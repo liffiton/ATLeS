@@ -1,0 +1,48 @@
+FishyCam
+========
+
+Overview
+--------
+
+The end goal is to make a Skinner box for zebrafish.  The box will sense the fish's position and give the fish visual feedback based on its position and the history thereof.
+
+Tanks are roughly 30cm x 15cm x 5cm (just guesses).  Position sensing will be on the x-y (30cm and 15cm) axes.  Feedback will be presented on one side of the tank in the same plane.
+
+
+Input
+-----
+
+Ideas:
+ * Camera
+   + Simple hardware -- cheap, easy to put together
+   - Issues with glare, filtering, etc.
+ * Photosensors
+   + More robust (?)
+   - More complex -- have to custom build it
+
+Spec:
+ * Resolution of 100 positions across (longest dimension) is fine.  10x10 would be workable.
+ * Realtime sensing and feedback
+
+
+Output
+------
+
+Ideas:
+ * Monitor
+   + Most flexible -- any image/animation can be displayed
+   + Simple hardware -- no construction required
+   - Cost (potentially)
+   - Issues with glare, filtering, given the camera is facing the display
+ * Matrix of LEDs
+   + Potentially easier to filter out
+   + Inexpensive
+   - Requires custom building
+   - Low resolution
+
+
+Plan
+----
+
+Webcam for sensing, monitor for feedback.
+
