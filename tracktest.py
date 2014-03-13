@@ -11,19 +11,19 @@ class Process(object):
         #self._bgs = cv2.BackgroundSubtractorMOG()
         #self._bgs = cv2.BackgroundSubtractorMOG2()  # not great defaults, and need bShadowDetection to be False
         #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
-        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=20, bShadowDetection=False)
+        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=10, bShadowDetection=False)
 
         # ??? history is ignored?  If learning_rate is > 0, or...?  Unclear.
 
-        # learning rate for background subtractor
-        # 0 = never adapts after initial background creation
-        # a bit above 0 looks good
-        self._learning_rate = 0.001
-
-        # threshold for feature detection
-        self._hessian_threshold = 2000
+        # Learning rate for background subtractor.
+        # 0 = never adapts after initial background creation.
+        # A bit above 0 looks good.
+        # Lower values are better for detecting slower movement, though it
+        # takes a bit of time to learn the background initially.
+        self._learning_rate = 0.0005
 
         # element to reuse in erode/dilate
+        # RECT is more robust at removing noise in the erode
         #self._element = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
         self._element = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
 
@@ -38,7 +38,7 @@ class Process(object):
         self._totaltime = 0
         self._avgtime = 0
 
-    def proc_frame(self, frame, sub_bg=False, mark_features=False, mark_contours=False, mark_centroids=False, verbose=False):
+    def proc_frame(self, frame, mark_contours=False, mark_centroids=False, verbose=False):
         # time processing
         start_time = time.time()
 
@@ -51,17 +51,10 @@ class Process(object):
             self._overlay = numpy.zeros((frame.shape[0], frame.shape[1], 4), frame.dtype)
         self._overlay = numpy.zeros((frame.shape[0], frame.shape[1], 4), frame.dtype)
 
-        # copy the frame for performing analysis and marking results
-        self._proc_frame = frame.copy()
+        # grayscale copy for contours
+        self._gframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        if sub_bg:
-            self._sub_bg()
-
-        # grayscale copy for SURF and contours
-        self._gframe = cv2.cvtColor(self._proc_frame, cv2.COLOR_BGR2GRAY)
-
-        if mark_features:
-            self._mark_features()
+        self._sub_bg()
 
         if mark_contours:
             self._mark_contours()
@@ -80,20 +73,9 @@ class Process(object):
         return self._overlay
 
     def _sub_bg(self):
-        mask = self._bgs.apply(self._proc_frame, learningRate=self._learning_rate)
-        maskrgb = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-        self._proc_frame = self._proc_frame & maskrgb
-
-    def _mark_features(self):
-        surf = cv2.SURF(self._hessian_threshold)
-        keypoints = surf.detect(self._gframe)
-
-        for kp in keypoints:
-            x, y = kp.pt
-            # dot at keypoint location
-            cv2.circle(self._overlay, (int(x), int(y)), 2, (0,255,0,255), -1)
-            # circle with size = keypoint response weight
-            #cv2.circle(self._overlay, (int(x), int(y)), int(kp.response/100), (255,0,0,255), 1)
+        mask = self._bgs.apply(self._gframe, learningRate=self._learning_rate)
+        #maskrgb = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+        self._gframe = self._gframe & mask
 
     def _get_contours(self):
         # filter out single pixels
@@ -164,7 +146,7 @@ def main():
             break
 
         # process the frame
-        overlay = proc.proc_frame(frame, sub_bg=True, mark_features=False, mark_contours=True, mark_centroids=False, verbose=True)
+        overlay = proc.proc_frame(frame, mark_contours=True, mark_centroids=False, verbose=True)
 
         # display the frame and handle the event loop
         draw = alphablend(frame, overlay)
