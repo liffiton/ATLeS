@@ -2,7 +2,6 @@ import cv2
 import numpy
 import os
 import sys
-import time
 
 
 class Process(object):
@@ -13,7 +12,7 @@ class Process(object):
         #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
         self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=10, bShadowDetection=False)
 
-        # ??? history is ignored?  If learning_rate is > 0, or...?  Unclear.
+        # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
 
         # Learning rate for background subtractor.
         # 0 = never adapts after initial background creation.
@@ -27,84 +26,63 @@ class Process(object):
         #self._element = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
         self._element = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
 
-        # contours for the most recent frame
+        # contours and centroids for the most recent frame
         self._contours = None
+        self._centroids = None
 
-        # overlay for marking elements on a frame
-        self._overlay = None
-
-        # processing statistics
-        self._nframes = 0
-        self._totaltime = 0
-        self._avgtime = 0
-
-    def proc_frame(self, frame, mark_contours=False, mark_centroids=False, verbose=False):
-        # time processing
-        start_time = time.time()
-
-        # reset contours
+    def proc_frame(self, frame, verbose=False):
+        # reset contours and centroids
         self._contours = None
+        self._centroids = None
 
-        # create overlay for marking elements on the frame
-        if self._overlay is None:
-            # 4 channels for rgb+alpha
-            self._overlay = numpy.zeros((frame.shape[0], frame.shape[1], 4), frame.dtype)
-        self._overlay = numpy.zeros((frame.shape[0], frame.shape[1], 4), frame.dtype)
-
-        # grayscale copy for contours
+        # grayscale copy
         self._gframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+        # subtract background, clean up image
         self._sub_bg()
-
-        if mark_contours:
-            self._mark_contours()
-
-        if mark_centroids:
-            self._mark_centroids()
-
-        # statistics
-        frame_time = time.time() - start_time
-        self._totaltime += frame_time
-        self._nframes += 1
-        if verbose:
-            print("Frame time: %.3f sec\nAvg. time:  %.3f sec (max %dfps)\n" % (frame_time, self._totaltime/self._nframes, int(self._nframes/self._totaltime)))
-
-        #self._overlay *= 0.99
-        return self._overlay
 
     def _sub_bg(self):
         mask = self._bgs.apply(self._gframe, learningRate=self._learning_rate)
         #maskrgb = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
         self._gframe = self._gframe & mask
 
-    def _get_contours(self):
         # filter out single pixels
         self._gframe = cv2.erode(self._gframe, self._element)
+
         # restore and join nearby regions (in case one fish has a skinny middle...)
         self._gframe = cv2.dilate(self._gframe, self._element)
         self._gframe = cv2.dilate(self._gframe, self._element)
         self._gframe = cv2.dilate(self._gframe, self._element)
 
+    def _get_contours(self):
         # find contours
         self._contours, _ = cv2.findContours(self._gframe, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    def _mark_contours(self):
+    def _get_centroids(self):
         if not self._contours:
             self._get_contours()
 
-        for i in range(len(self._contours)):
-            cv2.drawContours(self._overlay, self._contours, i, (0,255,0,255), 1)
-
-    def _mark_centroids(self):
-        if not self._contours:
-            self._get_contours()
+        self._centroids = []
 
         for contour in self._contours:
             moments = cv2.moments(contour)
             centroid_x = moments['m10'] / moments['m00']
             centroid_y = moments['m01'] / moments['m00']
-            # dot at centroid
-            cv2.circle(self._overlay, (int(centroid_x), int(centroid_y)), 2, (0,255,0,255), -1)
+            self._centroids.append((centroid_x, centroid_y))
+
+    @property
+    def contours(self):
+        if not self._contours:
+            self._get_contours()
+
+        return self._contours
+
+    @property
+    def centroids(self):
+        if not self._centroids:
+            self._get_centroids()
+
+        return self._centroids
 
 
 def alphablend(img, overlay):
@@ -136,6 +114,16 @@ def main():
         print "Could not open video stream..."
         sys.exit(1)
 
+    # get one frame for testing and setting up overlay
+    rval, frame = video.read()
+    if rval:
+        # create overlay for marking elements on the frame
+        # 4 channels for rgb+alpha
+        overlay = numpy.zeros((frame.shape[0], frame.shape[1], 4), frame.dtype)
+    else:
+        print "Error reading from video stream..."
+        sys.exit(1)
+
     i = 0
     while True:
         i += 1
@@ -146,7 +134,14 @@ def main():
             break
 
         # process the frame
-        overlay = proc.proc_frame(frame, mark_contours=True, mark_centroids=False, verbose=True)
+        proc.proc_frame(frame, verbose=True)
+
+        # fade previous overlay
+        overlay *= 0.99
+
+        # draw contours
+        for i in range(len(proc.contours)):
+            cv2.drawContours(overlay, proc.contours, i, (0,255,0,255), 1)
 
         # display the frame and handle the event loop
         draw = alphablend(frame, overlay)
