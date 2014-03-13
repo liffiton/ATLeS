@@ -139,9 +139,13 @@ def main():
         # fade previous overlay
         overlay *= 0.99
 
-        # draw contours
-        for i in range(len(proc.contours)):
-            cv2.drawContours(overlay, proc.contours, i, (0,255,0,255), 1)
+        ## draw contours
+        #for i in range(len(proc.contours)):
+        #    cv2.drawContours(overlay, proc.contours, i, (0,255,0,255), 1)
+
+        # draw centroids
+        for pt in proc.centroids:
+            cv2.circle(overlay, (int(pt[0]), int(pt[1])), 1, (0,255,0,255))
 
         # display the frame and handle the event loop
         draw = alphablend(frame, overlay)
