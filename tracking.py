@@ -1,10 +1,12 @@
 import cv2
+import math
 import numpy
 import os
+import random
 import sys
 
 
-class Process(object):
+class FrameProcessor(object):
     def __init__(self):
         # background subtractor
         #self._bgs = cv2.BackgroundSubtractorMOG()
@@ -85,12 +87,73 @@ class Process(object):
         return self._centroids
 
 
+class ParticleFilter(object):
+    def __init__(self, n, dims=[(0,1),(0,1),(-1,1),(-1,1)]):
+        self._n = n
+        self._repopulate(dims)
+
+    def _repopulate(self, dims):
+        self._particles = []
+        for i in range(self._n):
+            new_particle = {}
+            for i,dim in enumerate(dims):
+                new_particle[i] = random.uniform(*dim)
+            new_particle['weight'] = 1.0/self._n
+            self._particles.append(new_particle)
+
+    def update(self):
+        for particle in self._particles:
+            #particle[2] = random.gauss(particle[2], 1)
+            particle[0] += particle[2]
+            #particle[3] = random.gauss(particle[3], 1)
+            particle[1] += particle[3]
+
+    def measurement(self, position):
+        weightsum = 0.0
+        # reweight particles based on position measurement
+        for p in self._particles:
+            p['weight'] = math.exp(-distance(position, (p[0],p[1]))**2 / 100) / self._n
+            weightsum += p['weight']
+            p[2] = position[0] - p[0]
+            p[3] = position[1] - p[1]
+
+        if weightsum == 0.0:
+            self._repopulate([(position[0],position[0]), (position[1],position[1]), (-1,1), (-1,1)])
+        else:
+            # normalize weights
+            while weightsum < 1.0:
+                for p in self._particles:
+                    p['weight'] /= weightsum
+                weightsum = sum(p['weight'] for p in self._particles)
+
+        # resample
+        new_particles = []
+        for i in range(self._n):
+            rnd = random.random()
+            i = 0
+            while rnd >= 0.0 and i < self._n:
+                chosen = self._particles[i]
+                rnd -= chosen['weight']
+                i += 1
+            new_particles.append(chosen)
+
+        self._particles = new_particles
+
+    @property
+    def estimate(self):
+        return max(self._particles, key=lambda x: x['weight'])
+
+
 def alphablend(img, overlay):
     ret = img.copy()
     for c in 0,1,2:
         alpha = overlay[:,:,3]
         ret[:,:,c] = ret[:,:,c]*(1-alpha/255.0) + overlay[:,:,c]*(alpha/255.0)
     return ret
+
+
+def distance(p0, p1):
+    return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
 
 def main():
@@ -108,21 +171,23 @@ def main():
         # Webcam input
         video = cv2.VideoCapture(0)
 
-    proc = Process()
+    proc = FrameProcessor()
 
     if not video.isOpened():
         print "Could not open video stream..."
         sys.exit(1)
 
-    # get one frame for testing and setting up overlay
+    # get one frame for testing and setting up dimensions
     rval, frame = video.read()
-    if rval:
-        # create overlay for marking elements on the frame
-        # 4 channels for rgb+alpha
-        overlay = numpy.zeros((frame.shape[0], frame.shape[1], 4), frame.dtype)
-    else:
+    if not rval:
         print "Error reading from video stream..."
         sys.exit(1)
+
+    # create overlay for marking elements on the frame
+    # 4 channels for rgb+alpha
+    w,h = frame.shape[:2]
+    overlay = numpy.zeros((w, h, 4), frame.dtype)
+    filters = []
 
     i = 0
     while True:
@@ -136,20 +201,47 @@ def main():
         # process the frame
         proc.proc_frame(frame, verbose=True)
 
+        # let the background subtractor learn a good background before doing anything else
+        if i < 500:
+            continue
+
+        # make sure we have enough filters
+        while len(filters) < len(proc.centroids):
+            new_filt = ParticleFilter(100, [(0, w-1), (0,h-1), (-w/20.0, w/20.0), (-w/20.0, w/20.0)])
+            filters.append(new_filt)
+
+        # use the filters
+        unselected = proc.centroids
+        for filt in filters:
+            if not unselected:
+                break
+
+            closest = min(unselected, key=lambda pt: distance(pt, (filt.estimate[0], filt.estimate[1])))
+            unselected.remove(closest)
+            filt.update()
+            filt.measurement(closest)
+            cv2.line(overlay, (int(filt.estimate[0]), int(filt.estimate[1])), (int(closest[0]), int(closest[1])), (0,0,255,255))
+
         # fade previous overlay
         overlay *= 0.99
 
         ## draw contours
-        #for i in range(len(proc.contours)):
-        #    cv2.drawContours(overlay, proc.contours, i, (0,255,0,255), 1)
+        #for c_i in range(len(proc.contours)):
+        #    cv2.drawContours(overlay, proc.contours, c_i, (0,255,0,255), 1)
 
         # draw centroids
         for pt in proc.centroids:
             cv2.circle(overlay, (int(pt[0]), int(pt[1])), 1, (0,255,0,255))
 
+        # draw filtered points
+        #for filt in filters:
+            #cv2.circle(overlay, (int(filt.estimate[0]), int(filt.estimate[1])), 1, (0,0,255,255))
+
         # display the frame and handle the event loop
-        draw = alphablend(frame, overlay)
-        cv2.imshow("preview", draw)
+        if i % 100 == 0:
+            #draw = alphablend(frame, overlay)
+            draw = overlay
+            cv2.imshow("preview", draw)
 
         key = cv2.waitKey(1)
         if key % 256 == 27:  # exit on ESC
