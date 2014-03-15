@@ -48,9 +48,11 @@ def main():
 
     # create overlay for marking elements on the frame
     # 4 channels for rgb+alpha
-    w,h = frame.shape[:2]
-    overlay = numpy.zeros((w, h, 4), frame.dtype)
-    filters = []
+    h, w = frame.shape[:2]
+    #h, w = 120, 360
+    overlay = numpy.zeros((h, w, 4), frame.dtype)
+
+    pf = tracking.ParticleFilter(100, [(0, w-1), (0, h-1), (-1, 1), (-1, 1)])
 
     i = 0
     while True:
@@ -61,6 +63,8 @@ def main():
         if not rval:
             break
 
+        #frame = frame[:120, :360]
+
         # process the frame
         proc.proc_frame(frame, verbose=True)
 
@@ -68,22 +72,13 @@ def main():
         if i < 500:
             continue
 
-        # make sure we have enough filters
-        while len(filters) < len(proc.centroids):
-            new_filt = tracking.ParticleFilter(100, [(0, w-1), (0,h-1), (-w/20.0, w/20.0), (-w/20.0, w/20.0)])
-            filters.append(new_filt)
-
-        # use the filters
-        unselected = proc.centroids
-        for filt in filters:
-            if not unselected:
-                break
-
-            closest = min(unselected, key=lambda pt: distance(pt, (filt.estimate[0], filt.estimate[1])))
-            unselected.remove(closest)
-            filt.update()
-            filt.measurement(closest)
-            cv2.line(overlay, (int(filt.estimate[0]), int(filt.estimate[1])), (int(closest[0]), int(closest[1])), (0,0,255,255))
+        # use the filter
+        if proc.centroids:
+            closest = min(proc.centroids, key=lambda pt: distance(pt, (pf.estimate[0], pf.estimate[1])))
+            pf.update()
+            pf.measurement(closest)
+            cv2.line(overlay, (int(pf.estimate[0]), int(pf.estimate[1])), (int(closest[0]), int(closest[1])), (0,0,255,255))
+            cv2.circle(overlay, (int(pf.estimate[0]), int(pf.estimate[1])), 1, (0,255,0,255))
 
         # fade previous overlay
         overlay *= 0.99
@@ -93,17 +88,17 @@ def main():
         #    cv2.drawContours(overlay, proc.contours, c_i, (0,255,0,255), 1)
 
         # draw centroids
-        for pt in proc.centroids:
-            cv2.circle(overlay, (int(pt[0]), int(pt[1])), 1, (0,255,0,255))
+        #for pt in proc.centroids:
+        #    cv2.circle(overlay, (int(pt[0]), int(pt[1])), 1, (0,255,0,255))
 
         # draw filtered points
         #for filt in filters:
             #cv2.circle(overlay, (int(filt.estimate[0]), int(filt.estimate[1])), 1, (0,0,255,255))
 
         # display the frame and handle the event loop
-        if i % 100 == 0:
-            #draw = alphablend(frame, overlay)
-            draw = overlay
+        if i % 10 == 0:
+            draw = alphablend(frame, overlay)
+            #draw = overlay
             cv2.imshow("preview", draw)
 
         key = cv2.waitKey(1)

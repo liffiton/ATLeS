@@ -90,6 +90,7 @@ class ParticleFilter(object):
         self._repopulate(dims)
 
     def _repopulate(self, dims):
+        print "repop"
         self._particles = []
         for i in range(self._n):
             new_particle = {}
@@ -104,16 +105,16 @@ class ParticleFilter(object):
 
     def update(self):
         for particle in self._particles:
-            #particle[2] = random.gauss(particle[2], 1)
-            particle[0] += particle[2]
-            #particle[3] = random.gauss(particle[3], 1)
-            particle[1] += particle[3]
+            particle[0] += random.gauss(particle[2], particle[2]*0.1)
+            #particle[0] += particle[2]
+            particle[1] += random.gauss(particle[3], particle[3]*0.1)
+            #particle[1] += particle[3]
 
     def measurement(self, position):
         weightsum = 0.0
         # reweight particles based on position measurement
         for p in self._particles:
-            p['weight'] = math.exp(-self.distance(position, (p[0],p[1]))**2 / 100) / self._n
+            p['weight'] = math.exp(-self.distance(position, (p[0],p[1]))**2 / 10000)
             weightsum += p['weight']
             p[2] = position[0] - p[0]
             p[3] = position[1] - p[1]
@@ -136,7 +137,7 @@ class ParticleFilter(object):
                 chosen = self._particles[i]
                 rnd -= chosen['weight']
                 i += 1
-            new_particles.append(chosen)
+            new_particles.append(chosen.copy())
 
         self._particles = new_particles
 
