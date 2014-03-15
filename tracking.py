@@ -3,6 +3,10 @@ import math
 import random
 
 
+def distance(p0, p1):
+    return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+
+
 class FrameProcessor(object):
     def __init__(self):
         # background subtractor
@@ -84,13 +88,50 @@ class FrameProcessor(object):
         return self._centroids
 
 
+class SimpleTracker(object):
+    def __init__(self):
+        self._pos = [0,0]
+        self._vel = [0,0]
+
+    @property
+    def _speed(self):
+        return math.sqrt(self._vel[0]**2 + self._vel[1]**2)
+
+    @property
+    def position(self):
+        return self._pos
+
+    def update(self, obs):
+        if obs:
+            closest = min(obs, key=lambda pt: distance(pt, self._pos))
+        else:
+            closest = None
+
+        # skip if no centroids or if closest is more than 50px away (XXX: magic number!) but velocity is not 0.0 (i.e. no estimate yet)
+        if closest is None or distance(closest, self._pos) > 50 and self._speed != 0.0:
+            # use the stored velocity
+            self._pos[0] += self._vel[0]
+            self._pos[1] += self._vel[1]
+        else:
+            dx = closest[0] - self._pos[0]
+            dy = closest[1] - self._pos[1]
+
+            # update estimate position
+            self._pos = list(closest)
+
+            # update estimate velocity as a decaying average
+            alpha = 0.4
+            self._vel[0] = alpha * dx + (1-alpha) * self._vel[0]
+            self._vel[1] = alpha * dy + (1-alpha) * self._vel[1]
+
+
 class ParticleFilter(object):
+    """A hacked-together, somewhat bogus particle filter... use at your own risk."""
     def __init__(self, n, dims=[(0,1),(0,1),(-1,1),(-1,1)]):
         self._n = n
         self._repopulate(dims)
 
     def _repopulate(self, dims):
-        print "repop"
         self._particles = []
         for i in range(self._n):
             new_particle = {}
@@ -98,10 +139,6 @@ class ParticleFilter(object):
                 new_particle[i] = random.uniform(*dim)
             new_particle['weight'] = 1.0/self._n
             self._particles.append(new_particle)
-
-    @staticmethod
-    def distance(p0, p1):
-        return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
     def update(self):
         for particle in self._particles:

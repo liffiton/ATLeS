@@ -34,8 +34,6 @@ def main():
         # Webcam input
         video = cv2.VideoCapture(0)
 
-    proc = tracking.FrameProcessor()
-
     if not video.isOpened():
         print "Could not open video stream..."
         sys.exit(1)
@@ -48,11 +46,12 @@ def main():
 
     # create overlay for marking elements on the frame
     # 4 channels for rgb+alpha
-    h, w = frame.shape[:2]
-    #h, w = 120, 360
+    #h, w = frame.shape[:2]
+    h, w = 140, 360
     overlay = numpy.zeros((h, w, 4), frame.dtype)
 
-    pf = tracking.ParticleFilter(100, [(0, w-1), (0, h-1), (-1, 1), (-1, 1)])
+    proc = tracking.FrameProcessor()
+    tracker = tracking.SimpleTracker()
 
     i = 0
     while True:
@@ -63,7 +62,7 @@ def main():
         if not rval:
             break
 
-        #frame = frame[:120, :360]
+        frame = frame[:140, :360]
 
         # process the frame
         proc.proc_frame(frame, verbose=True)
@@ -72,13 +71,11 @@ def main():
         if i < 500:
             continue
 
-        # use the filter
-        if proc.centroids:
-            closest = min(proc.centroids, key=lambda pt: distance(pt, (pf.estimate[0], pf.estimate[1])))
-            pf.update()
-            pf.measurement(closest)
-            cv2.line(overlay, (int(pf.estimate[0]), int(pf.estimate[1])), (int(closest[0]), int(closest[1])), (0,0,255,255))
-            cv2.circle(overlay, (int(pf.estimate[0]), int(pf.estimate[1])), 1, (0,255,0,255))
+        tracker.update(proc.centroids)
+
+        position = tuple(int(x) for x in tracker.position)
+
+        cv2.circle(overlay, position, 0, (0,255,0,255))
 
         # fade previous overlay
         overlay *= 0.99
@@ -90,10 +87,6 @@ def main():
         # draw centroids
         #for pt in proc.centroids:
         #    cv2.circle(overlay, (int(pt[0]), int(pt[1])), 1, (0,255,0,255))
-
-        # draw filtered points
-        #for filt in filters:
-            #cv2.circle(overlay, (int(filt.estimate[0]), int(filt.estimate[1])), 1, (0,0,255,255))
 
         # display the frame and handle the event loop
         if i % 10 == 0:
