@@ -46,3 +46,61 @@ Plan
 
 Webcam for sensing, monitor for feedback.
 
+
+Software
+--------
+
+Interface needs:
+  * Setup
+    * ???
+  * Monitor
+    * Time experiment started, time running
+    * View experiment parameters?
+    * View current data?  (Form?)
+    * Current video feed
+      * Ideally live video, but a current still should be alright
+  * Control
+    * Stop experiment
+  * Download
+    * Data from previous experiment
+    * Data from all past experiments
+    * Data from selected experiment(s)
+    * ?Form?
+
+Interface options:
+  * Web-based or GUI app
+    * Web-based most accessible
+    * GUI app runs where?  Via SSH?  Or physically at the machine itself?
+  * Per-box or single centralized
+    * Per-box is actually simpler to setup, maintain
+    * Single centralized could be more usable
+
+Data:
+  * ???Form???
+  * Centralized database?
+    * Would be useful, but adds a lot of complexity
+
+Feedback:
+  * Animations?
+    * If so, run in a separate thread
+    * Thread 1: Track fish and make feedback decisions
+    * Queue for messages, thr1->thr2
+    * Thread 2: Animation, responding to messages in queue
+
+API flow:
+  frame = cv2.get...
+  proc.proc(frame)
+  tracker.update(proc.centroids)
+  track.store(tracker.position)
+  feedback.update(track)
+
+General coding:
+  * Use logging package, log any uncaught exceptions (crashes):
+      http://blog.tplus1.com/blog/2012/08/05/python-log-uncaught-exceptions-with-sys-excepthook/
+  * Animation:
+     * Use pyprocessing for animation?
+       http://code.google.com/p/pyprocessing/
+     * Or use pyglet directly?
+     * Pyprocessing will likely be easier for others to use for making new 'plugins'.
+  * Use multiprocessing.{Process|Queue} for 'threading' and communication
+  * Setup a 'plugin' architecture, with a directory for 'feedback' plugins and a directory for 'trigger' plugins?
