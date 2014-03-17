@@ -104,3 +104,18 @@ General coding:
      * Pyprocessing will likely be easier for others to use for making new 'plugins'.
   * Use multiprocessing.{Process|Queue} for 'threading' and communication
   * Setup a 'plugin' architecture, with a directory for 'feedback' plugins and a directory for 'trigger' plugins?
+
+**OR**
+Build on pre-existing software:
+  https://en.wikipedia.org/wiki/Comparison_of_behavioral_experiment_software
+  * Python:
+    * OpenSesame looks feature-rich
+      * Uses PsychoPy or Expyriment for backends
+    * PsychoPy also has a graphical experiment builder
+    * Expyriment is code only, and it might not offer much we need...
+
+Scripting options:
+  * Let users create experiments in raw Python
+  * Use a graphical editor like OpenSesame or PsychoPy (or one of those directly)
+  * Blockly!  Can export to Python.  Can likely create custom blocks for various functions/variables of interest...!
+
