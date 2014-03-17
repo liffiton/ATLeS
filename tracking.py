@@ -94,6 +94,8 @@ class SimpleTracker(object):
     def __init__(self):
         self._pos = [0,0]
         self._vel = [0,0]
+        self._missing_count = 1  # How many frames have we not had something to track?
+                                 # Initialized to 1 so status() is initially 'missing'
 
     @property
     def _speed(self):
@@ -103,6 +105,16 @@ class SimpleTracker(object):
     def position(self):
         return self._pos
 
+    @property
+    def status(self):
+        # is anything currently being tracked
+        if self._missing_count == 0:
+            return 'acquired'
+        elif self._missing_count < 5:
+            return 'missing'
+        else:
+            return 'lost'
+
     def update(self, obs):
         if obs:
             closest = min(obs, key=lambda pt: distance(pt, self._pos))
@@ -111,10 +123,15 @@ class SimpleTracker(object):
 
         # skip if no centroids or if closest is more than 50px away (XXX: magic number!) but velocity is not 0.0 (i.e. no estimate yet)
         if closest is None or distance(closest, self._pos) > 50 and self._speed != 0.0:
-            # use the stored velocity
-            self._pos[0] += self._vel[0]
-            self._pos[1] += self._vel[1]
+            self._missing_count += 1
+
+            if self.status != 'lost':
+                # use the stored velocity
+                self._pos[0] += self._vel[0]
+                self._pos[1] += self._vel[1]
+            # otherwise, just use last known position
         else:
+            self._missing_count = 0
             dx = closest[0] - self._pos[0]
             dy = closest[1] - self._pos[1]
 
@@ -224,6 +241,10 @@ class Tracker(object):
         self._proc = FrameProcessor()
         self.frame = None
         self.frame_count = 0
+
+    @property
+    def status(self):
+        return self._track.status
 
     def next_frame(self, do_track=True):
         rval, self.frame = self._stream.get_frame()

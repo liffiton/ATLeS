@@ -69,10 +69,16 @@ def main():
             continue
 
         position = tracker.position
-        print position
+        status = tracker.status
+        print "%10s %s" % (status, str(position))
 
         position = tuple(int(x) for x in position)
-        cv2.circle(overlay, position, 0, (0,255,0,255))
+        if status == 'acquired':
+            cv2.circle(overlay, position, 0, (0,255,0,255))
+        elif status == 'missing':
+            cv2.circle(overlay, position, 2, (255,0,0,255))
+        elif status == 'lost':
+            cv2.circle(overlay, position, 5, (0,0,255,255))
 
         # fade previous overlay
         overlay *= 0.999
