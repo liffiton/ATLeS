@@ -1,6 +1,5 @@
 import cv2
 import numpy
-import os
 import sys
 
 import tracking
@@ -19,57 +18,46 @@ def main():
 
     if len(sys.argv) > 1:
         # Video file input
-        filename = sys.argv[1]
-        if os.path.exists(filename):
-            video = cv2.VideoCapture(filename)
-        else:
-            print("Input file not found: %s" % filename)
-            sys.exit(1)
+        source = sys.argv[1]
     else:
         # Webcam input
-        video = cv2.VideoCapture(0)
+        source = 0
 
-    if not video.isOpened():
-        print "Could not open video stream..."
-        sys.exit(1)
+    stream = tracking.Stream(source)
+
+    stream.set_crop([0,140, 0,360])
 
     # get one frame for testing and setting up dimensions
-    rval, frame = video.read()
+    rval, frame = stream.get_frame()
     if not rval:
-        print "Error reading from video stream..."
+        sys.stderr.write("Error reading from video stream...\n")
         sys.exit(1)
 
     # create overlay for marking elements on the frame
     # 4 channels for rgb+alpha
-    #h, w = frame.shape[:2]
-    h, w = 140, 360
+    h, w = frame.shape[:2]
     overlay = numpy.zeros((h, w, 4), frame.dtype)
 
-    proc = tracking.FrameProcessor()
-    tracker = tracking.SimpleTracker()
+    tracker = tracking.Tracker(stream)
 
     i = 0
     while True:
         i += 1
 
-        # capture one frame
-        rval, frame = video.read()
+        rval = tracker.next_frame(do_track=(i >= 500))
         if not rval:
+            # no more frames
             break
-
-        frame = frame[:140, :360]
-
-        # process the frame
-        proc.proc_frame(frame, verbose=True)
 
         # let the background subtractor learn a good background before doing anything else
         if i < 500:
             continue
 
-        tracker.update(proc.centroids)
+        position = tracker.position
+        print position
+        frame = tracker.frame
 
-        position = tuple(int(x) for x in tracker.position)
-
+        position = tuple(int(x) for x in position)
         cv2.circle(overlay, position, 0, (0,255,0,255))
 
         # fade previous overlay

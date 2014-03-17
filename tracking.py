@@ -1,6 +1,8 @@
 import cv2
 import math
+import os
 import random
+import sys
 
 
 def distance(p0, p1):
@@ -33,7 +35,7 @@ class FrameProcessor(object):
         self._contours = None
         self._centroids = None
 
-    def proc_frame(self, frame, verbose=False):
+    def proc_frame(self, frame):
         # reset contours and centroids
         self._contours = None
         self._centroids = None
@@ -181,3 +183,59 @@ class ParticleFilter(object):
     @property
     def estimate(self):
         return max(self._particles, key=lambda x: x['weight'])
+
+
+class Stream(object):
+    def __init__(self, source):
+        self._crop = None
+
+        if type(source) == 'int':
+            # webcam
+            self._video = cv2.VideoCapture(source)
+        elif os.path.isfile(source):
+            # video file
+            self._video = cv2.VideoCapture(source)
+        else:
+            sys.stderr.write("Input file not found: %s\n" % source)
+            sys.exit(1)
+
+        if not self._video.isOpened():
+            sys.stderr.write("Could not open video stream...\n")
+            sys.exit(1)
+
+    def set_crop(self, newcrop):
+        self._crop = newcrop
+
+    def get_frame(self):
+        rval, frame = self._video.read()
+        if self._crop:
+            c = self._crop
+            frame = frame[c[0]:c[1], c[2]:c[3]]
+        return rval, frame
+
+
+# TODO: rename Tracker and/or SimpleTracker to differentiate
+class Tracker(object):
+    def __init__(self, stream):
+        self._stream = stream
+        self._track = SimpleTracker()
+        self._proc = FrameProcessor()
+        self.frame = None
+        self.frame_count = 0
+
+    def next_frame(self, do_track=True):
+        rval, self.frame = self._stream.get_frame()
+        if not rval:
+            return False
+
+        self.frame_count += 1
+
+        # process the frame
+        self._proc.proc_frame(self.frame)
+
+        # allow for not updating tracker (to let background subtractor to settle, e.g.)
+        if do_track:
+            self._track.update(self._proc.centroids)
+            self.position = self._track.position
+
+        return True
