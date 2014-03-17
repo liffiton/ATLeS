@@ -1,8 +1,9 @@
 #
-# Source: http://stackoverflow.com/a/11449901
+# Based on: http://stackoverflow.com/a/11449901
 #
 
 import cv2
+import time
 
 cv2.namedWindow("preview")
 vc = cv2.VideoCapture(0)
@@ -12,10 +13,17 @@ if vc.isOpened():  # try to get the first frame
 else:
     rval = False
 
+prevtime = None
+
 while rval:
+    curtime = time.time()
+    if prevtime is not None:
+        print "%dms: %dfps" % (1000*(curtime-prevtime), 1/(curtime-prevtime))
+    prevtime = curtime
+
     cv2.imshow("preview", frame)
     rval, frame = vc.read()
-    key = cv2.waitKey(10)
+    key = cv2.waitKey(1)
     if key % 256 == 27:  # exit on ESC
         break
 

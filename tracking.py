@@ -189,7 +189,7 @@ class Stream(object):
     def __init__(self, source):
         self._crop = None
 
-        if type(source) == 'int':
+        if type(source) == int:
             # webcam
             self._video = cv2.VideoCapture(source)
         elif os.path.isfile(source):
@@ -208,6 +208,8 @@ class Stream(object):
 
     def get_frame(self):
         rval, frame = self._video.read()
+        if not rval:
+            return rval, frame
         if self._crop:
             c = self._crop
             frame = frame[c[0]:c[1], c[2]:c[3]]

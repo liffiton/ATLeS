@@ -1,6 +1,7 @@
 import cv2
 import numpy
 import sys
+import time
 
 import tracking
 
@@ -41,27 +42,40 @@ def main():
     tracker = tracking.Tracker(stream)
 
     i = 0
+    prev_time = None
     while True:
-        i += 1
+        # handle the event loop no matter what
+        key = cv2.waitKey(1)
+        if key % 256 == 27:  # exit on ESC
+            break
 
-        rval = tracker.next_frame(do_track=(i >= 500))
+        if prev_time is not None:
+            print time.time() - prev_time
+        prev_time = time.time()
+
+        i += 1
+        initializing = (i < 200)
+
+        rval = tracker.next_frame(do_track=(not initializing))
         if not rval:
             # no more frames
             break
 
+        frame = tracker.frame
+
         # let the background subtractor learn a good background before doing anything else
-        if i < 500:
+        if initializing:
+            cv2.imshow("preview", frame)
             continue
 
         position = tracker.position
         print position
-        frame = tracker.frame
 
         position = tuple(int(x) for x in position)
         cv2.circle(overlay, position, 0, (0,255,0,255))
 
         # fade previous overlay
-        overlay *= 0.99
+        overlay *= 0.999
 
         ## draw contours
         #for c_i in range(len(proc.contours)):
@@ -71,15 +85,11 @@ def main():
         #for pt in proc.centroids:
         #    cv2.circle(overlay, (int(pt[0]), int(pt[1])), 1, (0,255,0,255))
 
-        # display the frame and handle the event loop
-        if i % 10 == 0:
+        # display the frame
+        if i % 1 == 0:
             draw = alphablend(frame, overlay)
             #draw = overlay
             cv2.imshow("preview", draw)
-
-        key = cv2.waitKey(1)
-        if key % 256 == 27:  # exit on ESC
-            break
 
     cv2.destroyWindow("preview")
 
