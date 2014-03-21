@@ -203,12 +203,18 @@ class ParticleFilter(object):
 
 
 class Stream(object):
-    def __init__(self, source):
+    def __init__(self, source, params=None):
         self._crop = None
 
         if type(source) == int:
             # webcam
             self._video = cv2.VideoCapture(source)
+            # try to set given parameters
+            for key, value in params.items():
+                self._video.set(key, value)
+                newval = self._video.get(key)
+                if newval != value:
+                    print "Unable to set %s to %s, got %s." % (key, value, newval)
         elif os.path.isfile(source):
             # video file
             self._video = cv2.VideoCapture(source)
