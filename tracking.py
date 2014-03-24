@@ -48,7 +48,6 @@ class FrameProcessor(object):
 
     def _sub_bg(self):
         mask = self._bgs.apply(self._gframe, learningRate=self._learning_rate)
-        #maskrgb = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
         self._gframe = self._gframe & mask
 
         # filter out single pixels

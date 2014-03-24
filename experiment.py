@@ -34,11 +34,16 @@ def main():
     if see_frames:
         cv2.namedWindow("preview")
 
+    prevtime = None
     while True:
-        print time.time()
-        stim.blank(delay=0.25)
+        curtime = time.time()
+        if prevtime is not None:
+            print("%dms: %dfps" % (1000*(curtime-prevtime), 1/(curtime-prevtime)))
+        prevtime = curtime
+
+        #stim.blank()
         rval = track.next_frame()
-        stim.unblank()
+        #stim.unblank()
         if not rval:
             break
 
@@ -59,7 +64,7 @@ def main():
     stim.end()
 
     if see_frames:
-        cv2.destroyWindow("preview")
+        cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':

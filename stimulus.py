@@ -1,8 +1,6 @@
 import multiprocessing
-import random
-import time
 
-from pyprocessing import *
+from pyprocessing import *   # flake8: noqa
 
 # TODO: use abc to make an abstract base class for stimulus w/ show, end as requiring overrides...
 
@@ -21,6 +19,7 @@ class VisualStimulusHelper(object):
         self._pipe = pipe
         self._pos = None
         self._blank = False
+        self._bgcolor = 0  # black
 
     def _loop(self):
         '''Called repeatedly by pyprocessing.'''
@@ -30,20 +29,26 @@ class VisualStimulusHelper(object):
 
         val = self._pipe.recv()
         #print("Got: %s" % str(val))
+
         if type(val) in (int, float):
             self._pos = (val, val)
-        elif type(val) == str:
-            if val == 'blank':
-                self._blank = True
-            elif val == 'unblank':
-                self._blank = False
-            elif val == 'end':
-                exit()
+        elif val == 'blank':
+            self._blank = True
+        elif val == 'unblank':
+            self._blank = False
+        elif val == 'end':
+            exit()
 
         self._draw()
 
+        if val == 'blank':
+            self._pipe.send('blanked')
+
+    def _clear(self):
+        background(self._bgcolor)
+
     def _draw(self):
-        background(0)
+        self._clear()
         if self._pos is not None and not self._blank:
             x = self._pos[0]  # + random.randint(-20,20)
             y = self._pos[1]  # + random.randint(-20,20)
@@ -52,8 +57,8 @@ class VisualStimulusHelper(object):
     def vis_thread(self):
         size(500,500)
         smooth()
-        background(0)
-        fill(123,231,0)
+        fill(0,0,255)
+        self._clear()
         import __main__             # HACK
         __main__.draw = self._loop  # HACK  (monkeypatching)
         run()
@@ -61,7 +66,7 @@ class VisualStimulusHelper(object):
 
 class VisualStimulus(object):
     def __init__(self):
-        self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=False)
+        self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=True)
         self._helper = VisualStimulusHelper(self._child_pipe)
         self._p = multiprocessing.Process(target=self._helper.vis_thread)
         self._p.start()
@@ -69,9 +74,12 @@ class VisualStimulus(object):
     def show(self, stimulus):
         self._pipe.send(stimulus)
 
-    def blank(self, delay):
+    def blank(self):
         self._pipe.send('blank')
-        time.sleep(delay)
+        # wait for confirmation...
+        response = self._pipe.recv()
+        print response
+        assert(response == 'blanked')
 
     def unblank(self):
         self._pipe.send('unblank')
