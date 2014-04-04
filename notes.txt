@@ -19,6 +19,10 @@ Ideas:
  * Camera
    + Simple hardware -- cheap, easy to put together
    - Issues with glare, filtering, etc.
+ * IR Camera (rpi)
+   + Simple hardware
+   + IR sensitivity / filtering (http://publiclab.org/wiki/near-infrared-camera)
+   * Note: RPI Python OpenCV V4L2 stuff: http://www.raspberrypi.org/forums/viewtopic.php?f=43&t=65026&start=25
  * Photosensors
    + More robust (?)
    - More complex -- have to custom build it
