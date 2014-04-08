@@ -12,7 +12,7 @@ import stimulus
 #  Stimulus: Visual stimulus
 
 # Testing setup (hacked in here for now... TODO: cleanup.)
-test_input = False
+test_input = True
 see_frames = True
 force_stimulus = True
 
@@ -41,9 +41,9 @@ def main():
             print("%dms: %dfps" % (1000*(curtime-prevtime), 1/(curtime-prevtime)))
         prevtime = curtime
 
-        #stim.blank()
+        stim.blank()
         rval = track.next_frame()
-        #stim.unblank()
+        stim.unblank()
         if not rval:
             break
 

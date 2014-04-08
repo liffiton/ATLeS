@@ -1,8 +1,11 @@
 import multiprocessing
 
+# TODO: drop pyprocessing or factor our into separate module for cleaner imports
 from pyprocessing import *   # flake8: noqa
 
-# TODO: use abc to make an abstract base class for stimulus w/ show, end as requiring overrides...
+import pygame
+
+# TODO: use abc to make an abstract base class for stimulus w/ show() and end() requiring overrides...
 
 
 class DummyStimulus(object):
@@ -14,7 +17,48 @@ class DummyStimulus(object):
         self._stimcount += 1
 
 
-class VisualStimulusHelper(object):
+class VisualStimulusHelperPygame(object):
+    def __init__(self, pipe):
+        self._pipe = pipe
+        self._pos = None
+        self._blank = False
+        self._bgcolor = (0,0,0)  # black
+        pygame.init()
+        self._screen = pygame.display.set_mode((640, 480))
+
+    def _draw(self):
+        self._screen.fill(self._bgcolor)
+        if self._pos is not None and not self._blank:
+            x = self._pos[0]  # + random.randint(-20,20)
+            y = self._pos[1]  # + random.randint(-20,20)
+            pygame.draw.circle(self._screen, (255,0,0), (x,y), 100)
+        pygame.display.update()
+
+    def vis_thread(self):
+        while True:
+            if not self._pipe.poll(0):
+                self._draw()
+                continue
+
+            val = self._pipe.recv()
+            #print("Got: %s" % str(val))
+
+            if type(val) in (int, float):
+                self._pos = (val, val)
+            elif val == 'blank':
+                self._blank = True
+            elif val == 'unblank':
+                self._blank = False
+            elif val == 'end':
+                exit()
+
+            self._draw()
+
+            if val == 'blank':
+                self._pipe.send('blanked')
+
+
+class VisualStimulusHelperPyprocessing(object):
     def __init__(self, pipe):
         self._pipe = pipe
         self._pos = None
@@ -67,7 +111,7 @@ class VisualStimulusHelper(object):
 class VisualStimulus(object):
     def __init__(self):
         self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=True)
-        self._helper = VisualStimulusHelper(self._child_pipe)
+        self._helper = VisualStimulusHelperPygame(self._child_pipe)
         self._p = multiprocessing.Process(target=self._helper.vis_thread)
         self._p.start()
 
