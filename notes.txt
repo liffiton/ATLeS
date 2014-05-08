@@ -2,7 +2,7 @@ FishyCam
 ========
 
 Fishycam "server" (laptop) IP currently 10.2.6.220
-Fishypi raspi IP currently 10.2.7.204
+Fishypi raspi IP currently 10.2.7.110
 
 Overview
 --------
