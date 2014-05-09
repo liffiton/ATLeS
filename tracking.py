@@ -29,7 +29,8 @@ class FrameProcessor(object):
         # element to reuse in erode/dilate
         # RECT is more robust at removing noise in the erode
         #self._element = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
-        self._element = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+        self._element33 = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+        self._element55 = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
 
         # contours and centroids for the most recent frame
         self._contours = None
@@ -51,12 +52,10 @@ class FrameProcessor(object):
         self._gframe = self._gframe & mask
 
         # filter out single pixels
-        self._gframe = cv2.erode(self._gframe, self._element)
+        self._gframe = cv2.erode(self._gframe, self._element33)
 
         # restore and join nearby regions (in case one fish has a skinny middle...)
-        self._gframe = cv2.dilate(self._gframe, self._element)
-        self._gframe = cv2.dilate(self._gframe, self._element)
-        self._gframe = cv2.dilate(self._gframe, self._element)
+        self._gframe = cv2.dilate(self._gframe, self._element55)
 
     def _get_contours(self):
         # find contours
@@ -202,7 +201,7 @@ class ParticleFilter(object):
 
 
 class Stream(object):
-    def __init__(self, source, params=None):
+    def __init__(self, source, params=None, fps=6):
         self._crop = None
 
         if type(source) == int:
@@ -214,6 +213,8 @@ class Stream(object):
                 newval = self._video.get(key)
                 if newval != value:
                     print "Unable to set %s to %s, got %s." % (key, value, newval)
+            # hack to set FPS (OpenCV requests 30, hardcoded)
+            os.system("v4l2-ctl -p %d" % fps)
         elif os.path.isfile(source):
             # video file
             self._video = cv2.VideoCapture(source)
@@ -240,24 +241,16 @@ class Stream(object):
 
 # TODO: rename Tracker and/or SimpleTracker to differentiate
 class Tracker(object):
-    def __init__(self, stream):
-        self._stream = stream
+    def __init__(self):
         self._track = SimpleTracker()
         self._proc = FrameProcessor()
         self.frame = None
-        self.frame_count = 0
 
     @property
     def status(self):
         return self._track.status
 
-    def next_frame(self, do_track=True):
-        rval, self.frame = self._stream.get_frame()
-        if not rval:
-            return False
-
-        self.frame_count += 1
-
+    def process_frame(self, do_track=True):
         # process the frame
         self._proc.proc_frame(self.frame)
 
