@@ -3,7 +3,12 @@
 #
 
 import cv2
+import os
 import time
+
+width = 320
+height = 240
+fps = 8
 
 cv2.namedWindow("preview")
 cap = cv2.VideoCapture(0)
@@ -11,8 +16,8 @@ cap = cv2.VideoCapture(0)
 if cap.isOpened():  # try to get the first frame
     default_res = (cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     print("Frame resolution (default): %s" % str(default_res))
-    cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 320)
-    cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 240)
+    cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, width)
+    cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, height)
     new_res = (cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     print("Frame resolution (new): %s" % str(new_res))
 
@@ -21,6 +26,9 @@ if cap.isOpened():  # try to get the first frame
 else:
     rval = False
 
+# Drop framerate to 8fps (OpenCV requests 30fps by default, which rpi can't handle)
+os.system("v4l2-ctl -p %d" % fps)
+
 prevtime = None
 while rval:
     curtime = time.time()
@@ -28,7 +36,7 @@ while rval:
         print("%dms: %dfps" % (1000*(curtime-prevtime), 1/(curtime-prevtime)))
     prevtime = curtime
 
-    rval, frame = cap.read()
+    _,frame = cap.read()
 
     cv2.imshow("preview", frame)
 
