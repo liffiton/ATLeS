@@ -1,8 +1,5 @@
 import multiprocessing
 
-# TODO: drop pyprocessing or factor our into separate module for cleaner imports
-from pyprocessing import *   # flake8: noqa
-
 import pygame
 
 # TODO: use abc to make an abstract base class for stimulus w/ show() and end() requiring overrides...
@@ -56,56 +53,6 @@ class VisualStimulusHelperPygame(object):
 
             if val == 'blank':
                 self._pipe.send('blanked')
-
-
-class VisualStimulusHelperPyprocessing(object):
-    def __init__(self, pipe):
-        self._pipe = pipe
-        self._pos = None
-        self._blank = False
-        self._bgcolor = 0  # black
-
-    def _loop(self):
-        '''Called repeatedly by pyprocessing.'''
-        if not self._pipe.poll(0):
-            self._draw()
-            return
-
-        val = self._pipe.recv()
-        #print("Got: %s" % str(val))
-
-        if type(val) in (int, float):
-            self._pos = (val, val)
-        elif val == 'blank':
-            self._blank = True
-        elif val == 'unblank':
-            self._blank = False
-        elif val == 'end':
-            exit()
-
-        self._draw()
-
-        if val == 'blank':
-            self._pipe.send('blanked')
-
-    def _clear(self):
-        background(self._bgcolor)
-
-    def _draw(self):
-        self._clear()
-        if self._pos is not None and not self._blank:
-            x = self._pos[0]  # + random.randint(-20,20)
-            y = self._pos[1]  # + random.randint(-20,20)
-            ellipse(x, y, 100, 100)
-
-    def vis_thread(self):
-        size(500,500)
-        smooth()
-        fill(0,0,255)
-        self._clear()
-        import __main__             # HACK
-        __main__.draw = self._loop  # HACK  (monkeypatching)
-        run()
 
 
 class VisualStimulus(object):
