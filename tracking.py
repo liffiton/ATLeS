@@ -42,7 +42,7 @@ class FrameProcessor(object):
         self._centroids = None
 
         # grayscale copy
-        self._gframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        self._gframe = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (160,120))
 
         # subtract background, clean up image
         self._sub_bg()
@@ -244,15 +244,14 @@ class Tracker(object):
     def __init__(self):
         self._track = SimpleTracker()
         self._proc = FrameProcessor()
-        self.frame = None
 
     @property
     def status(self):
         return self._track.status
 
-    def process_frame(self, do_track=True):
+    def process_frame(self, frame, do_track=True):
         # process the frame
-        self._proc.proc_frame(self.frame)
+        self._proc.proc_frame(frame)
 
         # allow for not updating tracker (to let background subtractor to settle, e.g.)
         if do_track:

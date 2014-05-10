@@ -13,8 +13,11 @@ import stimulus
 
 # Testing setup (hacked in here for now... TODO: cleanup.)
 test_input = False
-see_frames = True
+see_frames = False
 force_stimulus = True
+width = 160
+height = 120
+fps = 30
 
 
 def main():
@@ -22,14 +25,14 @@ def main():
         stream = tracking.Stream("test.avi")
     else:
         params = {}
-        params[cv2.cv.CV_CAP_PROP_FRAME_WIDTH] = 160
-        params[cv2.cv.CV_CAP_PROP_FRAME_HEIGHT] = 120
+        params[cv2.cv.CV_CAP_PROP_FRAME_WIDTH] = width
+        params[cv2.cv.CV_CAP_PROP_FRAME_HEIGHT] = height
         params[cv2.cv.CV_CAP_PROP_EXPOSURE] = 0.001
-        stream = tracking.Stream(0, params=params, fps=4)
+        stream = tracking.Stream(0, params=params, fps=fps)
 
     track = tracking.Tracker()
     control = controllers.FixedIntervalController(response_interval=5)
-    stim = stimulus.VisualStimulus()
+    stim = stimulus.DummyStimulus()
 
     if see_frames:
         cv2.namedWindow("preview")

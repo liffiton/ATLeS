@@ -13,6 +13,15 @@ class DummyStimulus(object):
         print "%5d: %s" % (self._stimcount, str(stimulus))
         self._stimcount += 1
 
+    def blank(self):
+        print "Blanked."
+
+    def unblank(self):
+        print "Unblanked."
+
+    def end(self):
+        print "Ended."
+
 
 class VisualStimulusHelperPygame(object):
     def __init__(self, pipe):
