@@ -29,13 +29,9 @@ else:
 # Drop framerate to 8fps (OpenCV requests 30fps by default, which rpi can't handle)
 os.system("v4l2-ctl -p %d" % fps)
 
-prevtime = None
+prevtime = time.time()
+frames = 0
 while rval:
-    curtime = time.time()
-    if prevtime is not None:
-        print("%dms: %dfps" % (1000*(curtime-prevtime), 1/(curtime-prevtime)))
-    prevtime = curtime
-
     _,frame = cap.read()
 
     cv2.imshow("preview", frame)
@@ -43,6 +39,15 @@ while rval:
     key = cv2.waitKey(1)
     if key % 256 == 27:  # exit on ESC
         break
+
+    frames += 1
+    if frames % 10 == 0:
+        curtime = time.time()
+        frame_time = (curtime-prevtime) / 10
+        if prevtime is not None:
+            print("%dms: %dfps" % (1000*frame_time, 1/frame_time))
+        prevtime = curtime
+
 
 cap.release()
 cv2.destroyAllWindows()
