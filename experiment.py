@@ -13,11 +13,11 @@ import stimulus
 
 # Testing setup (hacked in here for now... TODO: cleanup.)
 test_input = False
-see_frames = False
+see_frames = True
 force_stimulus = True
 width = 160
 height = 120
-fps = 30
+fps = 3
 
 
 def main():
@@ -32,18 +32,15 @@ def main():
 
     track = tracking.Tracker()
     control = controllers.FixedIntervalController(response_interval=5)
-    stim = stimulus.DummyStimulus()
+    stim = stimulus.VisualStimulus()
 
     if see_frames:
         cv2.namedWindow("preview")
 
-    prevtime = None
-    while True:
-        curtime = time.time()
-        if prevtime is not None:
-            print("%dms: %dfps" % (1000*(curtime-prevtime), 1/(curtime-prevtime)))
-        prevtime = curtime
+    prevtime = time.time()
+    frames = 0
 
+    while True:
         stim.blank()
         rval, frame = stream.get_frame()
         stim.unblank()
@@ -66,6 +63,13 @@ def main():
                 control.add_hit('x>100')
                 if control.do_response():
                     stim.show(pos[0])
+
+        frames += 1
+        if frames % 10 == 0:
+            curtime = time.time()
+            frame_time = (curtime - prevtime) / 10
+            print("%dms: %dfps" % (1000*frame_time, 1/frame_time))
+            prevtime = curtime
 
     stim.end()
 

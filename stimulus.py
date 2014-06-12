@@ -42,11 +42,7 @@ class VisualStimulusHelperPygame(object):
 
     def vis_thread(self):
         while True:
-            if not self._pipe.poll(0):
-                self._draw()
-                continue
-
-            val = self._pipe.recv()
+            val = self._pipe.recv()  # waits for next command
             #print("Got: %s" % str(val))
 
             if type(val) in (int, float):
@@ -78,7 +74,6 @@ class VisualStimulus(object):
         self._pipe.send('blank')
         # wait for confirmation...
         response = self._pipe.recv()
-        print response
         assert(response == 'blanked')
 
     def unblank(self):

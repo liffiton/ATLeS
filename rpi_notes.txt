@@ -27,3 +27,8 @@ For now, I think the default capture size is fine, as the CPU overhead is minima
 
 Secondly, then, it is important to note that terminal output, displayed on the rpi's X server, uses a large amount of the CPU as well.  Simply switching to a different tab while FPS output is enabled in camtest.py drops the CPU usage significantly.  Keep this in mind particularly during testing, where debugging output may significantly harm performance.
 
+
+Blanking / Hiding Stimulus
+--------------------------
+
+The stimulus can be hidden from the camera while still being generally visible if certain conditions are met.  Primarily, the application needs to be running with enough CPU time free for the camera to *not* lag.  Currently, with the processing/tracking overhead *and* the overhead of displaying frames (to check for the presence of the stimulus), this appears to be possible at 3fps, max.  This works correctly, *most* of the time, with no additional sleep() statements, etc.  However, the stimulus is still occasionally visible in the captured frame...  Without the overhead of displaying frames, it may be fine?
