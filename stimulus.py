@@ -1,4 +1,5 @@
 import multiprocessing
+import sys
 
 import pygame
 
@@ -30,7 +31,8 @@ class VisualStimulusHelperPygame(object):
         self._blank = False
         self._bgcolor = (0,0,0)  # black
         pygame.init()
-        self._screen = pygame.display.set_mode((640, 480))
+        self._screen = pygame.display.set_mode((640, 480), pygame.FULLSCREEN)
+        pygame.mouse.set_visible(False)
 
     def _draw(self):
         self._screen.fill(self._bgcolor)
@@ -56,6 +58,12 @@ class VisualStimulusHelperPygame(object):
 
             self._draw()
 
+            # check pygame events for quit
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT or event.type == pygame.KEYUP:
+                    self._pipe.send('quit')
+                    exit()
+
             if val == 'blank':
                 self._pipe.send('blanked')
 
@@ -74,7 +82,10 @@ class VisualStimulus(object):
         self._pipe.send('blank')
         # wait for confirmation...
         response = self._pipe.recv()
-        assert(response == 'blanked')
+        if response == 'quit':
+            exit()
+        else:
+            assert(response == 'blanked')
 
     def unblank(self):
         self._pipe.send('unblank')

@@ -21,9 +21,7 @@ First, displaying the captured frames using highgui takes a huge amount of CPU t
 Secondly, the capture size obviously makes a difference.  However, there is currently some bug in the interaction between OpenCV and V4L that makes it impossible to change the capture size after the stream is opened in OpenCV (at its default 640x480 size).  However, a user on the rpi forums has posted a fix to OpenCV:
   http://www.raspberrypi.org/forums/viewtopic.php?f=43&t=62364&start=322
 
-It requires modifying and recompiling OpenCV.  I have not yet attempted this (2014-06-11).
-
-For now, I think the default capture size is fine, as the CPU overhead is minimal, and I can always scale it down after capture without *too* much overhead.
+It requires modifying and recompiling OpenCV.  I have adopted his/her modifications, allowing me to set the video capture size smaller for better performance.  160x120 seems nice and fast, but we have lots of flexibility now.
 
 Secondly, then, it is important to note that terminal output, displayed on the rpi's X server, uses a large amount of the CPU as well.  Simply switching to a different tab while FPS output is enabled in camtest.py drops the CPU usage significantly.  Keep this in mind particularly during testing, where debugging output may significantly harm performance.
 
@@ -34,3 +32,10 @@ Blanking / Hiding Stimulus
 The stimulus can be hidden from the camera while still being generally visible if certain conditions are met.  Primarily, the application needs to be running with enough CPU time free for the camera to *not* lag.  Currently, with the processing/tracking overhead *and* the overhead of displaying frames (to check for the presence of the stimulus), this appears to be possible at 3fps, max.
 
 This works correctly, *most* of the time, with no additional sleep() statements, etc.  However, the stimulus is still occasionally visible in the captured frame...  Without the overhead of displaying frames, it may be fine?  For example, it seems to catch the stimulus when I move the mouse -- due to the added overhead of simply dealing w/ the USB mouse?  Anyway, it is sensitive to CPU usage...
+
+
+Display
+-------
+
+In X, pygame will make a fullscreen view, but it won't (as far as I've found so far) scale the image.  So if I request 640x480, I get a 640x480 surface in the middle of my monitor.  Running from the terminal, however, does work.  I don't know what interface SDL is using, exactly, but it seems alright.
+

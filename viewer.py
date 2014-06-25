@@ -26,7 +26,8 @@ def main():
 
     stream = tracking.Stream(source)
 
-    stream.set_crop([0,140, 0,360])
+    # useful for test.avi
+    #stream.set_crop([0,140, 0,360])
 
     # get one frame for testing and setting up dimensions
     rval, frame = stream.get_frame()
@@ -39,7 +40,7 @@ def main():
     h, w = frame.shape[:2]
     overlay = numpy.zeros((h, w, 4), frame.dtype)
 
-    tracker = tracking.Tracker(stream)
+    tracker = tracking.Tracker()
 
     i = 0
     prev_time = None
@@ -54,19 +55,13 @@ def main():
         prev_time = time.time()
 
         i += 1
-        initializing = (i < 200)
 
-        rval = tracker.next_frame(do_track=(not initializing))
+        rval, frame = stream.get_frame()
         if not rval:
             # no more frames
             break
 
-        frame = tracker.frame
-
-        # let the background subtractor learn a good background before doing anything else
-        if initializing:
-            cv2.imshow("preview", frame)
-            continue
+        tracker.process_frame(frame)
 
         position = tracker.position
         status = tracker.status
@@ -81,7 +76,7 @@ def main():
             cv2.circle(overlay, position, 5, (0,0,255,255))
 
         # fade previous overlay
-        overlay *= 0.999
+        overlay *= 0.99
 
         ## draw contours
         #for c_i in range(len(proc.contours)):
@@ -92,7 +87,7 @@ def main():
         #    cv2.circle(overlay, (int(pt[0]), int(pt[1])), 1, (0,255,0,255))
 
         # display the frame
-        if i % 1 == 0:
+        if i % 10 == 0:
             draw = alphablend(frame, overlay)
             #draw = overlay
             cv2.imshow("preview", draw)

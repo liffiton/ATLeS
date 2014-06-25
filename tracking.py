@@ -24,7 +24,8 @@ class FrameProcessor(object):
         # A bit above 0 looks good.
         # Lower values are better for detecting slower movement, though it
         # takes a bit of time to learn the background initially.
-        self._learning_rate = 0.0005
+        #self._learning_rate = 0.0005  # for ~30fps video
+        self._learning_rate = 0.005  # for 3fps video?
 
         # element to reuse in erode/dilate
         # RECT is more robust at removing noise in the erode
@@ -42,7 +43,8 @@ class FrameProcessor(object):
         self._centroids = None
 
         # grayscale copy
-        self._gframe = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (160,120))
+        #self._gframe = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (160,120))
+        self._gframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # subtract background, clean up image
         self._sub_bg()
@@ -92,8 +94,8 @@ class SimpleTracker(object):
     def __init__(self):
         self._pos = [0,0]
         self._vel = [0,0]
-        self._missing_count = 1  # How many frames have we not had something to track?
-                                 # Initialized to 1 so status() is initially 'missing'
+        self._missing_count = 100  # How many frames have we not had something to track?
+                                   # Initialized to 100 so status() is initially 'lost'
 
     @property
     def _speed(self):
@@ -101,14 +103,14 @@ class SimpleTracker(object):
 
     @property
     def position(self):
-        return self._pos
+        return tuple(self._pos)
 
     @property
     def status(self):
         # is anything currently being tracked
         if self._missing_count == 0:
             return 'acquired'
-        elif self._missing_count < 5:
+        elif 0 < self._missing_count < 5:
             return 'missing'
         else:
             return 'lost'
@@ -119,27 +121,39 @@ class SimpleTracker(object):
         else:
             closest = None
 
-        # skip if no centroids or if closest is more than 50px away (XXX: magic number!) but velocity is not 0.0 (i.e. no estimate yet)
-        if closest is None or distance(closest, self._pos) > 50 and self._speed != 0.0:
-            self._missing_count += 1
+        if self.status == 'lost':
+            self._vel = [0,0]
+            if closest is None:
+                self._missing_count += 1
+                # just use the last known position
+                return
+            else:
+                # closest position is new acquired position
+                self._missing_count = 0
+                self._pos = list(closest)
 
-            if self.status != 'lost':
+        else:
+            # satus is missing or acquired
+        
+            # skip if no centroids or if closest is more than 50px away (XXX: magic number!) but velocity is not 0.0 (i.e. no estimate yet)
+            if closest is None or distance(closest, self._pos) > 50 and self._speed != 0.0:
+                self._missing_count += 1
+
                 # use the stored velocity
                 self._pos[0] += self._vel[0]
                 self._pos[1] += self._vel[1]
-            # otherwise, just use last known position
-        else:
-            self._missing_count = 0
-            dx = closest[0] - self._pos[0]
-            dy = closest[1] - self._pos[1]
+            else:
+                self._missing_count = 0
+                dx = closest[0] - self._pos[0]
+                dy = closest[1] - self._pos[1]
 
-            # update estimate position
-            self._pos = list(closest)
+                # update estimate position
+                self._pos = list(closest)
 
-            # update estimate velocity as a decaying average
-            alpha = 0.4
-            self._vel[0] = alpha * dx + (1-alpha) * self._vel[0]
-            self._vel[1] = alpha * dy + (1-alpha) * self._vel[1]
+                # update estimate velocity as a decaying average
+                alpha = 0.4
+                self._vel[0] = alpha * dx + (1-alpha) * self._vel[0]
+                self._vel[1] = alpha * dy + (1-alpha) * self._vel[1]
 
 
 class ParticleFilter(object):
@@ -201,12 +215,14 @@ class ParticleFilter(object):
 
 
 class Stream(object):
-    def __init__(self, source, params=None, fps=6):
+    def __init__(self, source, w=160, h=120, params=None, fps=6):
         self._crop = None
+        if params is None:
+            params = {}
 
         if type(source) == int:
             # webcam
-            self._video = cv2.VideoCapture(source)
+            self._video = cv2.VideoCapture(source, w, h)
             # try to set given parameters
             for key, value in params.items():
                 self._video.set(key, value)

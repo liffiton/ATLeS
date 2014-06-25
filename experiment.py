@@ -14,7 +14,7 @@ import stimulus
 # Testing setup (hacked in here for now... TODO: cleanup.)
 test_input = False
 see_frames = True
-force_stimulus = True
+force_stimulus = False
 width = 160
 height = 120
 fps = 3
@@ -25,14 +25,17 @@ def main():
         stream = tracking.Stream("test.avi")
     else:
         params = {}
-        params[cv2.cv.CV_CAP_PROP_FRAME_WIDTH] = width
-        params[cv2.cv.CV_CAP_PROP_FRAME_HEIGHT] = height
+        #params[cv2.cv.CV_CAP_PROP_FRAME_WIDTH] = width
+        #params[cv2.cv.CV_CAP_PROP_FRAME_HEIGHT] = height
         params[cv2.cv.CV_CAP_PROP_EXPOSURE] = 0.001
-        stream = tracking.Stream(0, params=params, fps=fps)
+        # NOTE: requires my hacked version of OpenCV w/ width/height constructor
+        stream = tracking.Stream(0, w=width, h=height, params=params, fps=fps)
 
     track = tracking.Tracker()
-    control = controllers.FixedIntervalController(response_interval=5)
-    stim = stimulus.VisualStimulus()
+    #control = controllers.FixedIntervalController(response_interval=5)
+    control = controllers.FixedRatioController(1)
+    #stim = stimulus.VisualStimulus()
+    stim = stimulus.DummyStimulus()
 
     if see_frames:
         cv2.namedWindow("preview")
@@ -50,12 +53,17 @@ def main():
 
         track.process_frame(frame)
 
+        pos = track.position
+        print pos
+        print track.status
+
         if see_frames:
+            position = tuple(int(x) for x in pos)
+            cv2.circle(frame, position, 5, (0,255,0,255))
             cv2.imshow("preview", frame)
             if cv2.waitKey(1) % 256 == 27:
                 break
 
-        pos = track.position
         if force_stimulus:
             stim.show(200)
         else:

@@ -8,10 +8,10 @@ import time
 
 width = 320
 height = 240
-fps = 8
+fps = 30
 
 cv2.namedWindow("preview")
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0, 160, 120)
 
 if cap.isOpened():  # try to get the first frame
     default_res = (cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
