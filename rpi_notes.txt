@@ -31,4 +31,6 @@ Secondly, then, it is important to note that terminal output, displayed on the r
 Blanking / Hiding Stimulus
 --------------------------
 
-The stimulus can be hidden from the camera while still being generally visible if certain conditions are met.  Primarily, the application needs to be running with enough CPU time free for the camera to *not* lag.  Currently, with the processing/tracking overhead *and* the overhead of displaying frames (to check for the presence of the stimulus), this appears to be possible at 3fps, max.  This works correctly, *most* of the time, with no additional sleep() statements, etc.  However, the stimulus is still occasionally visible in the captured frame...  Without the overhead of displaying frames, it may be fine?
+The stimulus can be hidden from the camera while still being generally visible if certain conditions are met.  Primarily, the application needs to be running with enough CPU time free for the camera to *not* lag.  Currently, with the processing/tracking overhead *and* the overhead of displaying frames (to check for the presence of the stimulus), this appears to be possible at 3fps, max.
+
+This works correctly, *most* of the time, with no additional sleep() statements, etc.  However, the stimulus is still occasionally visible in the captured frame...  Without the overhead of displaying frames, it may be fine?  For example, it seems to catch the stimulus when I move the mouse -- due to the added overhead of simply dealing w/ the USB mouse?  Anyway, it is sensitive to CPU usage...
