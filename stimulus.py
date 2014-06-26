@@ -31,16 +31,17 @@ class VisualStimulusHelperPygame(object):
         self._blank = False
         self._bgcolor = (0,0,0)  # black
         pygame.init()
-        self._screen = pygame.display.set_mode((640, 480), pygame.FULLSCREEN)
+        self._screen = pygame.display.set_mode((640, 480))
+        #self._screen = pygame.display.set_mode((640, 480), pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.FULLSCREEN)
         pygame.mouse.set_visible(False)
 
     def _draw(self):
         self._screen.fill(self._bgcolor)
         if self._pos is not None and not self._blank:
-            x = self._pos[0]  # + random.randint(-20,20)
-            y = self._pos[1]  # + random.randint(-20,20)
+            x = int(self._pos[0])  # + random.randint(-20,20)
+            y = int(self._pos[1])  # + random.randint(-20,20)
             pygame.draw.circle(self._screen, (255,0,0), (x,y), 100)
-        pygame.display.update()
+        pygame.display.flip()
 
     def vis_thread(self):
         while True:
@@ -49,6 +50,8 @@ class VisualStimulusHelperPygame(object):
 
             if type(val) in (int, float):
                 self._pos = (val, val)
+            elif val is None:
+                self._pos = None
             elif val == 'blank':
                 self._blank = True
             elif val == 'unblank':

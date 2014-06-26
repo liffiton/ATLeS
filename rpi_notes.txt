@@ -29,13 +29,15 @@ Secondly, then, it is important to note that terminal output, displayed on the r
 Blanking / Hiding Stimulus
 --------------------------
 
-The stimulus can be hidden from the camera while still being generally visible if certain conditions are met.  Primarily, the application needs to be running with enough CPU time free for the camera to *not* lag.  Currently, with the processing/tracking overhead *and* the overhead of displaying frames (to check for the presence of the stimulus), this appears to be possible at 3fps, max.
+The stimulus can be hidden from the camera while still being generally visible if certain conditions are met.  Primarily, the application needs to be running with enough CPU time free for the camera to *not* lag.  Additionally, there needs to be enough delay before capturing a frame to give the image time to truly blank on the monitor.  Currently, a simple test shows that 6fps works (no stimulus visible in preview), while 7fps is a bit too fast and some stimuli are captured.
 
-This works correctly, *most* of the time, with no additional sleep() statements, etc.  However, the stimulus is still occasionally visible in the captured frame...  Without the overhead of displaying frames, it may be fine?  For example, it seems to catch the stimulus when I move the mouse -- due to the added overhead of simply dealing w/ the USB mouse?  Anyway, it is sensitive to CPU usage...
+Note that at 6fps (or 7), the CPU usage is still under 100%, indicating it is only a display persistence issue, not a lag issue.  Any additional CPU usage can cause issues, though.  For example, it seems to catch the stimulus when I move the mouse -- due to the added overhead of simply dealing w/ the USB mouse?  Anyway, it is sensitive to CPU usage...
 
 
 Display
 -------
 
-In X, pygame will make a fullscreen view, but it won't (as far as I've found so far) scale the image.  So if I request 640x480, I get a 640x480 surface in the middle of my monitor.  Running from the terminal, however, does work.  I don't know what interface SDL is using, exactly, but it seems alright.
+In X, pygame will make a fullscreen view, but it won't (as far as I've found so far) scale the image.  So if I request 640x480, I get a 640x480 surface in the middle of my monitor.
+
+Running from the terminal, however, does work.  I don't know what interface SDL is using, exactly, but it seems alright.  It seems to only work *once*, though.  Running the program a second time results in a blank screen.  I may be using Pygame incorrectly...
 

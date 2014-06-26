@@ -5,6 +5,9 @@ class Controller(object):
     def __init__(self):
         self._hits = []
 
+    def set_response(self, response):
+        self._response = response
+
     def add_hit(self, hit):
         new_hit = {
             'time': time.time(),
@@ -15,11 +18,15 @@ class Controller(object):
 
 class FixedRatioController(Controller):
     def __init__(self, response_step):
+        '''response_step (int): #hits between responses (1 = every hit)'''
         super(FixedRatioController, self).__init__()
         self._step = response_step
 
-    def do_response(self):
-        return len(self._hits) % self._step == 0
+    def get_response(self):
+        if len(self._hits) % self._step == 0:
+            return self._response
+        else:
+            return None
 
 
 class FixedIntervalController(Controller):
@@ -29,11 +36,13 @@ class FixedIntervalController(Controller):
         self._interval = response_interval
         self._prevtime = None
 
-    def do_response(self):
+    def get_response(self):
         curtime = self._hits[-1]['time']
 
         if self._prevtime is None or (curtime - self._prevtime) >= self._interval:
+            print curtime
+            print self._prevtime
             self._prevtime = curtime
-            return True
-
-        return False
+            return self._response
+        else:
+            return None

@@ -7,8 +7,8 @@ import stimulus
 
 # An example experiment with:
 #  Tracking: Simple
-#  Controller: Fixed 5 second interval
-#  Behavior: xpos > 100
+#  Controller: Fixed 3 second interval
+#  Behavior: xpos > 10
 #  Stimulus: Visual stimulus
 
 # Testing setup (hacked in here for now... TODO: cleanup.)
@@ -17,7 +17,7 @@ see_frames = True
 force_stimulus = False
 width = 160
 height = 120
-fps = 3
+fps = 6
 
 
 def main():
@@ -27,15 +27,18 @@ def main():
         params = {}
         #params[cv2.cv.CV_CAP_PROP_FRAME_WIDTH] = width
         #params[cv2.cv.CV_CAP_PROP_FRAME_HEIGHT] = height
-        params[cv2.cv.CV_CAP_PROP_EXPOSURE] = 0.001
+        #params[cv2.cv.CV_CAP_PROP_EXPOSURE] = 0.001
         # NOTE: requires my hacked version of OpenCV w/ width/height constructor
         stream = tracking.Stream(0, w=width, h=height, params=params, fps=fps)
 
     track = tracking.Tracker()
-    #control = controllers.FixedIntervalController(response_interval=5)
-    control = controllers.FixedRatioController(1)
-    #stim = stimulus.VisualStimulus()
-    stim = stimulus.DummyStimulus()
+
+    control = controllers.FixedIntervalController(response_interval=3)
+    #control = controllers.FixedRatioController(1)
+    control.set_response(100)
+
+    stim = stimulus.VisualStimulus()
+    #stim = stimulus.DummyStimulus()
 
     if see_frames:
         cv2.namedWindow("preview")
@@ -54,8 +57,8 @@ def main():
         track.process_frame(frame)
 
         pos = track.position
-        print pos
-        print track.status
+        #print pos
+        #print track.status
 
         if see_frames:
             position = tuple(int(x) for x in pos)
@@ -67,11 +70,12 @@ def main():
         if force_stimulus:
             stim.show(200)
         else:
-            if pos[0] > 100:
-                control.add_hit('x>100')
-                if control.do_response():
-                    stim.show(pos[0])
+            if pos[0] > 10:
+                control.add_hit('x>10')
+                response = control.get_response()
+                stim.show(response)
 
+        # tracking performance / FPS
         frames += 1
         if frames % 10 == 0:
             curtime = time.time()
