@@ -10,6 +10,12 @@ class DummyStimulus(object):
     def __init__(self):
         self._stimcount = 0
 
+    def begin(self):
+        print "Begin."
+
+    def end(self):
+        print "End."
+
     def show(self, stimulus):
         print "%5d: %s" % (self._stimcount, str(stimulus))
         self._stimcount += 1
@@ -20,9 +26,6 @@ class DummyStimulus(object):
     def unblank(self):
         print "Unblanked."
 
-    def end(self):
-        print "Ended."
-
 
 class VisualStimulusHelperPygame(object):
     def __init__(self, pipe):
@@ -30,6 +33,8 @@ class VisualStimulusHelperPygame(object):
         self._pos = None
         self._blank = False
         self._bgcolor = (0,0,0)  # black
+
+    def begin(self):
         pygame.init()
         self._screen = pygame.display.set_mode((640, 480))
         #self._screen = pygame.display.set_mode((640, 480), pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.FULLSCREEN)
@@ -75,8 +80,15 @@ class VisualStimulus(object):
     def __init__(self):
         self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=True)
         self._helper = VisualStimulusHelperPygame(self._child_pipe)
+
+    def begin(self):
+        self._helper.begin()
         self._p = multiprocessing.Process(target=self._helper.vis_thread)
         self._p.start()
+
+    def end(self):
+        self._pipe.send('end')
+        self._p.join()
 
     def show(self, stimulus):
         self._pipe.send(stimulus)
@@ -92,7 +104,3 @@ class VisualStimulus(object):
 
     def unblank(self):
         self._pipe.send('unblank')
-
-    def end(self):
-        self._pipe.send('end')
-        self._p.join()
