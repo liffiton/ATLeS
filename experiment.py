@@ -17,7 +17,7 @@ see_frames = True
 force_stimulus = False
 width = 160
 height = 120
-fps = 6
+fps = 5
 
 
 def main():
@@ -33,8 +33,8 @@ def main():
 
     track = tracking.Tracker()
 
-    control = controllers.FixedIntervalController(response_interval=3)
-    #control = controllers.FixedRatioController(1)
+    #control = controllers.FixedIntervalController(response_interval=3)
+    control = controllers.FixedRatioController(1)
     control.set_response(100)
 
     stim = stimulus.VisualStimulus()
