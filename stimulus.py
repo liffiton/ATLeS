@@ -62,7 +62,7 @@ class VisualStimulusHelperPygame(object):
             elif val == 'unblank':
                 self._blank = False
             elif val == 'end':
-                exit()
+                return
 
             self._draw()
 
@@ -70,7 +70,7 @@ class VisualStimulusHelperPygame(object):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or event.type == pygame.KEYUP:
                     self._pipe.send('quit')
-                    exit()
+                    return
 
             if val == 'blank':
                 self._pipe.send('blanked')

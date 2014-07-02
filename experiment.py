@@ -1,5 +1,7 @@
 import argparse
 import os
+import signal
+import sys
 import time
 
 import cv2
@@ -74,13 +76,15 @@ def run_experiment(watch, stream, outfile):
             print("%dms: %dfps" % (1000*frame_time, 1/frame_time))
             prevtime = curtime
 
-    stim.end()
+    cleanup_and_exit()
 
 
 def get_args():
     parser = argparse.ArgumentParser(description='Zebrafish Skinner box experiment.')
     parser.add_argument('id', type=str, nargs='?', default='',
                         help='experiment ID (optional), added to data output filename')
+    parser.add_argument('-t', '--time', type=int, default=None,
+                        help='limit the experiment to TIME minutes (default: run forever / until stopped with CTL-C)')
     # TODO: separate frequent/useful arguments from infrequest/testing arguments (below
     parser.add_argument('-w', '--watch', action='store_true',
                         help='create a window to see the camera view and tracking information')
@@ -94,6 +98,17 @@ def get_args():
                         help='read video input from the given file (for testing purposes)')
 
     return parser.parse_args()
+
+
+def cleanup_and_exit():
+    stim.end()
+    cv2.destroyAllWindows()
+    sys.exit(0)
+
+
+def alarm_handler(signum, frame):
+    print("Terminating experiment after timeout.")
+    cleanup_and_exit()
 
 
 def main():
@@ -123,11 +138,16 @@ def main():
     else:
         datafilename = "%s/%s.csv" % (logdir, filetimestamp)
 
+    # setup timeout alarm if needed
+    # NOTE: not cross-platform (SIGALRM not available on Windows)
+    if args.time:
+        signal.signal(signal.SIGALRM, alarm_handler)
+        signal.alarm(args.time*60)
+
     with open(datafilename, 'w') as outfile:
         run_experiment(args.watch, stream, outfile)
 
-    if args.watch:
-        cv2.destroyAllWindows()
+    cleanup_and_exit()
 
 
 if __name__ == '__main__':
