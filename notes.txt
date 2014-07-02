@@ -16,6 +16,12 @@ Tanks are roughly 30cm x 15cm x 5cm (just guesses).  Position sensing will be on
 Input
 -----
 
+Spec:
+ * Resolution of 100 positions across (longest dimension) is fine.  10x10 would be workable.
+ * Realtime sensing and feedback
+ * Ideally: automatic detection of position and orientation of tank within frame.
+   * For consistent, scaled coordinates across experiments
+
 Ideas:
  * Camera
    + Simple hardware -- cheap, easy to put together
@@ -28,9 +34,12 @@ Ideas:
    + More robust (?)
    - More complex -- have to custom build it
 
-Spec:
- * Resolution of 100 positions across (longest dimension) is fine.  10x10 would be workable.
- * Realtime sensing and feedback
+Automatic position/orientation detection:
+ * Apply markers to 4 corners of tank (at bottom and at water line)
+   * Differentiate by color?  (possibly easiest)
+   * Use a unique pattern?
+ * Detect prominent lines in tank and find 4 lines w/ most appropriate ratios/slopes to be the tank
+   * http://stackoverflow.com/a/17265438
 
 
 Output
