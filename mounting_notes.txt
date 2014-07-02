@@ -1,0 +1,48 @@
+Mounting the Raspberry Pi and Camera
+====================================
+
+Requirements
+------------
+
+  * Camera must be held in correct orientation (i.e., right-side-up).
+  * Camera must be facing fish tank.
+  * Camera should be as close to a set distance from and orientation w.r.t. the fishtank as possible.
+  * Raspberry Pi must be within flex-cable-range of camera.
+  * SD card, USB, HDMI, and ethernet must all be accessible on RPi.
+  * Monitor should be mounted in set position w.r.t. fishtank.
+  * All should be splash-proof (for whatever direction splashes might come from).
+
+Ideas
+-----
+
+Monitor:
+  * VESA mount would accomodate most regular monitors, but:
+    * Most regular monitors are larger than needed
+    * There are two(?) VESA standards
+    * Even w/in same monitor size, VESA mounts are likely not all in same position on monitor
+  * Specific smaller monitor
+    * E.g.: https://www.adafruit.com/products/1287 ($150ish)
+    * Requires mounting monitor and control board
+
+Construction:
+  * Clear acrylic
+    * Camera, Pi, monitor(?) mounted w/ simple bolts through mounting holes
+    * Holes in acrylic drilled *or* laser-cut
+    * Simple, splash-proof from direction of tank
+    * ? How to hold two pieces of acrylic (w/ some load) vertically in correct position?
+      * Side pieces as well?
+      * Dowels/rods between?
+    * ? How to position fishtank?
+      * Bottom piece of acrylic w/ laser-cut slots for tank "feet"?
+      * Cut piece for holding outline of tank in place?
+  * Full enclosure for Pi/Camera
+    * E.g.: http://www.thingiverse.com/thing:177816
+    * E.g.: http://www.thingiverse.com/thing:142608
+    * E.g.: http://www.thingiverse.com/thing:89745
+    * Note remixes of above, as well
+    * Cleaner, but not entirely needed...
+    * But definitely better protection for electronics...
+
+Questions
+---------
+  * Lighting?  Need sufficient for camera.  Does it need to be constant / standard for any experiments?

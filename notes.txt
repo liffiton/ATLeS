@@ -4,6 +4,7 @@ FishyCam
 Fishycam "server" (laptop) IP currently 10.2.6.220
 Fishypi raspi IP currently 10.2.7.110
 For rpi-specific notes, see rpi_notes.txt.
+For mounting/enclosure notes, see mounting_notes.txt.
 
 Overview
 --------
