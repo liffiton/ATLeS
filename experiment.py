@@ -1,4 +1,5 @@
 import argparse
+import os
 import time
 
 import cv2
@@ -16,12 +17,15 @@ track = tracking.Tracker()
 # Controller: Fixed interval or fixed ratio
 #control = controllers.FixedIntervalController(response_interval=3)
 control = controllers.FixedRatioController(1)
-# Currently: static response at position (100,100)
+# Conrol response: static response at position (100,100)
 control.set_response(100)
 
 # Stimulus: Visual stimulus or Dummy stimulus (just prints to terminal)
 stim = stimulus.VisualStimulus()
 #stim = stimulus.DummyStimulus()
+
+# Log directory
+logdir = "./logs"
 
 # Behavior test: xpos > 10
 def behavior_test(pos):
@@ -73,9 +77,9 @@ def run_experiment(watch, stream, outfile):
     stim.end()
 
 
-def main():
+def get_args():
     parser = argparse.ArgumentParser(description='Zebrafish Skinner box experiment.')
-    parser.add_argument('id', type=str, default='',
+    parser.add_argument('id', type=str, nargs='?', default='',
                         help='experiment ID (optional), added to data output filename')
     # TODO: separate frequent/useful arguments from infrequest/testing arguments (below
     parser.add_argument('-w', '--watch', action='store_true',
@@ -89,8 +93,11 @@ def main():
     parser.add_argument('--vidfile', type=str,
                         help='read video input from the given file (for testing purposes)')
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+def main():
+    args = get_args()
 
     if args.vidfile:
         stream = tracking.Stream(args.vidfile)
@@ -105,11 +112,17 @@ def main():
     if args.watch:
         cv2.namedWindow("preview")
 
+    # ensure log directory exists
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
+
+    # setup log file
     filetimestamp = time.strftime("%Y%m%d-%H%M")
     if args.id:
-        datafilename = "%s-%s.csv" % (filetimestamp, args.id)
+        datafilename = "%s/%s-%s.csv" % (logdir, filetimestamp, args.id)
     else:
-        datafilename = "%s.csv" % filetimstamp
+        datafilename = "%s/%s.csv" % (logdir, filetimestamp)
+
     with open(datafilename, 'w') as outfile:
         run_experiment(args.watch, stream, outfile)
 
