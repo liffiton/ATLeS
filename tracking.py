@@ -243,6 +243,12 @@ class Stream(object):
             sys.exit(1)
 
     def set_crop(self, newcrop):
+        '''Set the cropping for returned frames.
+
+        Inputs:
+          newcrop: (x1,x2, y1,y2) tuple or list of integers.
+                   Frame will be cropped to x=(x1..x2-1), y=(y1..y2-1).
+        '''
         self._crop = newcrop
 
     def get_frame(self):
