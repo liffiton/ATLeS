@@ -30,8 +30,8 @@ Construction:
     * Holes in acrylic drilled *or* laser-cut
     * Simple, splash-proof from direction of tank
     * ? How to hold two pieces of acrylic (w/ some load) vertically in correct position?
-      * Side pieces as well?
-      * Dowels/rods between?
+      * Threaded rod?  Seems good.
+      * Acrylic side pieces as well?  Then could be 100% laser-cut.
     * ? How to position fishtank?
       * Bottom piece of acrylic w/ laser-cut slots for tank "feet"?
       * Cut piece for holding outline of tank in place?
