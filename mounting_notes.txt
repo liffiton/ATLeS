@@ -27,6 +27,8 @@ Monitor:
 Construction:
   * Clear acrylic
     * Camera, Pi, monitor(?) mounted w/ simple bolts through mounting holes
+      * For RPi, M2.5 or 4-40 screws should work fine.  4-40 plentiful at HD.
+      * For camera, M2 screws work, and imperial size 2 (e.g. 2-56) might *just* fit...  Imperial size 1 is better, but...  not easy to find.
     * Holes in acrylic drilled *or* laser-cut
     * Simple, splash-proof from direction of tank
     * ? How to hold two pieces of acrylic (w/ some load) vertically in correct position?
