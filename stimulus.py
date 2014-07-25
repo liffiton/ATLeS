@@ -1,5 +1,5 @@
 import multiprocessing
-import sys
+import os
 
 import pygame
 
@@ -34,9 +34,19 @@ class VisualStimulusHelperPygame(object):
         self._blank = False
         self._bgcolor = (0,0,0)  # black
 
-    def begin(self):
+    def begin(self, conf):
+        '''Create a window in the specific location with the specified dimensions.'''
+
+        # Figure out x,y coordinates if given as negative values (i.e., from right/bottom)
         pygame.init()
-        self._screen = pygame.display.set_mode((640, 480))
+        info = pygame.display.Info()
+        if conf['x'] < 0:
+            conf['x'] = info.current_w - conf['width'] + conf['x'] + 1
+        if conf['y'] < 0:
+            conf['y'] = info.current_h - conf['height'] + conf['y'] + 1
+
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (conf['x'], conf['y'])
+        self._screen = pygame.display.set_mode((conf['width'], conf['height']))
         #self._screen = pygame.display.set_mode((640, 480), pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.FULLSCREEN)
         pygame.mouse.set_visible(False)
 
@@ -81,8 +91,8 @@ class VisualStimulus(object):
         self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=True)
         self._helper = VisualStimulusHelperPygame(self._child_pipe)
 
-    def begin(self):
-        self._helper.begin()
+    def begin(self, conf):
+        self._helper.begin(conf)
         self._p = multiprocessing.Process(target=self._helper.vis_thread)
         self._p.start()
 

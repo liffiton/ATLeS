@@ -1,4 +1,5 @@
 import argparse
+import ConfigParser
 import os
 import signal
 import sys
@@ -36,8 +37,8 @@ def behavior_test(pos):
 ####################################################################
 
 
-def run_experiment(args, stream, outfile):
-    stim.begin()
+def run_experiment(conf, args, stream, outfile):
+    stim.begin(conf['stimulus'])
     prevtime = time.time()
     frames = 0
 
@@ -84,7 +85,27 @@ def run_experiment(args, stream, outfile):
     cleanup_and_exit()
 
 
+def get_conf():
+    '''Read a configuration file, if present, else use default values.'''
+    defaults = {
+        'x': 0,
+        'y': 0,
+        'width': 640,
+        'height': 480
+    }
+    parser = ConfigParser.RawConfigParser(defaults)
+    parser.read('experiment.ini')
+
+    conf = {}
+    conf['stimulus'] = {}
+    for key in parser.options('stimulus'):
+        conf['stimulus'][key] = parser.getint('stimulus', key)
+
+    return conf
+
+
 def get_args():
+    '''Parse and return command-line arguments.'''
     parser = argparse.ArgumentParser(description='Zebrafish Skinner box experiment.')
     parser.add_argument('id', type=str, nargs='?', default='',
                         help='experiment ID (optional), added to data output filename')
@@ -119,6 +140,7 @@ def alarm_handler(signum, frame):
 
 
 def main():
+    conf = get_conf()
     args = get_args()
 
     if args.vidfile:
@@ -152,7 +174,7 @@ def main():
         signal.alarm(args.time*60)
 
     with open(datafilename, 'w') as outfile:
-        run_experiment(args, stream, outfile)
+        run_experiment(conf, args, stream, outfile)
 
     cleanup_and_exit()
 
