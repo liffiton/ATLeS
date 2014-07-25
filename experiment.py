@@ -67,6 +67,8 @@ def run_experiment(watch, stream, outfile):
             control.add_hit(str(pos))
             response = control.get_response()
             stim.show(response)
+        else:
+            stim.show(None)
 
         # tracking performance / FPS
         frames += 1
