@@ -36,7 +36,7 @@ def behavior_test(pos):
 ####################################################################
 
 
-def run_experiment(watch, stream, outfile):
+def run_experiment(args, stream, outfile):
     stim.begin()
     prevtime = time.time()
     frames = 0
@@ -56,7 +56,7 @@ def run_experiment(watch, stream, outfile):
         # Record data
         outfile.write("%0.4f,%s,%d,%d\n" % (time.time(), track.status, pos[0], pos[1]))
 
-        if watch:
+        if args.watch:
             position = tuple(int(x) for x in pos)
             cv2.circle(frame, position, 5, (0,255,0,255))
             cv2.imshow("preview", frame)
@@ -66,7 +66,10 @@ def run_experiment(watch, stream, outfile):
         if behavior_test(pos):
             control.add_hit(str(pos))
             response = control.get_response()
-            stim.show(response)
+            if not args.nostim:
+                stim.show(response)
+            else:
+                stim.show(None)
         else:
             stim.show(None)
 
@@ -87,6 +90,8 @@ def get_args():
                         help='experiment ID (optional), added to data output filename')
     parser.add_argument('-t', '--time', type=int, default=None,
                         help='limit the experiment to TIME minutes (default: run forever / until stopped with CTL-C)')
+    parser.add_argument('--nostim', action='store_true',
+                        help='disable all stimulus for this run')
     # TODO: separate frequent/useful arguments from infrequest/testing arguments (below
     parser.add_argument('-w', '--watch', action='store_true',
                         help='create a window to see the camera view and tracking information')
@@ -147,7 +152,7 @@ def main():
         signal.alarm(args.time*60)
 
     with open(datafilename, 'w') as outfile:
-        run_experiment(args.watch, stream, outfile)
+        run_experiment(args, stream, outfile)
 
     cleanup_and_exit()
 
