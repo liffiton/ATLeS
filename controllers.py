@@ -40,8 +40,6 @@ class FixedIntervalController(Controller):
         curtime = self._hits[-1]['time']
 
         if self._prevtime is None or (curtime - self._prevtime) >= self._interval:
-            print curtime
-            print self._prevtime
             self._prevtime = curtime
             return self._response
         else:

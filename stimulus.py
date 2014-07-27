@@ -1,3 +1,4 @@
+import atexit
 import multiprocessing
 import os
 
@@ -95,6 +96,7 @@ class VisualStimulus(object):
         self._helper.begin(conf)
         self._p = multiprocessing.Process(target=self._helper.vis_thread)
         self._p.start()
+        atexit.register(self.end)
 
     def end(self):
         self._pipe.send('end')

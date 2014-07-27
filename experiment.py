@@ -1,7 +1,5 @@
-import argparse
-import ConfigParser
+import logging
 import os
-import signal
 import sys
 import time
 
@@ -30,6 +28,7 @@ stim = stimulus.VisualStimulus()
 # Log directory
 logdir = "./logs"
 
+
 # Behavior test: xpos > 10
 def behavior_test(pos):
     return pos[0] > 10
@@ -37,147 +36,98 @@ def behavior_test(pos):
 ####################################################################
 
 
-def run_experiment(conf, args, stream, outfile):
-    stim.begin(conf['stimulus'])
-    prevtime = time.time()
-    frames = 0
+class Logger(object):
+    def __init__(self, logdir, expid=None):
+        self._dir = logdir
+        self._id = expid
 
-    while True:
-        stim.blank()
-        rval, frame = stream.get_frame()
-        stim.unblank()
+        # ensure log directory exists
+        if not os.path.exists(self._dir):
+            os.makedirs(self._dir)
 
-        if not rval:
-            break
+        # setup log files
+        filetimestamp = time.strftime("%Y%m%d-%H%M")
+        if self._id:
+            self._name = "%s-%s" % (filetimestamp, self._id)
+        else:
+            self._name = filetimestamp
+        self._trackfilename = "%s/%s-track.csv" % (self._dir, self._name)
+        self._logfilename = "%s/%s.log" % (self._dir, self._name)
 
-        track.process_frame(frame)
+        # Setup the ROOT level logger to send to a log file and console both
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+        fh = logging.FileHandler(filename=self._logfilename)
+        fh.setFormatter(logging.Formatter(fmt="%(asctime)s %(levelname)s:%(message)s"))
+        sh = logging.StreamHandler()
+        sh.setFormatter(logging.Formatter(fmt="%(levelname)s:%(message)s"))
+        logger.addHandler(fh)
+        logger.addHandler(sh)
 
-        pos = track.position
+        logging.info("Logging started.")
 
-        # Record data
-        outfile.write("%0.4f,%s,%d,%d\n" % (time.time(), track.status, pos[0], pos[1]))
+        self._trackfile = open(self._trackfilename, 'w')
 
-        if args.watch:
-            position = tuple(int(x) for x in pos)
-            cv2.circle(frame, position, 5, (0,255,0,255))
-            cv2.imshow("preview", frame)
-            if cv2.waitKey(1) % 256 == 27:
+    def record_setup(self, args, conf):
+        setupfilename = "%s/%s-setup.txt" % (self._dir, self._name)
+        with open(setupfilename, 'w') as setupfile:
+            setupfile.write("Command line:\n    %s\n\n" % (' '.join(sys.argv)))
+            setupfile.write("Configuration file:\n")
+            conf['_parserobj'].write(setupfile)
+
+    def write_data(self, data):
+        self._trackfile.write("%s,%s" % (time.time(), data))
+
+
+class Experiment(object):
+    def __init__(self, conf, args, stream):
+        self._conf = conf
+        self._args = args
+        self._stream = stream
+        self._logger = Logger(args.logdir, args.id)
+        self._logger.record_setup(args, conf)
+
+    def run(self):
+        stim.begin(self._conf['stimulus'])
+        prevtime = time.time()
+        frames = 0
+
+        while True:
+            stim.blank()
+            rval, frame = self._stream.get_frame()
+            stim.unblank()
+
+            if not rval:
                 break
 
-        if behavior_test(pos):
-            control.add_hit(str(pos))
-            response = control.get_response()
-            if not args.nostim:
-                stim.show(response)
+            track.process_frame(frame)
+
+            pos = track.position
+
+            # Record data
+            self._logger.write_data("%s,%d,%d\n" % (track.status, pos[0], pos[1]))
+
+            if self._args.watch:
+                position = tuple(int(x) for x in pos)
+                cv2.circle(frame, position, 5, (0,255,0,255))
+                cv2.imshow("preview", frame)
+                if cv2.waitKey(1) % 256 == 27:
+                    break
+
+            if behavior_test(pos):
+                control.add_hit(str(pos))
+                response = control.get_response()
+                if not self._args.nostim:
+                    stim.show(response)
+                else:
+                    stim.show(None)
             else:
                 stim.show(None)
-        else:
-            stim.show(None)
 
-        # tracking performance / FPS
-        frames += 1
-        if frames % 10 == 0:
-            curtime = time.time()
-            frame_time = (curtime - prevtime) / 10
-            print("%dms: %dfps" % (1000*frame_time, 1/frame_time))
-            prevtime = curtime
-
-    cleanup_and_exit()
-
-
-def get_conf():
-    '''Read a configuration file, if present, else use default values.'''
-    defaults = {
-        'x': 0,
-        'y': 0,
-        'width': 640,
-        'height': 480
-    }
-    parser = ConfigParser.RawConfigParser(defaults)
-    parser.read('experiment.ini')
-
-    conf = {}
-    conf['stimulus'] = {}
-    for key in parser.options('stimulus'):
-        conf['stimulus'][key] = parser.getint('stimulus', key)
-
-    return conf
-
-
-def get_args():
-    '''Parse and return command-line arguments.'''
-    parser = argparse.ArgumentParser(description='Zebrafish Skinner box experiment.')
-    parser.add_argument('id', type=str, nargs='?', default='',
-                        help='experiment ID (optional), added to data output filename')
-    parser.add_argument('-t', '--time', type=int, default=None,
-                        help='limit the experiment to TIME minutes (default: run forever / until stopped with CTL-C)')
-    parser.add_argument('--nostim', action='store_true',
-                        help='disable all stimulus for this run')
-    # TODO: separate frequent/useful arguments from infrequest/testing arguments (below
-    parser.add_argument('-w', '--watch', action='store_true',
-                        help='create a window to see the camera view and tracking information')
-    parser.add_argument('-W', '--width', type=int, default=160,
-                        help='video capture resolution width (default: 160)')
-    parser.add_argument('-H', '--height', type=int, default=120,
-                        help='video capture resolution height (default: 120)')
-    parser.add_argument('--fps', type=int, default=5,
-                        help='video capture frames per second (default: 5) -- also affects rate of stimulus blinking and behavior/position tests.')
-    parser.add_argument('--vidfile', type=str,
-                        help='read video input from the given file (for testing purposes)')
-
-    return parser.parse_args()
-
-
-def cleanup_and_exit():
-    stim.end()
-    cv2.destroyAllWindows()
-    sys.exit(0)
-
-
-def alarm_handler(signum, frame):
-    print("Terminating experiment after timeout.")
-    cleanup_and_exit()
-
-
-def main():
-    conf = get_conf()
-    args = get_args()
-
-    if args.vidfile:
-        stream = tracking.Stream(args.vidfile)
-    else:
-        params = {}
-        #params[cv2.cv.CV_CAP_PROP_FRAME_WIDTH] = args.width
-        #params[cv2.cv.CV_CAP_PROP_FRAME_HEIGHT] = args.height
-        #params[cv2.cv.CV_CAP_PROP_EXPOSURE] = 0.001
-        # NOTE: requires my hacked version of OpenCV w/ width/height constructor
-        stream = tracking.Stream(0, w=args.width, h=args.height, params=params, fps=args.fps)
-
-    if args.watch:
-        cv2.namedWindow("preview")
-
-    # ensure log directory exists
-    if not os.path.exists(logdir):
-        os.makedirs(logdir)
-
-    # setup log file
-    filetimestamp = time.strftime("%Y%m%d-%H%M")
-    if args.id:
-        datafilename = "%s/%s-%s.csv" % (logdir, filetimestamp, args.id)
-    else:
-        datafilename = "%s/%s.csv" % (logdir, filetimestamp)
-
-    # setup timeout alarm if needed
-    # NOTE: not cross-platform (SIGALRM not available on Windows)
-    if args.time:
-        signal.signal(signal.SIGALRM, alarm_handler)
-        signal.alarm(args.time*60)
-
-    with open(datafilename, 'w') as outfile:
-        run_experiment(conf, args, stream, outfile)
-
-    cleanup_and_exit()
-
-
-if __name__ == '__main__':
-    main()
+            # tracking performance / FPS
+            frames += 1
+            if frames % 10 == 0:
+                curtime = time.time()
+                frame_time = (curtime - prevtime) / 10
+                print("%dms: %dfps" % (1000*frame_time, 1/frame_time))
+                prevtime = curtime
