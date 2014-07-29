@@ -58,9 +58,9 @@ class Logger(object):
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
         fh = logging.FileHandler(filename=self._logfilename)
-        fh.setFormatter(logging.Formatter(fmt="%(asctime)s %(levelname)s:%(message)s"))
+        fh.setFormatter(logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(message)s"))
         sh = logging.StreamHandler()
-        sh.setFormatter(logging.Formatter(fmt="%(levelname)s:%(message)s"))
+        sh.setFormatter(logging.Formatter(fmt="[%(levelname)s] %(message)s"))
         logger.addHandler(fh)
         logger.addHandler(sh)
 
@@ -93,11 +93,16 @@ class Experiment(object):
         frames = 0
 
         while True:
-            stim.blank()
+            response = stim.blank()
+            if response == 'quit':
+                logging.info("Stimulus window closed; exiting.")
+                break
+
             rval, frame = self._stream.get_frame()
             stim.unblank()
 
             if not rval:
+                logging.warn("stream.get_frame() rval != True")
                 break
 
             track.process_frame(frame)
@@ -112,6 +117,7 @@ class Experiment(object):
                 cv2.circle(frame, position, 5, (0,255,0,255))
                 cv2.imshow("preview", frame)
                 if cv2.waitKey(1) % 256 == 27:
+                    logging.info("Escape pressed in preview window; exiting.")
                     break
 
             if behavior_test(pos):
@@ -126,8 +132,8 @@ class Experiment(object):
 
             # tracking performance / FPS
             frames += 1
-            if frames % 10 == 0:
+            if frames % 100 == 0:
                 curtime = time.time()
-                frame_time = (curtime - prevtime) / 10
-                print("%dms: %dfps" % (1000*frame_time, 1/frame_time))
+                frame_time = (curtime - prevtime) / 100
+                logging.info("%dms / frame : %dfps" % (1000*frame_time, 1/frame_time))
                 prevtime = curtime

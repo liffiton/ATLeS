@@ -1,4 +1,5 @@
 import cv2
+import logging
 import math
 import os
 import random
@@ -94,8 +95,8 @@ class SimpleTracker(object):
     def __init__(self):
         self._pos = [0,0]
         self._vel = [0,0]
-        self._missing_count = 100  # How many frames have we not had something to track?
-                                   # Initialized to 100 so status() is initially 'lost'
+        self._missing_count = 100   # How many frames have we not had something to track?
+                                    # Initialized to 100 so status() is initially 'lost'
 
     @property
     def _speed(self):
@@ -134,7 +135,7 @@ class SimpleTracker(object):
 
         else:
             # satus is missing or acquired
-        
+
             # skip if no centroids or if closest is more than 50px away (XXX: magic number!) but velocity is not 0.0 (i.e. no estimate yet)
             if closest is None or distance(closest, self._pos) > 50 and self._speed != 0.0:
                 self._missing_count += 1
@@ -235,11 +236,11 @@ class Stream(object):
             # video file
             self._video = cv2.VideoCapture(source)
         else:
-            sys.stderr.write("Input file not found: %s\n" % source)
+            logging.error("Input file not found: %s\n" % source)
             sys.exit(1)
 
         if not self._video.isOpened():
-            sys.stderr.write("Could not open video stream...\n")
+            logging.error("Could not open video stream...\n")
             sys.exit(1)
 
     def set_crop(self, newcrop):

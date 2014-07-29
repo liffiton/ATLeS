@@ -1,6 +1,7 @@
 import atexit
 import multiprocessing
 import os
+import signal
 
 import pygame
 
@@ -60,6 +61,10 @@ class VisualStimulusHelperPygame(object):
         pygame.display.flip()
 
     def vis_thread(self):
+        # ignore signals that will be handled by parent
+        signal.signal(signal.SIGALRM, signal.SIG_IGN)
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+
         while True:
             val = self._pipe.recv()  # waits for next command
             #print("Got: %s" % str(val))
@@ -109,10 +114,8 @@ class VisualStimulus(object):
         self._pipe.send('blank')
         # wait for confirmation...
         response = self._pipe.recv()
-        if response == 'quit':
-            exit()
-        else:
-            assert(response == 'blanked')
+        assert(response == 'blanked' or response == 'quit')
+        return response
 
     def unblank(self):
         self._pipe.send('unblank')

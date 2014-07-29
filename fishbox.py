@@ -59,8 +59,12 @@ def get_args():
     return parser.parse_args()
 
 
-def alarm_handler(signum, frame):
-    logging.info("Terminating experiment after timeout.")
+def sig_handler(signum, frame):
+    if signum == signal.SIGALRM:
+        logging.info("Terminating experiment after timeout.")
+    elif signum == signal.SIGINT:
+        logging.info("Caught ctrl-C; exiting.")
+
     sys.exit(0)
 
 
@@ -82,8 +86,11 @@ def main():
     # setup timeout alarm if needed
     # NOTE: not cross-platform (SIGALRM not available on Windows)
     if args.time:
-        signal.signal(signal.SIGALRM, alarm_handler)
+        signal.signal(signal.SIGALRM, sig_handler)
         signal.alarm(args.time*60)
+
+    # catch SIGINT (ctrl-C)
+    signal.signal(signal.SIGINT, sig_handler)
 
     exp = experiment.Experiment(conf, args, stream)
     exp.run()
