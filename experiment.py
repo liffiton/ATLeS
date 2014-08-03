@@ -10,10 +10,7 @@ import controllers
 import stimulus
 
 #############################################################
-# Experiment setup (tracking, controller, stimulus, and test)
-
-# Tracking: Simple
-track = tracking.Tracker()
+# Experiment setup (controller, stimulus, and test)
 
 # Controller: Fixed interval or fixed ratio
 #control = controllers.FixedIntervalController(response_interval=3)
@@ -87,6 +84,12 @@ class Experiment(object):
         self._logger = Logger(args.logdir, args.id)
         self._logger.record_setup(args, conf)
 
+        # Frame processor
+        self._proc = tracking.FrameProcessor()
+
+        # Tracking: Simple
+        self._track = tracking.SimpleTracker(w=args.width, h=args.height)
+
     def run(self):
         stim.begin(self._conf['stimulus'])
         prevtime = time.time()
@@ -100,12 +103,17 @@ class Experiment(object):
             if not rval:
                 break
 
-            track.process_frame(frame)
-
-            pos = track.position
+            # Process the frame (finds contours, centroids, and updates background subtractor)
+            self._proc.process_frame(frame)
+            # Update tracker w/ latest set of centroids
+            self._track.update(self._proc.centroids)
+            # Get the position estimate of the fish and tracking status from the tracker
+            pos = self._track.position
+            pos_scaled = self._track.position_scaled
+            status = self._track.status
 
             # Record data
-            self._logger.write_data("%s,%d,%d\n" % (track.status, pos[0], pos[1]))
+            self._logger.write_data("%s,%0.3f,%0.3f\n" % (status, pos_scaled[0], pos_scaled[1]))
 
             if self._args.watch:
                 position = tuple(int(x) for x in pos)

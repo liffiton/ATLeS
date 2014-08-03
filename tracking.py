@@ -37,7 +37,7 @@ class FrameProcessor(object):
         self._contours = None
         self._centroids = None
 
-    def proc_frame(self, frame):
+    def process_frame(self, frame):
         # reset contours and centroids
         self._contours = None
         self._centroids = None
@@ -91,7 +91,9 @@ class FrameProcessor(object):
 
 
 class SimpleTracker(object):
-    def __init__(self):
+    def __init__(self, w, h):
+        self._w = float(w)  # frame width (for scaling coordinates)
+        self._h = float(h)  # frame height
         self._pos = [0,0]
         self._vel = [0,0]
         self._missing_count = 100  # How many frames have we not had something to track?
@@ -104,6 +106,10 @@ class SimpleTracker(object):
     @property
     def position(self):
         return tuple(self._pos)
+
+    @property
+    def position_scaled(self):
+        return (self._pos[0] / self._w, self._pos[1] / self._h)
 
     @property
     def status(self):
@@ -134,7 +140,7 @@ class SimpleTracker(object):
 
         else:
             # satus is missing or acquired
-        
+
             # skip if no centroids or if closest is more than 50px away (XXX: magic number!) but velocity is not 0.0 (i.e. no estimate yet)
             if closest is None or distance(closest, self._pos) > 50 and self._speed != 0.0:
                 self._missing_count += 1
@@ -242,6 +248,14 @@ class Stream(object):
             sys.stderr.write("Could not open video stream...\n")
             sys.exit(1)
 
+    @property
+    def width(self):
+        return self._video.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+
+    @property
+    def height(self):
+        return self._video.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+
     def set_crop(self, newcrop):
         '''Set the cropping for returned frames.
 
@@ -259,25 +273,3 @@ class Stream(object):
             c = self._crop
             frame = frame[c[0]:c[1], c[2]:c[3]]
         return rval, frame
-
-
-# TODO: rename Tracker and/or SimpleTracker to differentiate
-class Tracker(object):
-    def __init__(self):
-        self._track = SimpleTracker()
-        self._proc = FrameProcessor()
-
-    @property
-    def status(self):
-        return self._track.status
-
-    def process_frame(self, frame, do_track=True):
-        # process the frame
-        self._proc.proc_frame(frame)
-
-        # allow for not updating tracker (to let background subtractor to settle, e.g.)
-        if do_track:
-            self._track.update(self._proc.centroids)
-            self.position = self._track.position
-
-        return True

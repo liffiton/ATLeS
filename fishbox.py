@@ -70,6 +70,8 @@ def main():
 
     if args.vidfile:
         stream = tracking.Stream(args.vidfile)
+        args.width = stream.width
+        args.height = stream.height
     else:
         params = {}
         # NOTE: requires my hacked version of OpenCV w/ width/height constructor
