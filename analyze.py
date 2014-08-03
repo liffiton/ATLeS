@@ -17,15 +17,15 @@ def main():
     )
 
     # calculate derivatives and other derived values
-    dx = np.ediff1d(x)
-    dy = np.ediff1d(y)
-    dt = np.ediff1d(time)
+    dx = np.gradient(x)
+    dy = np.gradient(y)
+    dt = np.gradient(time)
     movement = np.matrix([dx,dy])
     dist = np.linalg.norm(movement, axis=0)
     speed = dist / dt
     theta = np.arctan2(dy, dx)  # reversed params are correct for numpy.arctan2
-    dtheta = np.ediff1d(theta)
-    angular_velocity = dtheta / dt[1:]
+    dtheta = np.gradient(theta)
+    angular_velocity = dtheta / dt
 
     # produce boolean arrays
     valid = (status != 'lost') & (np.roll(status, 1) != 'lost')  # valid if this index *and* previous are both not 'lost'
