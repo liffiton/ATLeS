@@ -1,2 +1,10 @@
-Bugs:
+New features:
+ - Save video (if possible)
+ - Save frame when status first becomes "missing" for troubleshooting
+ - Calculate distances from dimensions in .ini file
+ - Data visualization
 
+Non-code:
+ - Check carefully how invalid entries ('lost') will affect collected metrics
+
+Bugs:
