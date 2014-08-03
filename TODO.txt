@@ -1,6 +1,6 @@
 New features:
  - Save video (if possible)
- - Save frame when status first becomes "missing" for troubleshooting
+ - Save frame (and result of background subtraction) when status first becomes "missing" for troubleshooting
  - Calculate distances from dimensions in .ini file
  - Data visualization
 
