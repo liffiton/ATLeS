@@ -72,8 +72,11 @@ class Logger(object):
             setupfile.write("Configuration file:\n")
             conf['_parserobj'].write(setupfile)
 
+    def start_time(self):
+        self._start = time.time()
+
     def write_data(self, data):
-        self._trackfile.write("%s,%s" % (time.time(), data))
+        self._trackfile.write("%0.4f,%s" % (time.time()-self._start, data))
 
 
 class Experiment(object):
@@ -94,6 +97,8 @@ class Experiment(object):
         stim.begin(self._conf['stimulus'])
         prevtime = time.time()
         frames = 0
+
+        self._logger.start_time()
 
         while True:
             stim.blank()
