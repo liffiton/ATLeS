@@ -2,6 +2,9 @@ New features:
  - Save video (if possible)
  - Save frame (and result of background subtraction) when status first becomes
    "missing" for troubleshooting
+ - Report m/s velocities in analyze.py (requires figuring out best way to get
+   different position data (frame- and tank-coords and tank phys size) into
+   analyze.py...)
  - Utility to create an .ini file interactively (w/ camera view, clicking,
    etc.)
 
