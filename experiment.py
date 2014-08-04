@@ -124,7 +124,11 @@ class Experiment(object):
             if self._args.watch:
                 # draw a green circle around the estimated position
                 position = tuple(int(x) for x in pos_pixel)
-                cv2.circle(frame, position, 5, (0,255,0,255))
+                if status == 'acquired':
+                    color = (0,255,0,255)  # green
+                else:
+                    color = (255,0,0,255)  # blue
+                cv2.circle(frame, position, 5, color)
                 # draw a red frame around the tank, according to the ini file
                 TL = (int(self._args.width * self._conf['camera']['tank_min_x']),
                       int(self._args.height * self._conf['camera']['tank_min_y']))
