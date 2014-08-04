@@ -1,10 +1,13 @@
 New features:
  - Save video (if possible)
- - Save frame (and result of background subtraction) when status first becomes "missing" for troubleshooting
- - Calculate distances from dimensions in .ini file
- - Data visualization
+ - Save frame (and result of background subtraction) when status first becomes
+   "missing" for troubleshooting
+ - Utility to create an .ini file interactively (w/ camera view, clicking,
+   etc.)
 
-Non-code:
+Testing/validation:
+ - Record a few real-world videos of fish w/ new setup and correct .ini files
+   to match
  - Check carefully how invalid entries ('lost') will affect collected metrics
 
 Bugs:

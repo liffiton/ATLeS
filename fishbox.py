@@ -11,24 +11,28 @@ import experiment
 import tracking
 
 
-def get_conf():
-    '''Read a configuration file, if present, else use default values.'''
-    stim_defaults = {
-        'x': 0,
-        'y': 0,
-        'width': 640,
-        'height': 480
-    }
+def num(s):
+    try:
+        return int(s)
+    except ValueError:
+        return float(s)
+
+
+def get_conf(config_filename):
+    '''Read a configuration file.'''
     parser = ConfigParser.RawConfigParser()
-    parser.read('default.ini')
+    parser.read(config_filename)
 
     conf = {}
     conf['_parserobj'] = parser
-    conf['stimulus'] = {}
-    for key in stim_defaults:
-        conf['stimulus'][key] = stim_defaults[key]
-    for key in parser.options('stimulus'):
-        conf['stimulus'][key] = parser.getint('stimulus', key)
+
+    # create a dictionary for each section
+    for section in parser.sections():
+        conf[section] = {}
+        for key in parser.options(section):
+            # Currently, all configuration options will be numeric.
+            # num() converts each to a float or an int, as appropriate.
+            conf[section][key] = num(parser.get(section, key))
 
     return conf
 
@@ -43,6 +47,8 @@ def get_args():
     parser.add_argument('--nostim', action='store_true',
                         help='disable all stimulus for this run')
     # TODO: separate frequent/useful arguments from infrequest/testing arguments (below
+    parser.add_argument('--inifile', type=str, default='default.ini',
+                        help="configuration file specifying physical setup (default: default.ini)")
     parser.add_argument('-w', '--watch', action='store_true',
                         help='create a window to see the camera view and tracking information')
     parser.add_argument('-W', '--width', type=int, default=160,
@@ -65,8 +71,8 @@ def alarm_handler(signum, frame):
 
 
 def main():
-    conf = get_conf()
     args = get_args()
+    conf = get_conf(args.inifile)
 
     if args.vidfile:
         stream = tracking.Stream(args.vidfile)
