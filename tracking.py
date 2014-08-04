@@ -96,8 +96,8 @@ class SimpleTracker(object):
         self._h = float(h)  # frame height
         self._pos = [0,0]
         self._vel = [0,0]
-        self._missing_count = 100  # How many frames have we not had something to track?
-                                   # Initialized to 100 so status() is initially 'lost'
+        self._missing_count = 100   # How many frames have we not had something to track?
+                                    # Initialized to 100 so status() is initially 'lost'
 
     @property
     def _speed(self):
@@ -109,7 +109,10 @@ class SimpleTracker(object):
 
     @property
     def position_scaled(self):
-        return (self._pos[0] / self._w, self._pos[1] / self._h)
+        '''Return a scaled position vector with both x- and y-coordinates normalized to 0.0-1.0.
+        NOTE: y-axis is inverted so y=1.0 is the **top** of the frame, y=0.0 is the bottom.
+        '''
+        return (self._pos[0] / self._w, 1.0 - self._pos[1] / self._h)
 
     @property
     def status(self):
