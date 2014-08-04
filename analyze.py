@@ -1,9 +1,130 @@
+import matplotlib.pyplot as plt
+from matplotlib import collections
 import numpy as np
 import sys
 
 _entry_wait = 1  # min seconds between counted entries to top
 _freeze_min_time = 0.1  # min seconds to count lack of motion as a "freeze"
 _freeze_max_speed = 0.01  # maximum speed to still consider a "freeze"
+
+
+# Source: https://gist.github.com/jasonmc/1160951
+def set_foregroundcolor(ax, color):
+    '''For the specified axes, sets the color of the frame, major ticks,
+    tick labels, axis labels, title and legend
+    '''
+    for tl in ax.get_xticklines() + ax.get_yticklines():
+        tl.set_color(color)
+    for spine in ax.spines:
+        ax.spines[spine].set_edgecolor(color)
+    for tick in ax.xaxis.get_major_ticks():
+        tick.label1.set_color(color)
+    for tick in ax.yaxis.get_major_ticks():
+        tick.label1.set_color(color)
+    ax.axes.xaxis.label.set_color(color)
+    ax.axes.yaxis.label.set_color(color)
+    ax.axes.xaxis.get_offset_text().set_color(color)
+    ax.axes.yaxis.get_offset_text().set_color(color)
+    ax.axes.title.set_color(color)
+    lh = ax.get_legend()
+    if lh is not None:
+        lh.get_title().set_color(color)
+        lh.legendPatch.set_edgecolor('none')
+        labels = lh.get_texts()
+        for lab in labels:
+            lab.set_color(color)
+    for tl in ax.get_xticklabels():
+        tl.set_color(color)
+    for tl in ax.get_yticklabels():
+        tl.set_color(color)
+
+
+# Source: https://gist.github.com/jasonmc/1160951
+def set_backgroundcolor(ax, color):
+    '''Sets the background color of the current axes (and legend).
+    Use 'None' (with quotes) for transparent. To get transparent
+    background on saved figures, use:
+    pp.savefig("fig1.svg", transparent=True)
+    '''
+    ax.patch.set_facecolor(color)
+    lh = ax.get_legend()
+    if lh is not None:
+        lh.legendPatch.set_facecolor(color)
+
+
+def plot(time, theta, speed, valid, frozen, in_top, x, y):
+    maxpts = 500
+    numplots = 1 + len(time) / maxpts
+
+    fig, axes = plt.subplots(figsize=(12,2*numplots), nrows=numplots)
+
+    # Format nicely
+    fig.patch.set_facecolor('black')
+    fig.tight_layout()
+
+    if numplots == 1:
+        axes = [axes]
+
+    for i, ax in enumerate(axes):
+        subplot(ax, time[i*maxpts:(i+1)*maxpts], theta[i*maxpts:(i+1)*maxpts], np.median(speed), speed[i*maxpts:(i+1)*maxpts], valid[i*maxpts:(i+1)*maxpts], frozen[i*maxpts:(i+1)*maxpts], in_top[i*maxpts:(i+1)*maxpts], x[i*maxpts:(i+1)*maxpts], y[i*maxpts:(i+1)*maxpts])
+
+    plt.show()
+    fig.savefig('plot.svg', facecolor=fig.get_facecolor(), edgecolor='none')
+
+
+def speed2color(speed, median_speed):
+    cutoff = median_speed*5
+    r = min(1, 0.8+speed/cutoff)
+    g = max(0, 0.8-speed/cutoff)
+    b = g
+    return (r,g,b)
+
+
+def subplot(ax, time, theta, median_speed, speed, valid, frozen, in_top, x, y):
+    # Format nicely
+    set_foregroundcolor(ax, (0.8,0.8,0.8))
+    set_backgroundcolor(ax, (0.1,0.1,0.1))
+    for spine in ax.spines:
+        ax.spines[spine].set_visible(False)
+    ax.axes.get_yaxis().set_visible(False)
+
+    # Get set axes (specifically, we don't want the y-axis to be autoscaled for us)
+    ax.axis([time[0], time[-1], -1, 1])
+
+    # Mark invalid sections
+    invalid_collection = collections.BrokenBarHCollection.span_where(
+        time,
+        -0.8, -0.85,
+        np.logical_not(valid),
+        edgecolors='none',
+        facecolors='red'
+    )
+    ax.add_collection(invalid_collection)
+
+    # Mark in-top sections
+    intop_collection = collections.BrokenBarHCollection.span_where(
+        time,
+        -0.7, -0.75,
+        in_top,
+        edgecolors='none',
+        facecolors='blue'
+    )
+    ax.add_collection(intop_collection)
+
+    # Plot height
+    ax.plot(time, y, color='green')
+
+    # Add stick plot of movement (where valid)
+    ax.quiver(
+        time, [0] * len(time),
+        speed*np.cos(theta), speed*np.sin(theta),
+        color=[speed2color(s, median_speed) for s in speed],
+        scale=median_speed*4,
+        scale_units='y',
+        width=0.01,
+        units='inches',
+        headlength=0, headwidth=0, headaxislength=0     # no arrowheads
+    )
 
 
 def main():
@@ -24,13 +145,13 @@ def main():
     dist = np.linalg.norm(movement, axis=0)
     speed = dist / dt
     theta = np.arctan2(dy, dx)  # reversed params are correct for numpy.arctan2
-    dtheta = np.gradient(theta)
-    angular_velocity = dtheta / dt
+    #dtheta = np.gradient(theta)
+    #angular_velocity = dtheta / dt
 
     # produce boolean arrays
     valid = (status != 'lost') & (np.roll(status, 1) != 'lost')  # valid if this index *and* previous are both not 'lost'
     valid_count = np.sum(valid)
-    in_top = y < 0.5
+    in_top = y > 0.5
     frozen = speed < _freeze_max_speed
 
     # initialize counters, etc.
@@ -136,6 +257,8 @@ def main():
         print "Total time frozen: %0.3f seconds" % total_freeze_time
         print "Avg. time per freeze: %0.3f seconds" % (total_freeze_time / freeze_count)
         print "Freeze frequency: %0.2f per minute" % (60.0*(freeze_count / time_total_valid))
+
+    plot(time, theta, np.where(valid, speed, 0), valid, frozen, in_top, x, y)
 
 if __name__ == '__main__':
     main()
