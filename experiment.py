@@ -10,10 +10,7 @@ import controllers
 import stimulus
 
 #############################################################
-# Experiment setup (tracking, controller, stimulus, and test)
-
-# Tracking: Simple
-track = tracking.Tracker()
+# Experiment setup (controller, stimulus, and test)
 
 # Controller: Fixed interval or fixed ratio
 #control = controllers.FixedIntervalController(response_interval=3)
@@ -75,8 +72,11 @@ class Logger(object):
             setupfile.write("Configuration file:\n")
             conf['_parserobj'].write(setupfile)
 
+    def start_time(self):
+        self._start = time.time()
+
     def write_data(self, data):
-        self._trackfile.write("%s,%s" % (time.time(), data))
+        self._trackfile.write("%0.4f,%s" % (time.time()-self._start, data))
 
 
 class Experiment(object):
@@ -87,10 +87,18 @@ class Experiment(object):
         self._logger = Logger(args.logdir, args.id)
         self._logger.record_setup(args, conf)
 
+        # Frame processor
+        self._proc = tracking.FrameProcessor()
+
+        # Tracking: Simple
+        self._track = tracking.SimpleTracker(w=args.width, h=args.height, conf=conf['camera'])
+
     def run(self):
         stim.begin(self._conf['stimulus'])
         prevtime = time.time()
         frames = 0
+
+        self._logger.start_time()
 
         while True:
             response = stim.blank()
@@ -105,23 +113,40 @@ class Experiment(object):
                 logging.warn("stream.get_frame() rval != True")
                 break
 
-            track.process_frame(frame)
-
-            pos = track.position
+            # Process the frame (finds contours, centroids, and updates background subtractor)
+            self._proc.process_frame(frame)
+            # Update tracker w/ latest set of centroids
+            self._track.update(self._proc.centroids)
+            # Get the position estimate of the fish and tracking status from the tracker
+            pos_pixel = self._track.position_pixel
+            pos_frame = self._track.position_frame
+            pos_tank = self._track.position_tank
+            status = self._track.status
 
             # Record data
-            self._logger.write_data("%s,%d,%d\n" % (track.status, pos[0], pos[1]))
+            self._logger.write_data("%s,%0.3f,%0.3f\n" % (status, pos_frame[0], pos_frame[1]))
 
             if self._args.watch:
-                position = tuple(int(x) for x in pos)
-                cv2.circle(frame, position, 5, (0,255,0,255))
+                # draw a green circle around the estimated position
+                position = tuple(int(x) for x in pos_pixel)
+                if status == 'acquired':
+                    color = (0,255,0,255)  # green
+                else:
+                    color = (255,0,0,255)  # blue
+                cv2.circle(frame, position, 5, color)
+                # draw a red frame around the tank, according to the ini file
+                TL = (int(self._args.width * self._conf['camera']['tank_min_x']),
+                      int(self._args.height * self._conf['camera']['tank_min_y']))
+                BR = (int(self._args.width * self._conf['camera']['tank_max_x']),
+                      int(self._args.height * self._conf['camera']['tank_max_y']))
+                cv2.rectangle(frame, TL, BR, (0,0,255,255))
                 cv2.imshow("preview", frame)
                 if cv2.waitKey(1) % 256 == 27:
                     logging.info("Escape pressed in preview window; exiting.")
                     break
 
-            if behavior_test(pos):
-                control.add_hit(str(pos))
+            if behavior_test(pos_tank):
+                control.add_hit(str(pos_tank))
                 response = control.get_response()
                 if not self._args.nostim:
                     stim.show(response)

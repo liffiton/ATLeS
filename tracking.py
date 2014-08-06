@@ -38,7 +38,7 @@ class FrameProcessor(object):
         self._contours = None
         self._centroids = None
 
-    def proc_frame(self, frame):
+    def process_frame(self, frame):
         # reset contours and centroids
         self._contours = None
         self._centroids = None
@@ -92,7 +92,15 @@ class FrameProcessor(object):
 
 
 class SimpleTracker(object):
-    def __init__(self):
+    def __init__(self, w, h, conf):
+        self._w = float(w)  # frame width (for scaling coordinates)
+        self._h = float(h)  # frame height
+        self._tank_min_x = float(conf['tank_min_x'])   # left edge of tank, in normalized x-coordinates
+        self._tank_max_x = float(conf['tank_max_x'])   # right edge of tank, in normalized x-coordinates
+        self._tank_min_y = float(conf['tank_min_y'])   # bottom edge of tank, in normalized y-coordinates
+        self._tank_max_y = float(conf['tank_max_y'])   # top edge of tank, in normalized y-coordinates
+        self._fov_w = float(conf['fov_width'])   # field of view width at fish tank (in meters)
+        self._fov_h = float(conf['fov_height'])  # field of view height at fish tank (in meters)
         self._pos = [0,0]
         self._vel = [0,0]
         self._missing_count = 100   # How many frames have we not had something to track?
@@ -103,8 +111,28 @@ class SimpleTracker(object):
         return math.sqrt(self._vel[0]**2 + self._vel[1]**2)
 
     @property
-    def position(self):
+    def position_pixel(self):
+        '''Return the position in pixel coordinates.'''
         return tuple(self._pos)
+
+    @property
+    def position_frame(self):
+        '''Return the position in frame coordinates.
+        Both x- and y-coordinates are scaled to 0.0-1.0 relative to the entire captured image.
+        NOTE: y-axis is inverted from pixel coordinates, so y=0.0 is the **bottom** of the frame.
+        '''
+        return (self._pos[0] / self._w, 1.0 - self._pos[1] / self._h)
+
+    @property
+    def position_tank(self):
+        '''Return the position in tank coordinates.
+        Both x- and y-coordinates are scaled to 0.0-1.0 relative to the view of the tank.
+        NOTE: y-axis is inverted from pixel coordinates, so y=0.0 is the **bottom** of the tank.
+        '''
+        return (
+            (self._pos[0] / self._w - self._tank_min_x) / (self._tank_max_x - self._tank_min_x),
+            1.0 - (self._pos[1] / self._h - self._tank_min_y) / (self._tank_max_y - self._tank_min_y)
+        )
 
     @property
     def status(self):
@@ -243,6 +271,14 @@ class Stream(object):
             logging.error("Could not open video stream...\n")
             sys.exit(1)
 
+    @property
+    def width(self):
+        return self._video.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+
+    @property
+    def height(self):
+        return self._video.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+
     def set_crop(self, newcrop):
         '''Set the cropping for returned frames.
 
@@ -260,25 +296,3 @@ class Stream(object):
             c = self._crop
             frame = frame[c[0]:c[1], c[2]:c[3]]
         return rval, frame
-
-
-# TODO: rename Tracker and/or SimpleTracker to differentiate
-class Tracker(object):
-    def __init__(self):
-        self._track = SimpleTracker()
-        self._proc = FrameProcessor()
-
-    @property
-    def status(self):
-        return self._track.status
-
-    def process_frame(self, frame, do_track=True):
-        # process the frame
-        self._proc.proc_frame(frame)
-
-        # allow for not updating tracker (to let background subtractor to settle, e.g.)
-        if do_track:
-            self._track.update(self._proc.centroids)
-            self.position = self._track.position
-
-        return True
