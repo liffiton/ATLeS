@@ -119,12 +119,12 @@ class Experiment(object):
             self._track.update(self._proc.centroids)
             # Get the position estimate of the fish and tracking status from the tracker
             pos_pixel = self._track.position_pixel
-            pos_frame = self._track.position_frame
             pos_tank = self._track.position_tank
+            # pos_frame = self._track.position_frame
             status = self._track.status
 
             # Record data
-            self._logger.write_data("%s,%0.3f,%0.3f\n" % (status, pos_frame[0], pos_frame[1]))
+            self._logger.write_data("%s,%0.3f,%0.3f\n" % (status, pos_tank[0], pos_tank[1]))
 
             if self._args.watch:
                 # draw a green circle around the estimated position
