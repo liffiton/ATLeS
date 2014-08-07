@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from matplotlib import collections
+from matplotlib import collections, gridspec
 import numpy as np
 import sys
 
@@ -52,21 +52,27 @@ def set_backgroundcolor(ax, color):
         lh.legendPatch.set_facecolor(color)
 
 
-def plot(time, theta, speed, valid, frozen, in_top, x, y):
+def plot(time, theta, speed, valid, lost, missing, frozen, in_top, x, y):
     maxpts = 500
     numplots = 1 + len(time) / maxpts
 
-    fig, axes = plt.subplots(figsize=(12,2*numplots), nrows=numplots)
+    fig = plt.figure(figsize=(12,2*numplots))
+    # make final chart only as wide as needed
+    last_width = (len(time) % maxpts) / float(maxpts)
+    gs = gridspec.GridSpec(numplots, 2, width_ratios=[last_width, 1-last_width])
+
+    for i in xrange(numplots):
+        # all plots but last span both columns,
+        # last plot only in the first column, to get the correct width
+        if i == numplots - 1:
+            ax = plt.subplot(gs[i,0])
+        else:
+            ax = plt.subplot(gs[i,:])
+        subplot(ax, time[i*maxpts:(i+1)*maxpts], theta[i*maxpts:(i+1)*maxpts], np.median(speed), speed[i*maxpts:(i+1)*maxpts], valid[i*maxpts:(i+1)*maxpts], lost[i*maxpts:(i+1)*maxpts], missing[i*maxpts:(i+1)*maxpts], frozen[i*maxpts:(i+1)*maxpts], in_top[i*maxpts:(i+1)*maxpts], x[i*maxpts:(i+1)*maxpts], y[i*maxpts:(i+1)*maxpts])
 
     # Format nicely
     fig.patch.set_facecolor('black')
-    fig.tight_layout()
-
-    if numplots == 1:
-        axes = [axes]
-
-    for i, ax in enumerate(axes):
-        subplot(ax, time[i*maxpts:(i+1)*maxpts], theta[i*maxpts:(i+1)*maxpts], np.median(speed), speed[i*maxpts:(i+1)*maxpts], valid[i*maxpts:(i+1)*maxpts], frozen[i*maxpts:(i+1)*maxpts], in_top[i*maxpts:(i+1)*maxpts], x[i*maxpts:(i+1)*maxpts], y[i*maxpts:(i+1)*maxpts])
+    plt.tight_layout()
 
     plt.show()
     fig.savefig('plot.svg', facecolor=fig.get_facecolor(), edgecolor='none')
@@ -77,10 +83,10 @@ def speed2color(speed, median_speed):
     r = min(1, 0.8+speed/cutoff)
     g = max(0, 0.8-speed/cutoff)
     b = g
-    return (r,g,b)
+    return (r,g,b, 0.5)
 
 
-def subplot(ax, time, theta, median_speed, speed, valid, frozen, in_top, x, y):
+def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, in_top, x, y):
     # Format nicely
     set_foregroundcolor(ax, (0.8,0.8,0.8))
     set_backgroundcolor(ax, (0.1,0.1,0.1))
@@ -91,15 +97,23 @@ def subplot(ax, time, theta, median_speed, speed, valid, frozen, in_top, x, y):
     # Get set axes (specifically, we don't want the y-axis to be autoscaled for us)
     ax.axis([time[0], time[-1], -1, 1])
 
-    # Mark invalid sections
-    invalid_collection = collections.BrokenBarHCollection.span_where(
+    # Mark lost/missing sections
+    lost_collection = collections.BrokenBarHCollection.span_where(
         time,
         -0.8, -0.85,
-        np.logical_not(valid),
+        lost,
         edgecolors='none',
         facecolors='red'
     )
-    ax.add_collection(invalid_collection)
+    ax.add_collection(lost_collection)
+    missing_collection = collections.BrokenBarHCollection.span_where(
+        time,
+        -0.8, -0.85,
+        missing,
+        edgecolors='none',
+        facecolors='yellow'
+    )
+    ax.add_collection(missing_collection)
 
     # Mark in-top sections
     intop_collection = collections.BrokenBarHCollection.span_where(
@@ -151,6 +165,8 @@ def main():
     # produce boolean arrays
     valid = (status != 'lost') & (np.roll(status, 1) != 'lost')  # valid if this index *and* previous are both not 'lost'
     valid_count = np.sum(valid)
+    lost = status == 'lost'
+    missing = status == 'missing'
     in_top = y > 0.5
     frozen = speed < _freeze_max_speed
 
@@ -258,7 +274,7 @@ def main():
         print "Avg. time per freeze: %0.3f seconds" % (total_freeze_time / freeze_count)
         print "Freeze frequency: %0.2f per minute" % (60.0*(freeze_count / time_total_valid))
 
-    plot(time, theta, np.where(valid, speed, 0), valid, frozen, in_top, x, y)
+    plot(time, theta, np.where(valid, speed, 0), valid, lost, missing, frozen, in_top, x, y)
 
 if __name__ == '__main__':
     main()
