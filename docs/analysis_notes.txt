@@ -1,0 +1,21 @@
+From Brad's hand-written notes (Jul 2014)
+
+
+Cachet et al. 2010
+------------------
+
+ * # of entries to top
+ * Entries top/bottom ratio
+ * Time spent in top (s)
+ * Time spent top/bottom ratio
+ * Average entry duration (time spent in top divided by the number of entries to top)
+ * Distance traveled in top (m)
+ * Distance traveled top/bottom ratio
+ * Latency to enter the top (s)
+ * # of erratic movements
+ * Freezing bouts (frequency)
+ * Freezing duration (s)
+ * Distance traveled (m)
+ * Velocity (m/s)
+   [note for last two: 'claim these represent hyperactivity']
+
