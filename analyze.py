@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from matplotlib import collections, gridspec
+from matplotlib import collections, gridspec, lines, patches
 import numpy as np
 import sys
 
@@ -59,16 +59,38 @@ def plot(time, theta, speed, valid, lost, missing, frozen, in_top, x, y):
     fig = plt.figure(figsize=(12,2*numplots))
     # make final chart only as wide as needed
     last_width = (len(time) % maxpts) / float(maxpts)
-    gs = gridspec.GridSpec(numplots, 2, width_ratios=[last_width, 1-last_width])
+    gs = gridspec.GridSpec(
+        numplots+1, 2,
+        height_ratios=[0.2] + ([1] * numplots),   # 0.2 for 'legend subplot'
+        width_ratios=[last_width, 1-last_width],  # all but last will span both columns
+    )
 
     for i in xrange(numplots):
         # all plots but last span both columns,
         # last plot only in the first column, to get the correct width
         if i == numplots - 1:
-            ax = plt.subplot(gs[i,0])
+            ax = plt.subplot(gs[i+1,0])
         else:
-            ax = plt.subplot(gs[i,:])
+            ax = plt.subplot(gs[i+1,:])
         subplot(ax, time[i*maxpts:(i+1)*maxpts], theta[i*maxpts:(i+1)*maxpts], np.median(speed), speed[i*maxpts:(i+1)*maxpts], valid[i*maxpts:(i+1)*maxpts], lost[i*maxpts:(i+1)*maxpts], missing[i*maxpts:(i+1)*maxpts], frozen[i*maxpts:(i+1)*maxpts], in_top[i*maxpts:(i+1)*maxpts], x[i*maxpts:(i+1)*maxpts], y[i*maxpts:(i+1)*maxpts])
+
+    # Make a legend with proxy artists
+    height_artist = lines.Line2D([],[], color='green')
+    intop_artist = patches.Rectangle((0,0), 1, 1, fc='blue', ec='None')
+    frozen_artist = patches.Rectangle((0,0), 1, 1, fc='lightblue', ec='None')
+    missing_artist = patches.Rectangle((0,0), 1, 1, fc='yellow', ec='None')
+    lost_artist = patches.Rectangle((0,0), 1, 1, fc='red', ec='None')
+    # Place it in center of top "subplot" area
+    legend_ax = plt.subplot(gs[0,:])
+    legend_ax.legend(
+        [height_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
+        ['Height of fish', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
+        loc='center',
+        ncol=5,
+    )
+    legend_ax.axis('off')
+    set_backgroundcolor(legend_ax, 'None')
+    set_foregroundcolor(legend_ax, '0.6')
 
     # Format nicely
     fig.patch.set_facecolor('black')
@@ -88,8 +110,8 @@ def speed2color(speed, median_speed):
 
 def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, in_top, x, y):
     # Format nicely
-    set_foregroundcolor(ax, (0.8,0.8,0.8))
-    set_backgroundcolor(ax, (0.1,0.1,0.1))
+    set_foregroundcolor(ax, '0.6')
+    set_backgroundcolor(ax, '0.08')
     for spine in ax.spines:
         ax.spines[spine].set_visible(False)
     ax.axes.get_yaxis().set_visible(False)
@@ -103,7 +125,7 @@ def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, 
         -0.8, -0.85,
         lost,
         edgecolors='none',
-        facecolors='red'
+        facecolors='red',
     )
     ax.add_collection(lost_collection)
     missing_collection = collections.BrokenBarHCollection.span_where(
@@ -111,9 +133,19 @@ def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, 
         -0.8, -0.85,
         missing,
         edgecolors='none',
-        facecolors='yellow'
+        facecolors='yellow',
     )
     ax.add_collection(missing_collection)
+
+    # Mark frozen sections
+    frozen_collection = collections.BrokenBarHCollection.span_where(
+        time,
+        -0.75, -0.8,
+        frozen,
+        edgecolors='none',
+        facecolors='lightblue',
+    )
+    ax.add_collection(frozen_collection)
 
     # Mark in-top sections
     intop_collection = collections.BrokenBarHCollection.span_where(
@@ -121,12 +153,12 @@ def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, 
         -0.7, -0.75,
         in_top,
         edgecolors='none',
-        facecolors='blue'
+        facecolors='blue',
     )
     ax.add_collection(intop_collection)
 
     # Plot height
-    ax.plot(time, y, color='green')
+    ax.plot(time, y, color='green', label='Height of fish')
 
     # Add stick plot of movement (where valid)
     ax.quiver(
