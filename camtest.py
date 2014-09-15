@@ -35,14 +35,20 @@ os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
 
 prevtime = time.time()
 frames = 0
+channel = -1
 while rval:
     _,frame = cap.read()
+
+    if channel >= 0:
+        frame = frame[:,:,channel]
 
     cv2.imshow("preview", frame)
 
     key = cv2.waitKey(1)
     if key % 256 == 27:  # exit on ESC
         break
+    elif key > 0:
+        channel = [1,2,-1,0][channel]
 
     frames += 1
     if frames % 10 == 0:
