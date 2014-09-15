@@ -29,7 +29,8 @@ else:
 # Drop framerate to 8fps (OpenCV requests 30fps by default, which rpi can't handle)
 os.system("v4l2-ctl -p %d" % fps)
 
-# Turn off white balance
+# Turn off white balance (seems to need to be reset to non-zero first, then zero)
+os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=1")
 os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
 
 prevtime = time.time()
