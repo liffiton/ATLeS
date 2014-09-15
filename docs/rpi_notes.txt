@@ -30,9 +30,10 @@ Exposure and white balance
 --------------------------
 
 Auto white balance can be disabled with:
+ v4l2-ctl --set-ctrl=white_balance_auto_preset=1
  v4l2-ctl --set-ctrl=white_balance_auto_preset=0
 
-I've seen it still adjust the white balance after I've set that setting before, so watch out.  It may have been due to some sequence of settings or camera accesses screwing it up, though, and it is likely that the typical usage (calling that once while starting up fishbox.py) will work fine.
+It does seem to need to be set to 1 then back to 0 to work, at least sometimes.  Without that, AWB is somehow enabled between(?) runs, and just setting the preset to 0 at the start of the next does not work.  The set to 1 then back does work, it appears.
 
 Exposure can be adjusted with:
  v4l2-ctl --set-ctrl=auto_exposure=1
