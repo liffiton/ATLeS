@@ -26,6 +26,23 @@ It requires modifying and recompiling OpenCV.  I have adopted his/her modificati
 Secondly, then, it is important to note that terminal output, displayed on the rpi's X server, uses a large amount of the CPU as well.  Simply switching to a different tab while FPS output is enabled in camtest.py drops the CPU usage significantly.  Keep this in mind particularly during testing, where debugging output may significantly harm performance.
 
 
+Exposure and white balance
+--------------------------
+
+Auto white balance can be disabled with:
+ v4l2-ctl --set-ctrl=white_balance_auto_preset=0
+
+I've seen it still adjust the white balance after I've set that setting before, so watch out.  It may have been due to some sequence of settings or camera accesses screwing it up, though, and it is likely that the typical usage (calling that once while starting up fishbox.py) will work fine.
+
+Exposure can be adjusted with:
+ v4l2-ctl --set-ctrl=auto_exposure=1
+ v4l2-ctl --set-ctrl=exposure_time_absolute=10000
+ v4l2-ctl -p 1
+
+"auto_exposure=1" disables auto exposure (don't ask me...).
+"exposure_time_absolute" is given in multiples of 0.1ms.  It needs to be adjusted along with the frame rate (-p) so that they match.  A higher frame rate will clip the exposure to make that frame rate possible.
+
+
 Blanking / Hiding Stimulus
 --------------------------
 
