@@ -11,7 +11,7 @@ height = 240
 fps = 30
 
 cv2.namedWindow("preview")
-cap = cv2.VideoCapture(0, 160, 120)
+cap = cv2.VideoCapture(0, width, height)
 
 if cap.isOpened():  # try to get the first frame
     default_res = (cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
@@ -28,6 +28,9 @@ else:
 
 # Drop framerate to 8fps (OpenCV requests 30fps by default, which rpi can't handle)
 os.system("v4l2-ctl -p %d" % fps)
+
+# Turn off white balance
+os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
 
 prevtime = time.time()
 frames = 0

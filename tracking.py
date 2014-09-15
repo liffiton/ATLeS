@@ -260,6 +260,8 @@ class Stream(object):
                     print "Unable to set %s to %s, got %s." % (key, value, newval)
             # hack to set FPS (OpenCV requests 30, hardcoded)
             os.system("v4l2-ctl -p %d" % fps)
+            # hack to disable auto white balance
+            os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
         elif os.path.isfile(source):
             # video file
             self._video = cv2.VideoCapture(source)
