@@ -38,10 +38,18 @@ Construction:
     * ? How to position fishtank?
       * Bottom piece of acrylic w/ laser-cut slots for tank "feet"?
       * Cut piece for holding outline of tank in place?
-  * Full enclosure for Pi/Camera
-    * E.g.: http://www.thingiverse.com/thing:177816
-    * E.g.: http://www.thingiverse.com/thing:142608
-    * E.g.: http://www.thingiverse.com/thing:89745
+
+Existing enclosure designs
+==========================
+  * Enclosure for camera alone
+    * https://github.com/luisibanez/ShapesFor3DPrinting/tree/master/OpenSCAD
+      * Shown on https://support.thingiverse.com/thing:214466
+  * Enclosure for Pi alone
+    * http://www.thingiverse.com/thing:16104/
+  * Full enclosure for Pi and Camera
+    * http://www.thingiverse.com/thing:177816
+    * http://www.thingiverse.com/thing:142608
+    * http://www.thingiverse.com/thing:89745
     * Note remixes of above, as well
     * Cleaner, but not entirely needed...
     * But definitely better protection for electronics...
