@@ -57,12 +57,12 @@
 //     Added showing GPIO pins with component drawing
 //
 // All parts are draw as default just disable the ones you don't want
-DRAWfull        = 1;
+DRAWfull        = 0;
 DRAWtop         = 1;
 DRAWbottom      = 1;
 DRAWtopinlet    = 0;
 DRAWbottominlet = 0;
-DRAWpcb         = 1;
+DRAWpcb         = 0;
 
 GPIOHOLE        = 2;        // GPIO opening in :  1=bottom   2=top
 GPIOsize        = 2;        // define height of gpiohole
@@ -70,7 +70,7 @@ GPIOsize        = 2;        // define height of gpiohole
 // select how the case should look like
 topframe    = false;        // if false, underneath values determines how
 topinlet    = false;        // false is outside, otherwise it is with an indent
-topholes    = false;
+topholes    = true;
 // ---- top holes sizes
 //holeofs=5;						//  2 for fish1,  10 for fish2,  5 for holes
 //holesiz=2;
@@ -87,19 +87,19 @@ noholes=12;					// 12 for top,  20 for bottom
 holelen=30;
 holeangle1=[0,0, 0];
 topmiddle   = false;
-toplogo     = true;
+toplogo     = false;
 toplogopc   = -1;            //  0   0  placement correction of logo
 toplogoxm   =  0;            //  3   6  leftmargin of logo
 toplogotm   =  -1;        // 12  15  topmargin of logo
-toplogohole = true;
+toplogohole = false;
 toplogosunken=false;              // true or false, no idea if this works on a reprap
 
 bottomframe = false;        // if false, underneath values determines how
 bottominlet = false;
-bottomholes = true;
+bottomholes = false;
 bottomscrew = false;
-bottomfeet  = false;
-bottomsupport = true;         // Added extra support locations for pcb
+bottomfeet  = true;
+bottomsupport = false;         // Added extra support locations for pcb
 bottomclick   = true;
 bottompcb    = false;		    // just a pcb holder without a top
 
