@@ -1,63 +1,89 @@
 #
-# Based on: http://stackoverflow.com/a/11449901
+# camtest.py - Testing the camera, setting parameters, etc.
 #
 
+import argparse
 import cv2
 import os
+import sys
 import time
 
-width = 320
-height = 240
-fps = 30
 
-cv2.namedWindow("preview")
-cap = cv2.VideoCapture(0, width, height)
+def cam_setup(args):
+    cap = cv2.VideoCapture(0, args.width, args.height)
 
-if cap.isOpened():  # try to get the first frame
-    default_res = (cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-    print("Frame resolution (default): %s" % str(default_res))
-    cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, width)
-    cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, height)
+    if not cap.isOpened():
+        return None
+
+    #default_res = (cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+    #print("Frame resolution (default): %s" % str(default_res))
+    cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, args.width)
+    cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, args.height)
     new_res = (cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-    print("Frame resolution (new): %s" % str(new_res))
+    print("Frame resolution: %s" % str(new_res))
 
-    rval, frame = cap.read()
+    # Read a frame, just in case it's needed before setting params
+    cap.read()
 
-else:
-    rval = False
+    # Set frame rate
+    os.system("v4l2-ctl -p %d" % args.fps)
 
-# Drop framerate to 8fps (OpenCV requests 30fps by default, which rpi can't handle)
-os.system("v4l2-ctl -p %d" % fps)
+    # Turn off white balance (seems to need to be reset to non-zero first, then zero)
+    os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=1")
+    os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
 
-# Turn off white balance (seems to need to be reset to non-zero first, then zero)
-os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=1")
-os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
+    # Set shutter speed
+    # exposure_time_absolute is given in multiples of 0.1ms.
+    # Make sure fps above is not set too high (exposure time
+    # will be adjusted automatically to allow higher frame rate)
+    os.system("v4l2-ctl --set-ctrl=auto_exposure=1")
+    os.system("v4l2-ctl --set-ctrl=exposure_time_absolute=%d" % args.exposure)
 
-prevtime = time.time()
-frames = 0
-channel = -1
-while rval:
-    _,frame = cap.read()
-
-    if channel >= 0:
-        frame = frame[:,:,channel]
-
-    cv2.imshow("preview", frame)
-
-    key = cv2.waitKey(1)
-    if key % 256 == 27:  # exit on ESC
-        break
-    elif key > 0:
-        channel = [1,2,-1,0][channel]
-
-    frames += 1
-    if frames % 10 == 0:
-        curtime = time.time()
-        frame_time = (curtime-prevtime) / 10
-        if prevtime is not None:
-            print("%dms: %dfps" % (1000*frame_time, 1/frame_time))
-        prevtime = curtime
+    return cap
 
 
-cap.release()
-cv2.destroyAllWindows()
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('width', type=int, nargs='?', default=320)
+    parser.add_argument('height', type=int, nargs='?', default=240)
+    parser.add_argument('fps', type=int, nargs='?', default=10)
+    parser.add_argument('exposure', type=int, nargs='?', default=200)
+    args = parser.parse_args()
+
+    cv2.namedWindow("preview")
+
+    cap = cam_setup(args)
+
+    prevtime = time.time()
+    frames = 0
+    channel = -1
+    rval = True
+    while rval:
+        rval, frame = cap.read()
+
+        if channel >= 0:
+            frame = frame[:,:,channel]
+
+        cv2.imshow("preview", frame)
+
+        key = cv2.waitKey(1)
+        if key % 256 == 27:  # exit on ESC
+            break
+        elif key > 0:
+            channel = [1,2,-1,0][channel]
+
+        frames += 1
+        if frames % 10 == 0:
+            curtime = time.time()
+            frame_time = (curtime-prevtime) / 10
+            if prevtime is not None:
+                print("%dms: %dfps" % (1000*frame_time, 1/frame_time))
+            prevtime = curtime
+
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    main()
