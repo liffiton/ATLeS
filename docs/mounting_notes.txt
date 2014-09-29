@@ -43,7 +43,7 @@ Existing enclosure designs
 ==========================
   * Enclosure for camera alone
     * https://github.com/luisibanez/ShapesFor3DPrinting/tree/master/OpenSCAD
-      * Shown on https://support.thingiverse.com/thing:214466
+      * Shown on https://www.thingiverse.com/thing:214466
   * Enclosure for Pi alone
     * http://www.thingiverse.com/thing:16104/
   * Full enclosure for Pi and Camera

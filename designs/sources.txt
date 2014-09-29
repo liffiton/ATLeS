@@ -1,0 +1,8 @@
+Camera Enclosure
+ * https://www.thingiverse.com/thing:214466
+ * https://github.com/luisibanez/ShapesFor3DPrinting/tree/master/OpenSCAD
+ * License: CC-BY
+
+Pi Enclosure
+ * http://www.thingiverse.com/thing:16104/
+ * License: CC-BY-SA
