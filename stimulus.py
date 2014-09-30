@@ -22,18 +22,11 @@ class DummyStimulus(object):
         print "%5d: %s" % (self._stimcount, str(stimulus))
         self._stimcount += 1
 
-    def blank(self):
-        print "Blanked."
-
-    def unblank(self):
-        print "Unblanked."
-
 
 class VisualStimulusHelperPygame(object):
     def __init__(self, pipe):
         self._pipe = pipe
         self._pos = None
-        self._blank = False
         self._bgcolor = (0,0,0)  # black
 
     def begin(self, conf):
@@ -54,7 +47,7 @@ class VisualStimulusHelperPygame(object):
 
     def _draw(self):
         self._screen.fill(self._bgcolor)
-        if self._pos is not None and not self._blank:
+        if self._pos is not None:
             x = int(self._pos[0])  # + random.randint(-20,20)
             y = int(self._pos[1])  # + random.randint(-20,20)
             pygame.draw.circle(self._screen, (255,0,0), (x,y), 100)
@@ -73,10 +66,6 @@ class VisualStimulusHelperPygame(object):
                 self._pos = (val, val)
             elif val is None:
                 self._pos = None
-            elif val == 'blank':
-                self._blank = True
-            elif val == 'unblank':
-                self._blank = False
             elif val == 'end':
                 return
 
@@ -87,9 +76,6 @@ class VisualStimulusHelperPygame(object):
                 if event.type == pygame.QUIT or event.type == pygame.KEYUP:
                     self._pipe.send('quit')
                     return
-
-            if val == 'blank':
-                self._pipe.send('blanked')
 
 
 class VisualStimulus(object):
@@ -110,12 +96,8 @@ class VisualStimulus(object):
     def show(self, stimulus):
         self._pipe.send(stimulus)
 
-    def blank(self):
-        self._pipe.send('blank')
-        # wait for confirmation...
-        response = self._pipe.recv()
-        assert(response == 'blanked' or response == 'quit')
-        return response
-
-    def unblank(self):
-        self._pipe.send('unblank')
+    def msg_poll(self):
+        if self._pipe.poll():
+            response = self._pipe.recv()
+            return response
+        return None

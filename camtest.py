@@ -5,12 +5,16 @@
 import argparse
 import cv2
 import os
-import sys
 import time
 
 
 def cam_setup(args):
-    cap = cv2.VideoCapture(0, args.width, args.height)
+    try:
+        cap = cv2.VideoCapture(0, args.width, args.height)
+    except TypeError:
+        # Don't have our modified version of OpenCV w/ width/height args
+        print("WARNING: Unmodified OpenCV installation; no width/height control for capture.")
+        cap = cv2.VideoCapture(0)
 
     if not cap.isOpened():
         return None
@@ -23,7 +27,9 @@ def cam_setup(args):
     print("Frame resolution: %s" % str(new_res))
 
     # Read a frame, just in case it's needed before setting params
-    cap.read()
+    rval, _ = cap.read()
+    if not rval:
+        return None
 
     # Set frame rate
     os.system("v4l2-ctl -p %d" % args.fps)
@@ -57,7 +63,7 @@ def main():
     prevtime = time.time()
     frames = 0
     channel = -1
-    rval = True
+    rval = (cap is not None)
     while rval:
         rval, frame = cap.read()
 
@@ -80,8 +86,8 @@ def main():
                 print("%dms: %dfps" % (1000*frame_time, 1/frame_time))
             prevtime = curtime
 
-
-    cap.release()
+    if cap:
+        cap.release()
     cv2.destroyAllWindows()
 
 

@@ -101,13 +101,12 @@ class Experiment(object):
         self._logger.start_time()
 
         while True:
-            response = stim.blank()
-            if response == 'quit':
+            stim_msg = stim.msg_poll()
+            if stim_msg == 'quit':
                 logging.info("Stimulus window closed; exiting.")
                 break
 
             rval, frame = self._stream.get_frame()
-            stim.unblank()
 
             if not rval:
                 logging.warn("stream.get_frame() rval != True")
