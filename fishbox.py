@@ -59,6 +59,8 @@ def get_args():
                         help='directory for storing log/data files (default: ./logs)')
     parser.add_argument('--fps', type=int, default=5,
                         help='video capture frames per second (default: 5) -- also affects rate of stimulus blinking and behavior/position tests.')
+    parser.add_argument('--exposure', type=int, default=200,
+                        help='video capture exposure time, given in multiples of 0.1ms (default: 200)')
     parser.add_argument('--vidfile', type=str,
                         help='read video input from the given file (for testing purposes)')
 
@@ -85,7 +87,7 @@ def main():
     else:
         params = {}
         # NOTE: requires my hacked version of OpenCV w/ width/height constructor
-        stream = tracking.Stream(0, w=args.width, h=args.height, params=params, fps=args.fps)
+        stream = tracking.Stream(0, w=args.width, h=args.height, params=params, fps=args.fps, exposure=args.exposure)
 
     if args.watch:
         cv2.namedWindow("preview")

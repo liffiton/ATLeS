@@ -244,24 +244,23 @@ class ParticleFilter(object):
 
 
 class Stream(object):
-    def __init__(self, source, w=160, h=120, params=None, fps=6):
+    def __init__(self, source, w=160, h=120, params=None, fps=6, exposure=200):
         self._crop = None
         if params is None:
             params = {}
 
         if type(source) == int:
             # webcam
-            self._video = cv2.VideoCapture(source, w, h)
+            self._video = self._cam_setup(source, w, h, fps, exposure)
+            if self._video is None:
+                logging.error("Could not open video stream...\n")
+                sys.exit(1)
             # try to set given parameters
             for key, value in params.items():
                 self._video.set(key, value)
                 newval = self._video.get(key)
                 if newval != value:
-                    print "Unable to set %s to %s, got %s." % (key, value, newval)
-            # hack to set FPS (OpenCV requests 30, hardcoded)
-            os.system("v4l2-ctl -p %d" % fps)
-            # hack to disable auto white balance
-            os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
+                    logging.warning("Unable to set %s to %s, got %s." % (key, value, newval))
         elif os.path.isfile(source):
             # video file
             self._video = cv2.VideoCapture(source)
@@ -272,6 +271,44 @@ class Stream(object):
         if not self._video.isOpened():
             logging.error("Could not open video stream...\n")
             sys.exit(1)
+
+    def _cam_setup(self, source, w, h, fps, exposure):
+        try:
+            cap = cv2.VideoCapture(source, w, h)
+        except TypeError:
+            # Don't have our modified version of OpenCV w/ width/height args
+            logging.warning("Unmodified OpenCV installation; no width/height control for capture.")
+            cap = cv2.VideoCapture(source)
+
+        if not cap.isOpened():
+            return None
+
+        # Try setting width/height this way, too, in case we don't have modified OpenCV but this still works.
+        cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, w)
+        cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, h)
+
+        # Read a frame, just in case it's needed before setting params
+        rval, _ = cap.read()
+        if not rval:
+            return None
+
+        # Hacks using v4l2-ctl to set capture parameters we can't control through OpenCV
+
+        # Set FPS (OpenCV requests 30, hardcoded)
+        os.system("v4l2-ctl -p %d" % fps)
+
+        # Turn off white balance (seems to need to be reset to non-zero first, then zero)
+        os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=1")
+        os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
+
+        # Set shutter speed
+        # exposure_time_absolute is given in multiples of 0.1ms.
+        # Make sure fps above is not set too high (exposure time
+        # will be adjusted automatically to allow higher frame rate)
+        os.system("v4l2-ctl --set-ctrl=auto_exposure=1")
+        os.system("v4l2-ctl --set-ctrl=exposure_time_absolute=%d" % exposure)
+
+        return cap
 
     @property
     def width(self):
