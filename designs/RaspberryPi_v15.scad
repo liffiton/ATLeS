@@ -463,7 +463,7 @@ module draw_pcbhold() {
 module split_top() {
     split1=box_w1+Cpwr_x;
     split2=split1+Cpwr_w;
-    split3=box_w1+Csd_x - 5;   // min 16.5+28
+    split3=box_w1+Csd_x - 12;   // min 16.5+28
     split4=box_w2 - 7;
     // Different splitlevels for the shells
     // 1st half on split level
@@ -478,7 +478,7 @@ module split_top() {
 module remove_top() {
     split1=box_w1+Cpwr_x;
     split2=split1+Cpwr_w;
-    split3=box_w2 - 7;
+    split3=box_w2 - 12;
     possd1=box_w1 + Csd_x - 0.3;
     widesd1=Csd_w+0.6;
     // Different splitlevels for the shells
@@ -497,7 +497,7 @@ module remove_top() {
 module remove_bottom() {
     split1=box_w1+Cpwr_x;
     split2=split1+Cpwr_w;
-    split3=box_w2 - 7.1;
+    split3=box_w2 - 12.1;
     possd1=box_w1 + Csd_x - 0.2;
     widesd1=Csd_w+0.6;
     // Different splitlevels for the shells
@@ -545,13 +545,8 @@ module draw_case(bottom, top) {
                     translate(v = [box_w1 + Crj45_x+Crj45_w, box_l1, casesplit - 5.4]) {
                         cube([10, 3, box_h-(casesplit-5.4)], center = false);
                     }
-                    translate(v = [box_w2-10, box_l2 - 1.5, casesplit - 5.4]) {
-                        // cutout for GPIO header
-                        difference() {
-                            cube([10, 1.5, box_h-(casesplit-5.4)], center = false);
-                            translate([2,-0.5,-0.1])
-                                cube([5, 3, 3], center = false);
-                        }
+                    translate(v = [box_w2-15, box_l2 - 1.5, casesplit - 5.4]) {
+                            cube([8, 1.5, box_h-(casesplit-5.4)], center = false);
                     }
                     // extra support for shell
                     translate(v = [box_w1, box_l1, pcb_c+0.4]) {
