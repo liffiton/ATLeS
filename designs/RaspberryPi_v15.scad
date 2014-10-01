@@ -89,7 +89,7 @@ bottomclick   = true;
 bottompcb    = false;		    // just a pcb holder without a top
 
 box_thickness = 2.0;            // minimum = 1.0
-inside_h      = 12.3;           // 12.1 = lowprofile    16.5 is full height
+inside_h      = 12.5;           // 12.1 = lowprofile    16.5 is full height
 pcb_h         = 5.6;            // height needed for SD holder and solder points of pcb
 //pcb_h         = box_thickness+3.5;    // height needed for SD holder and solder points of pcb
 // 4.1 = no deck, box_thickness+3.5 is with deck
@@ -111,13 +111,13 @@ Crj45_x=2.0;			 //2.0
 Crj45_y=-1;
 Crj45_w=16.4;			// 15.4
 Crj45_d=21.5;           //21.8
-Crj45_h=13.2;
+Crj45_h=13.8;
 
 Cusb_x=24.5;            // 23.9
 Cusb_y=-7.7;
 Cusb_w=13.9;            // 13.3
 Cusb_d=19.0;			// 17.2
-Cusb_h=15.6;
+Cusb_h=16.0;
 
 Cpwr_x=3.25;				// 3.5 3.6
 Cpwr_y=80.9;
@@ -546,7 +546,12 @@ module draw_case(bottom, top) {
                         cube([10, 3, box_h-(casesplit-5.4)], center = false);
                     }
                     translate(v = [box_w2-10, box_l2 - 1.5, casesplit - 5.4]) {
-                        cube([10, 1.5, box_h-(casesplit-5.4)], center = false);
+                        // cutout for GPIO header
+                        difference() {
+                            cube([10, 1.5, box_h-(casesplit-5.4)], center = false);
+                            translate([2,-0.5,-0.1])
+                                cube([5, 3, 3], center = false);
+                        }
                     }
                     // extra support for shell
                     translate(v = [box_w1, box_l1, pcb_c+0.4]) {
