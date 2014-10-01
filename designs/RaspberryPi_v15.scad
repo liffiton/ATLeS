@@ -60,8 +60,6 @@
 DRAWfull        = 0;
 DRAWtop         = 1;
 DRAWbottom      = 1;
-DRAWtopinlet    = 0;
-DRAWbottominlet = 0;
 DRAWpcb         = 0;
 
 GPIOHOLE        = 2;        // GPIO opening in :  1=bottom   2=top
@@ -69,7 +67,6 @@ GPIOsize        = 2;        // define height of gpiohole
 
 // select how the case should look like
 topframe    = false;        // if false, underneath values determines how
-topinlet    = false;        // false is outside, otherwise it is with an indent
 topholes    = true;
 // ---- holes sizes
 holeofs=2;
@@ -80,10 +77,8 @@ holelen=24;
 topmiddle   = false;
 
 bottomframe = false;        // if false, underneath values determines how
-bottominlet = false;
 bottomholes = false;
 bottomscrew = false;
-bottomfeet  = false;    // MHL: conflict w/ various through-hole components
 bottomsupport = false;         // Added extra support locations for pcb
 bottomclick   = true;
 bottompcb    = false;		    // just a pcb holder without a top
@@ -184,7 +179,7 @@ corner_radius = box_thickness*2;
 
 
 // count no of items to draw
-DRAWtotal = DRAWfull + DRAWtop + DRAWbottom + DRAWtopinlet + DRAWbottominlet;
+DRAWtotal = DRAWfull + DRAWtop + DRAWbottom;
 
 // ====================================================== DRAW items
 // if one  draw it centered
@@ -198,8 +193,6 @@ if (DRAWtotal == 1) {
             rotate(a=[0,180,0]) translate(v=[-box_w,0,-box_h]) draw_case(0,1);
         }
         if (DRAWbottom) draw_case(1,0);
-        if (DRAWtopinlet) make_deck(inside_w-5,inside_l-5,0, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false);
-        if (DRAWbottominlet) make_deck(inside_w-5,inside_l-5,0, 12,3,5, holes=bottomholes,feet=true,middle=false,screwholes=bottomscrew);
     }
 } else {
 // draw each one on there one location
@@ -214,12 +207,6 @@ if (DRAWtotal == 1) {
     }
     if (DRAWtop)    {
         translate(v = [ - 5,  5, box_h])  rotate(a=[0,180,0]) draw_case(0,1);
-    }
-    if (DRAWtopinlet) {
-        translate(v = [ -box_w-5,  -box_l-5, 0])    make_deck(inside_w-5,inside_l-5,0, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false);
-    }
-    if (DRAWbottominlet) {
-        translate(v = [ 5       ,  -box_l-5, 0]) make_deck(inside_w-5,inside_l-5,0, 10,3,5 , holes=bottomholes,feet=true,middle=false,screwholes=bottomscrew);
     }
 }
 
@@ -266,12 +253,6 @@ module make_deck(w,d,z,hole_no,hole_size,hole_step) {
                 }
             }
             color(CASEcolor) {
-                if (feet) {
-                    translate(v=[3,3,0])          cube([8, 8, box_thickness+4], center = false);
-                    translate(v=[w-3-8,3,0])      cube([8, 8, box_thickness+4], center = false);
-                    translate(v=[3,d-3-8,0])      cube([8, 8, box_thickness+4], center = false);
-                    translate(v=[w-3-8,d-3-8,0])  cube([8, 8, box_thickness+4], center = false);
-                }
                 if (top && holes) {
                     translate(v = [w/2-box_thickness,12,0]) cube([4,d-13, box_thickness], center = false);
                 }
@@ -395,18 +376,10 @@ module make_case(w,d,h,bt,lt) {
         }
     }
     if (!topframe) {
-        if (!topinlet) {
-            make_deck(inside_w-4,inside_l-4,box_h-box_thickness, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false,top=true);
-        } else {
-            make_deck(inside_w-4,inside_l-4,box_h-box_thickness*2, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false,top=true);
-        }
+        make_deck(inside_w-4,inside_l-4,box_h-box_thickness, 12,3,5, holes=topholes,middle=topmiddle,screwholes=false,top=true);
     }
     if (!bottomframe) {
-        if (!bottominlet) {
-            make_deck(inside_w-4,inside_l-4,0, 12,3,5, holes=bottomholes,feet=bottomfeet,screwholes=bottomscrew,middle=false,top=false);
-        } else {
-            make_deck(inside_w-4,inside_l-4,box_thickness, 12,3,5, holes=bottomholes,feet=bottomfeet,screwholes=bottomscrew,middle=false,top=false);
-        }
+        make_deck(inside_w-4,inside_l-4,0, 12,3,5, holes=bottomholes,screwholes=bottomscrew,middle=false,top=false);
         if (bottomsupport) {
             make_supports();
         }
