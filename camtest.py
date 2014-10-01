@@ -17,6 +17,7 @@ def cam_setup(args):
         cap = cv2.VideoCapture(0)
 
     if not cap.isOpened():
+        print("ERROR: Failed to open a video capture stream.")
         return None
 
     #default_res = (cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
@@ -29,6 +30,7 @@ def cam_setup(args):
     # Read a frame, just in case it's needed before setting params
     rval, _ = cap.read()
     if not rval:
+        print("ERROR: Failed to read a frame from the capture stream.")
         return None
 
     # Set frame rate
