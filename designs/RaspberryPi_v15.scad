@@ -71,28 +71,13 @@ GPIOsize        = 2;        // define height of gpiohole
 topframe    = false;        // if false, underneath values determines how
 topinlet    = false;        // false is outside, otherwise it is with an indent
 topholes    = true;
-// ---- top holes sizes
-//holeofs=5;						//  2 for fish1,  10 for fish2,  5 for holes
-//holesiz=2;
-//holelen=30;
-//holestep=5.2;
-//noholes=12;
-//holeangle1=[0,0, 0];		   // , 30] for fish1 and ,-30] for fish2 ,0] for holes
-//holeangle2=[0,0, 0];		   // ,-30] for fish1 and , 30] for fish2 ,0] for holes
-// ---- bottom holes sizes
-holeofs=5;
-holesiz=2.5;
-holestep=6;
-noholes=12;					// 12 for top,  20 for bottom
-holelen=50;
-holeangle1=[0,0, 0];
+// ---- holes sizes
+holeofs=2;
+holesiz=3;
+holestep=10;
+noholes=6;					// 12 for top,  20 for bottom
+holelen=24;
 topmiddle   = false;
-toplogo     = false;
-toplogopc   = -1;            //  0   0  placement correction of logo
-toplogoxm   =  0;            //  3   6  leftmargin of logo
-toplogotm   =  -1;        // 12  15  topmargin of logo
-toplogohole = false;
-toplogosunken=false;              // true or false, no idea if this works on a reprap
 
 bottomframe = false;        // if false, underneath values determines how
 bottominlet = false;
@@ -104,7 +89,7 @@ bottomclick   = true;
 bottompcb    = false;		    // just a pcb holder without a top
 
 box_thickness = 2.0;            // minimum = 1.0
-inside_h      = 12.1;           // 12.1 = lowprofile    16.5 is full height
+inside_h      = 12.3;           // 12.1 = lowprofile    16.5 is full height
 pcb_h         = 5.6;            // height needed for SD holder and solder points of pcb
 //pcb_h         = box_thickness+3.5;    // height needed for SD holder and solder points of pcb
 // 4.1 = no deck, box_thickness+3.5 is with deck
@@ -112,12 +97,11 @@ pcb_h         = 5.6;            // height needed for SD holder and solder points
 // just some colors to see the difference
 CASEcolor="Maroon";
 CONNcolor="Silver";
-LOGOcolor="White";
 
 // Define Raspberry Pi pcb dimensions in mm
 inside_l = 86.0;                //85.00 is largest length reported, so a bit room on each side
-inside_w = 57.0;                //56.17 is largest width  reported, so a bit room on each side
-pcb_thickness = 1.6;
+inside_w = 57.2;                //56.17 is largest width  reported, so a bit room on each side
+pcb_thickness = 1.7;
 
 // Coordinates based on RJ45 corner = 0,0,0
 // pcb connectors and locations. Based on Beta Board measurements of Gert and a real RPi
@@ -127,19 +111,19 @@ Crj45_x=2.0;			 //2.0
 Crj45_y=-1;
 Crj45_w=16.4;			// 15.4
 Crj45_d=21.5;           //21.8
-Crj45_h=13;
+Crj45_h=13.2;
 
 Cusb_x=24.5;            // 23.9
 Cusb_y=-7.7;
 Cusb_w=13.9;            // 13.3
 Cusb_d=19.0;			// 17.2
-Cusb_h=15.4;
+Cusb_h=15.6;
 
 Cpwr_x=3.25;				// 3.5 3.6
 Cpwr_y=80.9;
-Cpwr_w=8.6;				// 7.8 7.6
+Cpwr_w=8.8;				// 7.8 7.6
 Cpwr_d=5.6;
-Cpwr_h=2.5;
+Cpwr_h=2.6;
 
 Csd_x=16.7;
 Csd_y=inside_l-24.0;            // 30 mm is the length of a  sdcard
@@ -214,8 +198,8 @@ if (DRAWtotal == 1) {
             rotate(a=[0,180,0]) translate(v=[-box_w,0,-box_h]) draw_case(0,1);
         }
         if (DRAWbottom) draw_case(1,0);
-        if (DRAWtopinlet) make_deck(inside_w-5,inside_l-5,0, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false,logo=toplogo);
-        if (DRAWbottominlet) make_deck(inside_w-5,inside_l-5,0, 12,3,5, holes=bottomholes,feet=true,middle=false,screwholes=bottomscrew,logo=false);
+        if (DRAWtopinlet) make_deck(inside_w-5,inside_l-5,0, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false);
+        if (DRAWbottominlet) make_deck(inside_w-5,inside_l-5,0, 12,3,5, holes=bottomholes,feet=true,middle=false,screwholes=bottomscrew);
     }
 } else {
 // draw each one on there one location
@@ -232,28 +216,19 @@ if (DRAWtotal == 1) {
         translate(v = [ - 5,  5, box_h])  rotate(a=[0,180,0]) draw_case(0,1);
     }
     if (DRAWtopinlet) {
-        translate(v = [ -box_w-5,  -box_l-5, 0])    make_deck(inside_w-5,inside_l-5,0, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false,logo=toplogo);
+        translate(v = [ -box_w-5,  -box_l-5, 0])    make_deck(inside_w-5,inside_l-5,0, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false);
     }
     if (DRAWbottominlet) {
-        translate(v = [ 5       ,  -box_l-5, 0]) make_deck(inside_w-5,inside_l-5,0, 10,3,5 , holes=bottomholes,feet=true,middle=false,screwholes=bottomscrew,logo=false);
+        translate(v = [ 5       ,  -box_l-5, 0]) make_deck(inside_w-5,inside_l-5,0, 10,3,5 , holes=bottomholes,feet=true,middle=false,screwholes=bottomscrew);
     }
 }
 
 // ======================================================= END of draw
 // Module sections
 
-module put_pilogo(w,h,mx,mh,mt) {
-    fn="raspberrypi_logo.dxf";
-    // calculate the scale and which offset to use
-    scx=(w- (mx*2)) / 155.0;
-    ofsy= (h - mh) - (205.0*scx);
-
-    translate(v=[mx+toplogopc,ofsy-toplogotm,0]) linear_extrude(height=mt) import(file=fn, scale=scx);
-}
-
-module make_deckholes(no,w,d,step,v) {
+module make_deckholes(no,w,d,step) {
 for ( i = [0 : 1 : no - 1] ) {
-        translate(v=[w/2,(i*step)+(step/2),box_thickness/2]) rotate(a=v) cube([w,d, box_thickness+18], center=true);
+        translate(v=[w/2,(i*step)+(step/2),box_thickness/2]) cube([w,d, box_thickness+18], center=true);
     }
 }
 
@@ -269,14 +244,9 @@ module make_deck(w,d,z,hole_no,hole_size,hole_step) {
             echo("deck : z=",z," w=",w+0.01," d=",d+0.01);
             difference() {
                 cube([w, d, box_thickness], center = false);
-                if (top && !logo && holes && hole_size>0) {
-//                    if (holeangle1 != [0,0,0]) {
-//                       translate(v=[-1,hole_ofs+holeofs,-0.1]) make_deckholes(noholes,holelen,holesiz,holestep,holeangle1);
-//                       translate(v=[w/2-2,hole_ofs+holeofs,-0.1]) make_deckholes(noholes,holelen,holesiz,holestep,holeangle2);
-//                    } else {
-                       translate(v=[-1,hole_ofs+holeofs,-0.1]) make_deckholes(noholes,holelen,holesiz,holestep,holeangle1);
-                       translate(v=[w/2-2,hole_ofs+holeofs,-0.1]) make_deckholes(noholes,holelen,holesiz,holestep,holeangle2);
-//                    }
+                if (top && holes && hole_size>0) {
+                    translate(v=[-1,hole_ofs+holeofs,-0.1]) make_deckholes(noholes,holelen,holesiz,holestep);
+                    translate(v=[w/2-2,hole_ofs+holeofs,-0.1]) make_deckholes(noholes,holelen,holesiz,holestep);
                 }
                 if (screwholes) {
                     // --- 2x screw holes in bottom for mounting
@@ -292,49 +262,7 @@ module make_deck(w,d,z,hole_no,hole_size,hole_step) {
                     }
                 }
                 if (holes && !top) {
-                    translate(v=[(w-hole_w)/2,holeofs,-0.1]) make_deckholes(noholes,hole_w,holesiz,holestep,holeangle1);
-                }
-                if (logo) {
-                    if (toplogohole) {
-                        if (!topholes) {
-                            translate(v=[0,0,-1],center=false) put_pilogo(w,d,2,4,box_thickness+1.2);
-                        } else {
-                            if (!middle) {
-                                translate(v=[0,0,-1],center=false) put_pilogo(w,d-14,5,0,box_thickness+3.2);
-                            }
-                        }
-                    } else {
-                        if (toplogosunken) {
-                            color(LOGOcolor) {
-                                if (middle) {
-                                    translate(v = [(w-20)/2,(d-20)/2,box_thickness-0.3]) {
-                                        translate(v=[2,0,0],center=false) scale([ 0.1, 0.1, 1 ]) linear_extrude(height = 0.32) import_dxf(file = "raspberrypi_logo.dxf");
-                                    }
-                                } else {
-                                    translate(v=[10,14,box_thickness-0.3],center=false) scale([ 0.2, 0.2, 1 ]) linear_extrude(height = 0.32) import_dxf(file = "raspberrypi_logo.dxf");
-                                }
-                            }
-                        } else {
-                            color(CASEcolor) {
-                                if (middle) {
-                                    translate(v = [(w-20)/2,(d-20)/2,box_thickness-0.3]) cube([20,20, 30], center = false);
-                                } else {
-                                    translate(v=[(w-30)/2,14,box_thickness-0.3],center=false)  cube([30,d-41, 30], center = false);
-                                }
-                            }
-                        }
-                    }
-                }
-                if (logo && topholes) {
-for ( i = [d-17 : hole_step : d - hole_ofs] ) {
-                        // thru hole
-                        translate(v = [ofs1,box_thickness+i+3,-1]) {
-                            cube([hole_w, hole_size-1, box_thickness+3], center = false);
-                        }
-                        translate(v = [ofs2,box_thickness+i+3,-1]) {
-                            cube([hole_w, hole_size-1, box_thickness+3], center = false);
-                        }
-                    }
+                    translate(v=[(w-hole_w)/2,holeofs,-0.1]) make_deckholes(noholes,hole_w,holesiz,holestep);
                 }
             }
             color(CASEcolor) {
@@ -344,30 +272,13 @@ for ( i = [d-17 : hole_step : d - hole_ofs] ) {
                     translate(v=[3,d-3-8,0])      cube([8, 8, box_thickness+4], center = false);
                     translate(v=[w-3-8,d-3-8,0])  cube([8, 8, box_thickness+4], center = false);
                 }
-                if (top && !logo && holes) {
+                if (top && holes) {
                     translate(v = [w/2-box_thickness,12,0]) cube([4,d-13, box_thickness], center = false);
                 }
                 if (middle) {
                     // --- solid area for sticker
                     translate(v = [w/2-10,d/2-5-box_thickness/2,0]) {
-                        if (logo) {
-                            cube([20,20, box_thickness-0.3], center = false);
-                        } else {
-                            cube([20,20, box_thickness], center = false);
-                        }
-                    }
-                }
-            }
-            if (logo && !toplogohole) {
-                if (!toplogosunken) {
-                    color(LOGOcolor) {
-                        if (middle) {
-                            translate(v = [(w-20)/2,(d-20)/2,box_thickness-0.3]) {
-                                translate(v=[2,0,0],center=false) scale([ 0.1, 0.1, 1 ]) linear_extrude(height = 0.3) import_dxf(file = "raspberrypi_logo.dxf");
-                            }
-                        } else {
-                            translate(v=[10.5,14,box_thickness-0.3],center=false) scale([ 0.2, 0.2, 1 ]) linear_extrude(height = 0.3) import_dxf(file = "raspberrypi_logo.dxf");
-                        }
+                        cube([20,20, box_thickness], center = false);
                     }
                 }
             }
@@ -479,22 +390,22 @@ module make_case(w,d,h,bt,lt) {
         translate(v = [bt, bt, dt])   cube([w-bt2, d-bt2, h-(dt*2)], center = false);
         translate(v = [dt,dt,bt])     cube([w-(dt*2), d-(dt*2), h-bt2], center = false);
         // remove bottom and top deck
-        translate(v = [box_thickness+5, box_thickness+5,-2]) {
-            cube([inside_w-10, inside_l-10, box_h+4], center = false);
+        translate(v = [box_thickness+2, box_thickness+5,-2]) {
+            cube([inside_w-4, inside_l-10, box_h+4], center = false);
         }
     }
     if (!topframe) {
         if (!topinlet) {
-            make_deck(inside_w-4,inside_l-4,box_h-box_thickness, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false,logo=toplogo,top=true);
+            make_deck(inside_w-4,inside_l-4,box_h-box_thickness, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false,top=true);
         } else {
-            make_deck(inside_w-4,inside_l-4,box_h-box_thickness*2, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false,logo=toplogo,top=true);
+            make_deck(inside_w-4,inside_l-4,box_h-box_thickness*2, 12,3,5, holes=topholes,feet=false,middle=topmiddle,screwholes=false,top=true);
         }
     }
     if (!bottomframe) {
         if (!bottominlet) {
-            make_deck(inside_w-4,inside_l-4,0, 12,3,5, holes=bottomholes,feet=bottomfeet,screwholes=bottomscrew,middle=false,logo=false,top=false);
+            make_deck(inside_w-4,inside_l-4,0, 12,3,5, holes=bottomholes,feet=bottomfeet,screwholes=bottomscrew,middle=false,top=false);
         } else {
-            make_deck(inside_w-4,inside_l-4,box_thickness, 12,3,5, holes=bottomholes,feet=bottomfeet,screwholes=bottomscrew,middle=false,logo=false,top=false);
+            make_deck(inside_w-4,inside_l-4,box_thickness, 12,3,5, holes=bottomholes,feet=bottomfeet,screwholes=bottomscrew,middle=false,top=false);
         }
         if (bottomsupport) {
             make_supports();
@@ -520,29 +431,29 @@ module draw_pcbhold() {
         translate(v=[0  ,22,2]) cube([box_thickness,4,pcb_c]);
         translate(v=[box_w1-0.1  ,22.5,pcb_c+0.1]) {
             difference() {
-                cube([0.9, 3,2]);
-                translate(v=[0.9,-0.1,0])  rotate(a=-30, v=[0,1,0])  cube([1.6, 3.2, 4]);
+                cube([1, 3,2]);
+                translate(v=[1,-0.1,0])  rotate(a=-30, v=[0,1,0])  cube([1.6, 3.2, 4]);
             }
         }
         translate(v=[0  ,60.5,2]) cube([box_thickness,5,pcb_c]);
         translate(v=[box_w1-0.1  ,61.5,pcb_c+0.1]) {
             difference() {
-                cube([0.9,3,2]);
-                translate(v=[0.9,-0.1,0])  rotate(a=-30, v=[0,1,0])  cube([1.6, 3.2, 4]);
+                cube([1,3,2]);
+                translate(v=[1,-0.1,0])  rotate(a=-30, v=[0,1,0])  cube([1.6, 3.2, 4]);
             }
         }
         translate(v=[box_w2,29.5,2]) cube([box_thickness,4,pcb_c]);
         translate(v=[box_w2+0.1  ,30+3,pcb_c+0.1]) {
             rotate(a=180, v=[0,0,1]) difference() {
-                cube([0.9, 3,3]);
-                translate(v=[0.9,-0.1,0])  rotate(a=-30, v=[0,1,0])  cube([1.6, 3.2, 4]);
+                cube([1, 3,3]);
+                translate(v=[1,-0.1,0])  rotate(a=-30, v=[0,1,0])  cube([1.6, 3.2, 4]);
             }
         }
         translate(v=[box_w2,60.5,2]) cube([box_thickness,5,pcb_c]);
         translate(v=[box_w2+0.1  ,61+3.5,pcb_c+0.1]) {
             rotate(a=180, v=[0,0,1]) difference() {
-                cube([0.9,3,3]);
-                translate(v=[0.9,-0.1,0])  rotate(a=-30, v=[0,1,0])  cube([1.6, 3.2, 4]);
+                cube([1,3,3]);
+                translate(v=[1,-0.1,0])  rotate(a=-30, v=[0,1,0])  cube([1.6, 3.2, 4]);
             }
         }
     }
