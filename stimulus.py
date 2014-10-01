@@ -2,6 +2,7 @@ import atexit
 import multiprocessing
 import os
 import signal
+import time
 
 import pygame
 
@@ -23,11 +24,10 @@ class DummyStimulus(object):
         self._stimcount += 1
 
 
-class VisualStimulusHelperPygame(object):
-    def __init__(self, pipe):
+class VisualStimulusHelper(object):
+    def __init__(self, pipe, fps=10):
         self._pipe = pipe
-        self._pos = None
-        self._bgcolor = (0,0,0)  # black
+        self._fps = fps
 
     def begin(self, conf):
         '''Create a window in the specific location with the specified dimensions.'''
@@ -45,31 +45,24 @@ class VisualStimulusHelperPygame(object):
         #self._screen = pygame.display.set_mode((640, 480), pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.FULLSCREEN)
         pygame.mouse.set_visible(False)
 
-    def _draw(self):
-        self._screen.fill(self._bgcolor)
-        if self._pos is not None:
-            x = int(self._pos[0])  # + random.randint(-20,20)
-            y = int(self._pos[1])  # + random.randint(-20,20)
-            pygame.draw.circle(self._screen, (255,0,0), (x,y), 100)
-        pygame.display.flip()
-
     def vis_thread(self):
         # ignore signals that will be handled by parent
         signal.signal(signal.SIGALRM, signal.SIG_IGN)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
         while True:
-            val = self._pipe.recv()  # waits for next command
-            #print("Got: %s" % str(val))
-
-            if type(val) in (int, float):
-                self._pos = (val, val)
-            elif val is None:
-                self._pos = None
-            elif val == 'end':
-                return
-
             self._draw()
+            pygame.display.flip()
+
+            # check pipe for commands
+            while self._pipe.poll():
+                val = self._pipe.recv()
+
+                #print("Got: %s" % str(val))
+                if val == 'end':
+                    return
+
+                self._handle_command(val)
 
             # check pygame events for quit
             for event in pygame.event.get():
@@ -77,11 +70,37 @@ class VisualStimulusHelperPygame(object):
                     self._pipe.send('quit')
                     return
 
+            time.sleep(1.0 / self._fps)
+
+
+class StimulusFlashing(VisualStimulusHelper):
+    def __init__(self, pipe, fps=10):
+        super(StimulusFlashing, self).__init__(pipe, fps)
+        self._on = False
+        self._flash = True  # so it starts lit
+        self._bgcolor = (0,0,0)  # black
+        self._oncolor = (255,255,255)  # white
+
+    def _handle_command(self, cmd):
+        if cmd is None:
+            self._on = False
+            self._flash = True  # so it starts lit next time
+        else:
+            self._on = True
+
+    def _draw(self):
+        if self._on and self._flash:
+            self._screen.fill(self._oncolor)
+        else:
+            self._screen.fill(self._bgcolor)
+        if self._on:
+            self._flash = not self._flash
+
 
 class VisualStimulus(object):
     def __init__(self):
         self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=True)
-        self._helper = VisualStimulusHelperPygame(self._child_pipe)
+        self._helper = StimulusFlashing(self._child_pipe, fps=6)
 
     def begin(self, conf):
         self._helper.begin(conf)

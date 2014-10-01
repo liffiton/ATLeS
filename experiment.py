@@ -15,20 +15,17 @@ import stimulus
 # Controller: Fixed interval or fixed ratio
 #control = controllers.FixedIntervalController(response_interval=3)
 control = controllers.FixedRatioController(1)
-# Conrol response: static response at position (100,100)
-control.set_response(100)
+# Control response: static response: constant 1
+control.set_response(1)
 
 # Stimulus: Visual stimulus or Dummy stimulus (just prints to terminal)
 stim = stimulus.VisualStimulus()
 #stim = stimulus.DummyStimulus()
 
-# Log directory
-logdir = "./logs"
 
-
-# Behavior test: xpos > 10
+# Behavior test: xpos < 25%
 def behavior_test(pos):
-    return pos[0] > 10
+    return pos[0] < 0.25
 #
 ####################################################################
 
