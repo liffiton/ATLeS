@@ -51,14 +51,14 @@ def get_args():
                         help="configuration file specifying physical setup (default: default.ini)")
     parser.add_argument('-w', '--watch', action='store_true',
                         help='create a window to see the camera view and tracking information')
-    parser.add_argument('-W', '--width', type=int, default=160,
+    parser.add_argument('-W', '--width', type=int, default=192,
                         help='video capture resolution width (default: 160)')
-    parser.add_argument('-H', '--height', type=int, default=120,
+    parser.add_argument('-H', '--height', type=int, default=144,
                         help='video capture resolution height (default: 120)')
     parser.add_argument('--logdir', type=str, default='./logs',
                         help='directory for storing log/data files (default: ./logs)')
-    parser.add_argument('--fps', type=int, default=5,
-                        help='video capture frames per second (default: 5) -- also affects rate of stimulus blinking and behavior/position tests.')
+    parser.add_argument('--fps', type=int, default=10,
+                        help='video capture frames per second (default: 10) -- also affects rate of stimulus blinking and behavior/position tests.')
     parser.add_argument('--exposure', type=int, default=200,
                         help='video capture exposure time, given in multiples of 0.1ms (default: 200)')
     parser.add_argument('--vidfile', type=str,

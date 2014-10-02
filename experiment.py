@@ -90,6 +90,24 @@ class Experiment(object):
         # Tracking: Simple
         self._track = tracking.SimpleTracker(w=args.width, h=args.height, conf=conf['camera'])
 
+    def _draw_watch(self, frame, status, pos_pixel):
+        # draw a green circle around the estimated position
+        position = tuple(int(x) for x in pos_pixel)
+        if status == 'acquired':
+            color = (0,255,0,255)  # green
+        elif status == 'missing':
+            color = (255,0,0,255)  # blue
+        else:
+            color = (0,0,255,255)  # red
+        cv2.circle(frame, position, 5, color)
+        # draw a red frame around the tank, according to the ini file
+        TL = (int(self._args.width * self._conf['camera']['tank_min_x']),
+                int(self._args.height * self._conf['camera']['tank_min_y']))
+        BR = (int(self._args.width * self._conf['camera']['tank_max_x']),
+                int(self._args.height * self._conf['camera']['tank_max_y']))
+        cv2.rectangle(frame, TL, BR, (0,0,255,255))
+        cv2.imshow("preview", frame)
+
     def run(self):
         stim.begin(self._conf['stimulus'])
         prevtime = time.time()
@@ -123,25 +141,14 @@ class Experiment(object):
             self._logger.write_data("%s,%0.3f,%0.3f\n" % (status, pos_tank[0], pos_tank[1]))
 
             if self._args.watch:
-                # draw a green circle around the estimated position
-                position = tuple(int(x) for x in pos_pixel)
-                if status == 'acquired':
-                    color = (0,255,0,255)  # green
-                else:
-                    color = (255,0,0,255)  # blue
-                cv2.circle(frame, position, 5, color)
-                # draw a red frame around the tank, according to the ini file
-                TL = (int(self._args.width * self._conf['camera']['tank_min_x']),
-                      int(self._args.height * self._conf['camera']['tank_min_y']))
-                BR = (int(self._args.width * self._conf['camera']['tank_max_x']),
-                      int(self._args.height * self._conf['camera']['tank_max_y']))
-                cv2.rectangle(frame, TL, BR, (0,0,255,255))
-                cv2.imshow("preview", frame)
+                self._draw_watch(frame, status, pos_pixel)
                 if cv2.waitKey(1) % 256 == 27:
                     logging.info("Escape pressed in preview window; exiting.")
                     break
 
-            if behavior_test(pos_tank):
+            if status != 'lost' and behavior_test(pos_tank):
+                # Only provide a stimulus if we know where the fish is
+                # and the behavior test for that position says we should.
                 control.add_hit(str(pos_tank))
                 response = control.get_response()
                 if not self._args.nostim:

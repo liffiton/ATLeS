@@ -52,10 +52,10 @@ def cam_setup(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('width', type=int, nargs='?', default=320)
-    parser.add_argument('height', type=int, nargs='?', default=240)
-    parser.add_argument('fps', type=int, nargs='?', default=10)
-    parser.add_argument('exposure', type=int, nargs='?', default=200)
+    parser.add_argument('-W', '--width', type=int, nargs='?', default=320)
+    parser.add_argument('-H', '--height', type=int, nargs='?', default=240)
+    parser.add_argument('-f', '--fps', type=int, nargs='?', default=10)
+    parser.add_argument('-e', '--exposure', type=int, nargs='?', default=200)
     args = parser.parse_args()
 
     cv2.namedWindow("preview")
