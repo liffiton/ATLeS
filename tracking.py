@@ -45,7 +45,10 @@ class FrameProcessor(object):
 
         # grayscale copy
         #self._gframe = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (160,120))
-        self._gframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        #self._gframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # use the red channel (most IR, least visible light)
+        # BGR -> Blue = 0, Green = 1, Red = 2
+        self._gframe = frame[:,:,2]
 
         # subtract background, clean up image
         self._sub_bg()
