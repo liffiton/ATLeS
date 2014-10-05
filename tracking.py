@@ -16,7 +16,9 @@ class FrameProcessor(object):
         #self._bgs = cv2.BackgroundSubtractorMOG()
         #self._bgs = cv2.BackgroundSubtractorMOG2()  # not great defaults, and need bShadowDetection to be False
         #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
-        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=10, bShadowDetection=False)
+
+        # varThreshold: higher values detect fewer/smaller changed regions
+        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=16, bShadowDetection=False)
 
         # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
 
@@ -25,14 +27,12 @@ class FrameProcessor(object):
         # A bit above 0 looks good.
         # Lower values are better for detecting slower movement, though it
         # takes a bit of time to learn the background initially.
-        #self._learning_rate = 0.0005  # for ~30fps video
-        self._learning_rate = 0.005  # for 3fps video?
+        self._learning_rate = 0.001  # for 10ish fps video?
 
         # element to reuse in erode/dilate
         # RECT is more robust at removing noise in the erode
-        #self._element = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
         self._element33 = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-        self._element55 = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
+        self._element55 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
 
         # contours and centroids for the most recent frame
         self._contours = None
@@ -44,8 +44,6 @@ class FrameProcessor(object):
         self._centroids = None
 
         # grayscale copy
-        #self._gframe = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (160,120))
-        #self._gframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # use the red channel (most IR, least visible light)
         # BGR -> Blue = 0, Green = 1, Red = 2
         self._gframe = frame[:,:,2]

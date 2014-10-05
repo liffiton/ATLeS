@@ -88,9 +88,12 @@ class Experiment(object):
         self._proc = tracking.FrameProcessor()
 
         # Tracking: Simple
-        self._track = tracking.SimpleTracker(w=args.width, h=args.height, conf=conf['camera'])
+        self._track = tracking.SimpleTracker(w=stream.width, h=stream.height, conf=conf['camera'])
 
-    def _draw_watch(self, frame, status, pos_pixel):
+    def _draw_watch(self, frame, track, proc):
+        pos_pixel = track.position_pixel
+        status = track.status
+
         # draw a green circle around the estimated position
         position = tuple(int(x) for x in pos_pixel)
         if status == 'acquired':
@@ -100,12 +103,27 @@ class Experiment(object):
         else:
             color = (0,0,255,255)  # red
         cv2.circle(frame, position, 5, color)
+
         # draw a red frame around the tank, according to the ini file
-        TL = (int(self._args.width * self._conf['camera']['tank_min_x']),
-                int(self._args.height * self._conf['camera']['tank_min_y']))
-        BR = (int(self._args.width * self._conf['camera']['tank_max_x']),
-                int(self._args.height * self._conf['camera']['tank_max_y']))
+        TL = (int(self._stream.width * self._conf['camera']['tank_min_x']),
+              int(self._stream.height * self._conf['camera']['tank_min_y']))
+        BR = (int(self._stream.width * self._conf['camera']['tank_max_x']),
+              int(self._stream.height * self._conf['camera']['tank_max_y']))
         cv2.rectangle(frame, TL, BR, (0,0,255,255))
+
+        # draw contours
+        for c_i in range(len(proc.contours)):
+            cv2.drawContours(frame, proc.contours, c_i, (0,255,0,255), 1)
+
+        # draw centroids
+        for pt in proc.centroids:
+            color = (0, 255, 255, 255)  # yellow
+            x = int(pt[0])
+            y = int(pt[1])
+            cv2.line(frame, (x-5,y), (x+5,y), color)
+            cv2.line(frame, (x,y-5), (x,y+5), color)
+            #cv2.circle(frame, (int(pt[0]), int(pt[1])), 1, (0,255,255,255))
+
         cv2.imshow("preview", frame)
 
     def run(self):
@@ -132,7 +150,7 @@ class Experiment(object):
             # Update tracker w/ latest set of centroids
             self._track.update(self._proc.centroids)
             # Get the position estimate of the fish and tracking status from the tracker
-            pos_pixel = self._track.position_pixel
+            # pos_pixel = self._track.position_pixel
             pos_tank = self._track.position_tank
             # pos_frame = self._track.position_frame
             status = self._track.status
@@ -141,12 +159,12 @@ class Experiment(object):
             self._logger.write_data("%s,%0.3f,%0.3f\n" % (status, pos_tank[0], pos_tank[1]))
 
             if self._args.watch:
-                self._draw_watch(frame, status, pos_pixel)
+                self._draw_watch(frame, self._track, self._proc)
                 if cv2.waitKey(1) % 256 == 27:
                     logging.info("Escape pressed in preview window; exiting.")
                     break
 
-            if status != 'lost' and behavior_test(pos_tank):
+            if status != 'lost' and behavior_test(pos_tank) and not self._args.nostim:
                 # Only provide a stimulus if we know where the fish is
                 # and the behavior test for that position says we should.
                 control.add_hit(str(pos_tank))
