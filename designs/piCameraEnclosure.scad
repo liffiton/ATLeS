@@ -131,7 +131,7 @@ module piCameraEnclosure()
 		piCameraAdapter();
 		// Comment out translate to see
 		// back cover in place.
-		translate([40,0,-8])
+		translate([40,5,-8])
 			piCameraBackCover();
 	}
 }
