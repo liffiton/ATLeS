@@ -1,3 +1,4 @@
+import atexit
 import cv2
 import logging
 import math
@@ -285,6 +286,10 @@ class Stream(object):
 
         return framecount, fps
 
+    @staticmethod
+    def _v4l2_call(params):
+        subprocess.call(["v4l2-ctl"] + params.split())
+
     def _cam_setup(self, source, w, h, fps, exposure):
         try:
             cap = cv2.VideoCapture(source, w, h)
@@ -303,23 +308,26 @@ class Stream(object):
         # Read a frame, just in case it's needed before setting params
         rval, _ = cap.read()
         if not rval:
+            cap.release()
             return None
 
         # Hacks using v4l2-ctl to set capture parameters we can't control through OpenCV
 
         # Set FPS (OpenCV requests 30, hardcoded)
-        subprocess.call("v4l2-ctl -p %d" % fps)
+        self._v4l2_call("-p %d" % fps)
 
         # Turn off white balance (seems to need to be reset to non-zero first, then zero)
-        subprocess.call("v4l2-ctl --set-ctrl=white_balance_auto_preset=1")
-        subprocess.call("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
+        self._v4l2_call("--set-ctrl=white_balance_auto_preset=1")
+        self._v4l2_call("--set-ctrl=white_balance_auto_preset=0")
 
         # Set shutter speed
         # exposure_time_absolute is given in multiples of 0.1ms.
         # Make sure fps above is not set too high (exposure time
         # will be adjusted automatically to allow higher frame rate)
-        subprocess.call("v4l2-ctl --set-ctrl=auto_exposure=1")
-        subprocess.call("v4l2-ctl --set-ctrl=exposure_time_absolute=%d" % exposure)
+        self._v4l2_call("--set-ctrl=auto_exposure=1")
+        self._v4l2_call("--set-ctrl=exposure_time_absolute=%d" % exposure)
+
+        atexit.register(cap.release)
 
         return cap
 

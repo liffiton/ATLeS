@@ -7,47 +7,7 @@ import cv2
 import subprocess
 import time
 
-
-def cam_setup(args):
-    try:
-        cap = cv2.VideoCapture(0, args.width, args.height)
-    except TypeError:
-        # Don't have our modified version of OpenCV w/ width/height args
-        print("WARNING: Unmodified OpenCV installation; no width/height control for capture.")
-        cap = cv2.VideoCapture(0)
-
-    if not cap.isOpened():
-        print("ERROR: Failed to open a video capture stream.")
-        return None
-
-    #default_res = (cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-    #print("Frame resolution (default): %s" % str(default_res))
-    cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, args.width)
-    cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, args.height)
-    new_res = (cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-    print("Frame resolution: %s" % str(new_res))
-
-    # Read a frame, just in case it's needed before setting params
-    rval, _ = cap.read()
-    if not rval:
-        print("ERROR: Failed to read a frame from the capture stream.")
-        return None
-
-    # Set frame rate
-    subprocess.call("v4l2-ctl -p %d" % args.fps)
-
-    # Turn off white balance (seems to need to be reset to non-zero first, then zero)
-    subprocess.call("v4l2-ctl --set-ctrl=white_balance_auto_preset=1")
-    subprocess.call("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
-
-    # Set shutter speed
-    # exposure_time_absolute is given in multiples of 0.1ms.
-    # Make sure fps above is not set too high (exposure time
-    # will be adjusted automatically to allow higher frame rate)
-    subprocess.call("v4l2-ctl --set-ctrl=auto_exposure=1")
-    subprocess.call("v4l2-ctl --set-ctrl=exposure_time_absolute=%d" % args.exposure)
-
-    return cap
+import tracking
 
 
 def main():
@@ -58,16 +18,17 @@ def main():
     parser.add_argument('-e', '--exposure', type=int, nargs='?', default=200)
     args = parser.parse_args()
 
-    cv2.namedWindow("preview")
+    params = {}
+    stream = tracking.Stream(0, w=args.width, h=args.height, params=params, fps=args.fps, exposure=args.exposure)
 
-    cap = cam_setup(args)
+    cv2.namedWindow("preview")
 
     prevtime = time.time()
     frames = 0
     channel = -1
-    rval = (cap is not None)
+    rval = (stream is not None)
     while rval:
-        rval, frame = cap.read()
+        rval, frame = stream.get_frame()
 
         if channel >= 0:
             frame = frame[:,:,channel]
@@ -88,8 +49,6 @@ def main():
                 print("%dms: %dfps" % (1000*frame_time, 1/frame_time))
             prevtime = curtime
 
-    if cap:
-        cap.release()
     cv2.destroyAllWindows()
 
 

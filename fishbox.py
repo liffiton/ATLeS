@@ -86,7 +86,6 @@ def main():
         args.height = stream.height
     else:
         params = {}
-        # NOTE: requires my hacked version of OpenCV w/ width/height constructor
         stream = tracking.Stream(0, w=args.width, h=args.height, params=params, fps=args.fps, exposure=args.exposure)
 
     if args.watch:
