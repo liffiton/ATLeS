@@ -95,6 +95,12 @@ class Logger(object):
 
 
 class Experiment(object):
+    RED = (0, 0, 255, 255)
+    GREEN = (0, 255, 0, 255)
+    BLUE = (255, 0, 0, 255)
+    YELLOW = (0, 255, 255, 255)
+    STATUS_COLORS = {'acquired': GREEN, 'missing': BLUE, 'lost': RED}
+
     def __init__(self, conf, args, stream):
         self._conf = conf
         self._args = args
@@ -111,39 +117,47 @@ class Experiment(object):
         # Tracking: Simple
         self._track = tracking.SimpleTracker(w=stream.width, h=stream.height, conf=conf['camera'])
 
+        # For mouse interaction
+        self._mouse_on = False
+
+    def mouse_callback(self, event, x, y, flags, *args):
+        if event == 1:  # mouse down
+            self._mouse_on = not self._mouse_on
+        self._mousex = x
+        self._mousey = y
+
     def _draw_watch(self, frame, track, proc):
         pos_pixel = track.position_pixel
         status = track.status
 
-        # draw a green circle around the estimated position
+        # draw a circle around the estimated position
         position = tuple(int(x) for x in pos_pixel)
-        if status == 'acquired':
-            color = (0,255,0,255)  # green
-        elif status == 'missing':
-            color = (255,0,0,255)  # blue
-        else:
-            color = (0,0,255,255)  # red
-        cv2.circle(frame, position, 5, color)
+        cv2.circle(frame, position, 5, self.STATUS_COLORS[status])
 
         # draw a red frame around the tank, according to the ini file
         TL = (int(self._stream.width * self._conf['camera']['tank_min_x']),
               int(self._stream.height * self._conf['camera']['tank_min_y']))
         BR = (int(self._stream.width * self._conf['camera']['tank_max_x']),
               int(self._stream.height * self._conf['camera']['tank_max_y']))
-        cv2.rectangle(frame, TL, BR, (0,0,255,255))
+        cv2.rectangle(frame, TL, BR, self.RED)
 
         # draw contours
-        for c_i in range(len(proc.contours)):
-            cv2.drawContours(frame, proc.contours, c_i, (0,255,0,255), 1)
+        #for c_i in range(len(proc.contours)):
+        #    cv2.drawContours(frame, proc.contours, c_i, self.GREEN, 1)
 
         # draw centroids
         for pt in proc.centroids:
-            color = (0, 255, 255, 255)  # yellow
             x = int(pt[0])
             y = int(pt[1])
-            cv2.line(frame, (x-5,y), (x+5,y), color)
-            cv2.line(frame, (x,y-5), (x,y+5), color)
-            #cv2.circle(frame, (int(pt[0]), int(pt[1])), 1, (0,255,255,255))
+            cv2.line(frame, (x-5,y), (x+5,y), self.YELLOW)
+            cv2.line(frame, (x,y-5), (x,y+5), self.YELLOW)
+
+        # draw crosshair and frame coordinates at mouse
+        if self._mouse_on:
+            cv2.line(frame, (0, self._mousey), (self._stream.width, self._mousey), self.RED)
+            cv2.line(frame, (self._mousex, 0), (self._mousex, self._stream.height), self.RED)
+            text = "%.3f %.3f" % (float(self._mousex) / self._stream.width, float(self._mousey) / self._stream.height)
+            cv2.putText(frame, text, (5, self._stream.height-5), cv2.FONT_HERSHEY_PLAIN, 1, self.RED)
 
         cv2.imshow("preview", frame)
 

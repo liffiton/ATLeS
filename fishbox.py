@@ -103,6 +103,10 @@ def main():
     signal.signal(signal.SIGINT, sig_handler)
 
     exp = experiment.Experiment(conf, args, stream)
+
+    if args.watch:
+        cv2.setMouseCallback("preview", exp.mouse_callback)
+
     exp.run()
 
     sys.exit(0)

@@ -74,9 +74,10 @@ class FrameProcessor(object):
 
         for contour in self._contours:
             moments = cv2.moments(contour)
-            centroid_x = moments['m10'] / moments['m00']
-            centroid_y = moments['m01'] / moments['m00']
-            self._centroids.append((centroid_x, centroid_y))
+            if moments['m00'] != 0.0:  # skip zero-area contours
+                centroid_x = moments['m10'] / moments['m00']
+                centroid_y = moments['m01'] / moments['m00']
+                self._centroids.append((centroid_x, centroid_y))
 
     @property
     def contours(self):
@@ -324,11 +325,11 @@ class Stream(object):
 
     @property
     def width(self):
-        return self._video.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+        return int(self._video.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 
     @property
     def height(self):
-        return self._video.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+        return int(self._video.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 
     def set_crop(self, newcrop):
         '''Set the cropping for returned frames.
