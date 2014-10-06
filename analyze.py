@@ -175,7 +175,7 @@ def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, 
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: %s FILE.log" % sys.argv[0])
+        print("Usage: %s track.csv" % sys.argv[0])
         sys.exit(1)
 
     fname = sys.argv[1]
