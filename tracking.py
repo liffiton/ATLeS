@@ -263,9 +263,11 @@ class Stream(object):
                 newval = self._video.get(key)
                 if newval != value:
                     logging.warning("Unable to set %s to %s, got %s." % (key, value, newval))
+            self.source = 'camera'
         elif os.path.isfile(source):
             # video file
             self._video = cv2.VideoCapture(source)
+            self.source = 'file'
         else:
             logging.error("Input file not found: %s\n" % source)
             sys.exit(1)
@@ -273,6 +275,14 @@ class Stream(object):
         if not self._video.isOpened():
             logging.error("Could not open video stream...\n")
             sys.exit(1)
+
+    def get_video_stats(self):
+        assert(self.source == 'file')
+
+        framecount = self._video.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
+        fps = self._video.get(cv2.cv.CV_CAP_PROP_FPS)
+
+        return framecount, fps
 
     def _cam_setup(self, source, w, h, fps, exposure):
         try:
