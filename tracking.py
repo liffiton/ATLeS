@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import random
+import subprocess
 import sys
 
 
@@ -296,18 +297,18 @@ class Stream(object):
         # Hacks using v4l2-ctl to set capture parameters we can't control through OpenCV
 
         # Set FPS (OpenCV requests 30, hardcoded)
-        os.system("v4l2-ctl -p %d" % fps)
+        subprocess.call("v4l2-ctl -p %d" % fps)
 
         # Turn off white balance (seems to need to be reset to non-zero first, then zero)
-        os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=1")
-        os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
+        subprocess.call("v4l2-ctl --set-ctrl=white_balance_auto_preset=1")
+        subprocess.call("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
 
         # Set shutter speed
         # exposure_time_absolute is given in multiples of 0.1ms.
         # Make sure fps above is not set too high (exposure time
         # will be adjusted automatically to allow higher frame rate)
-        os.system("v4l2-ctl --set-ctrl=auto_exposure=1")
-        os.system("v4l2-ctl --set-ctrl=exposure_time_absolute=%d" % exposure)
+        subprocess.call("v4l2-ctl --set-ctrl=auto_exposure=1")
+        subprocess.call("v4l2-ctl --set-ctrl=exposure_time_absolute=%d" % exposure)
 
         return cap
 
