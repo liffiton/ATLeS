@@ -4,7 +4,10 @@ import os
 import signal
 import time
 
-import pygame
+try:
+    import pygame
+except:
+    pygame = None
 
 # TODO: use abc to make an abstract base class for stimulus w/ show() and end() requiring overrides...
 
@@ -13,15 +16,19 @@ class DummyStimulus(object):
     def __init__(self):
         self._stimcount = 0
 
-    def begin(self):
-        print "Begin."
+    def begin(self, conf):
+        print "Dummy: begin()"
 
     def end(self):
-        print "End."
+        print "Dummy: end()"
 
     def show(self, stimulus):
-        print "%5d: %s" % (self._stimcount, str(stimulus))
-        self._stimcount += 1
+        if stimulus is not None:
+            print "Dummy: stimulus %5d: %s" % (self._stimcount, str(stimulus))
+            self._stimcount += 1
+
+    def msg_poll(self):
+        return None
 
 
 class VisualStimulusHelper(object):

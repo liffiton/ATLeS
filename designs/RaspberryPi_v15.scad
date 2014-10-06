@@ -68,12 +68,13 @@ GPIOsize        = 2;        // define height of gpiohole
 // select how the case should look like
 topframe    = false;        // if false, underneath values determines how
 topholes    = true;
+ledholes    = true;
 // ---- holes sizes
-holeofs=2;
+holeofs=6;
 holesiz=3;
-holestep=10;
-noholes=6;					// 12 for top,  20 for bottom
-holelen=24;
+holestep=8;
+noholes=7;
+holelen=30;
 topmiddle   = false;
 
 bottomframe = false;        // if false, underneath values determines how
@@ -251,6 +252,10 @@ module make_deck(w,d,z,hole_no,hole_size,hole_step) {
                 if (holes && !top) {
                     translate(v=[(w-hole_w)/2,holeofs,-0.1]) make_deckholes(noholes,hole_w,holesiz,holestep);
                 }
+                if (top && ledholes) {
+						translate([w-8,3,-0.1])
+	                    cube([5,11,20]);
+                }
             }
             color(CASEcolor) {
                 if (top && holes) {
@@ -277,8 +282,8 @@ module rounded_corner(x,y,rx,ry,cx,cy) {
 }
 
 
-module make_topcomponents() {
-    color(CONNcolor) translate(v=[box_w1,box_l1,pcb_c]) {
+module make_topcomponents(alpha=1) {
+    color(CONNcolor, alpha=alpha) translate(v=[box_w1,box_l1,pcb_c]) {
         translate(v=[Crj45_x,Crj45_y,0]) cube([Crj45_w,Crj45_d,Crj45_h],center=false);
         translate(v=[Cusb_x,Cusb_y,0])   cube([Cusb_w,Cusb_d,Cusb_h],center=false);
         translate(v=[Cpwr_x,Cpwr_y,0])   cube([Cpwr_w,Cpwr_d,Cpwr_h],center=false);
@@ -293,9 +298,9 @@ module make_topcomponents() {
         translate(v=[Crca_x+Crca_w,Crca_y+Crca_d/2,Crca_z+Crca_r/2]) rotate(a=90,v=[0,1,0]) cylinder(r=Crca_r/2, h=Crca_l+0.1, $fn=100);
     }
     for ( i = [0 : 1 : 12] ) {
-        color("black") translate(v=[box_w2-6.6,box_l2-1-34+(i*2.54),pcb_c]) cube([5.08,2.53,2.5]);
-        color("Gainsboro") translate(v=[box_w2-6.6+0.97,box_l2-1-34+(i*2.54)+0.95,pcb_c-3])  cube([0.6,0.6,11.5]);
-        color("Gainsboro") translate(v=[box_w2-6.6+3.61,box_l2-1-34+(i*2.54)+0.95,pcb_c-3])  cube([0.6,0.6,11.5]);
+        color("black", alpha=alpha) translate(v=[box_w2-6.6,box_l2-1-34+(i*2.54),pcb_c]) cube([5.08,2.53,2.5]);
+        color("Gainsboro", alpha=alpha) translate(v=[box_w2-6.6+0.97,box_l2-1-34+(i*2.54)+0.95,pcb_c-3])  cube([0.6,0.6,11.5]);
+        color("Gainsboro", alpha=alpha) translate(v=[box_w2-6.6+3.61,box_l2-1-34+(i*2.54)+0.95,pcb_c-3])  cube([0.6,0.6,11.5]);
 
     }
 }
@@ -330,14 +335,14 @@ module make_connholes() {
     }
 }
 
-module make_pcb() {
+module make_pcb(alpha=1) {
     translate(v=[box_w1,box_l1,pcb_h]) {
-        color("darkgreen") cube([inside_w,inside_l,pcb_thickness], center=false);
+        color("darkgreen", alpha=alpha) cube([inside_w,inside_l,pcb_thickness], center=false);
     }
-    color(CONNcolor) {
+    color(CONNcolor, alpha=alpha) {
         translate(v=[box_w1+Csd_x,box_l1+Csd_y,pcb_h-Csd_h]) cube([Csd_w,Csd_d,Csd_h],center=false);
     }
-    make_topcomponents();
+    make_topcomponents(alpha=alpha);
 }
 
 // put extra supports on free spaces, used beta board image
@@ -376,7 +381,7 @@ module make_case(w,d,h,bt,lt) {
         }
     }
     if (!topframe) {
-        make_deck(inside_w-4,inside_l-4,box_h-box_thickness, 12,3,5, holes=topholes,middle=topmiddle,screwholes=false,top=true);
+        make_deck(inside_w-4,inside_l-4,box_h-box_thickness, 12,3,5, holes=topholes, ledholes=ledholes, middle=topmiddle,screwholes=false,top=true);
     }
     if (!bottomframe) {
         make_deck(inside_w-4,inside_l-4,0, 12,3,5, holes=bottomholes,screwholes=bottomscrew,middle=false,top=false);
@@ -566,6 +571,6 @@ module draw_case(bottom, top) {
     }
     if (bottom) {
         draw_pcbhold();
-        if (DRAWpcb == 1)  make_pcb();
+        if (DRAWpcb == 1)  make_pcb(alpha=0.5);
     }
 } // end module

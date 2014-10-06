@@ -174,6 +174,10 @@ def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, 
 
 
 def main():
+    if len(sys.argv) < 2:
+        print("Usage: %s FILE.log" % sys.argv[0])
+        sys.exit(1)
+
     fname = sys.argv[1]
 
     time, status, x, y = np.loadtxt(
@@ -188,7 +192,11 @@ def main():
     dy = np.gradient(y)
     dt = np.gradient(time)
     movement = np.matrix([dx,dy])
-    dist = np.linalg.norm(movement, axis=0)
+    try:
+        dist = np.linalg.norm(movement, axis=0)
+    except TypeError:
+        # older version of numpy w/o axis argument
+        dist = map(np.linalg.norm, np.transpose(movement))
     speed = dist / dt
     theta = np.arctan2(dy, dx)  # reversed params are correct for numpy.arctan2
     #dtheta = np.gradient(theta)

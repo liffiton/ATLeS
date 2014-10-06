@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import random
+import subprocess
 import sys
 
 
@@ -16,7 +17,9 @@ class FrameProcessor(object):
         #self._bgs = cv2.BackgroundSubtractorMOG()
         #self._bgs = cv2.BackgroundSubtractorMOG2()  # not great defaults, and need bShadowDetection to be False
         #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
-        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=10, bShadowDetection=False)
+
+        # varThreshold: higher values detect fewer/smaller changed regions
+        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=16, bShadowDetection=False)
 
         # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
 
@@ -25,14 +28,12 @@ class FrameProcessor(object):
         # A bit above 0 looks good.
         # Lower values are better for detecting slower movement, though it
         # takes a bit of time to learn the background initially.
-        #self._learning_rate = 0.0005  # for ~30fps video
-        self._learning_rate = 0.005  # for 3fps video?
+        self._learning_rate = 0.001  # for 10ish fps video?
 
         # element to reuse in erode/dilate
         # RECT is more robust at removing noise in the erode
-        #self._element = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
         self._element33 = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-        self._element55 = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
+        self._element55 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
 
         # contours and centroids for the most recent frame
         self._contours = None
@@ -44,8 +45,6 @@ class FrameProcessor(object):
         self._centroids = None
 
         # grayscale copy
-        #self._gframe = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (160,120))
-        #self._gframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # use the red channel (most IR, least visible light)
         # BGR -> Blue = 0, Green = 1, Red = 2
         self._gframe = frame[:,:,2]
@@ -75,9 +74,10 @@ class FrameProcessor(object):
 
         for contour in self._contours:
             moments = cv2.moments(contour)
-            centroid_x = moments['m10'] / moments['m00']
-            centroid_y = moments['m01'] / moments['m00']
-            self._centroids.append((centroid_x, centroid_y))
+            if moments['m00'] != 0.0:  # skip zero-area contours
+                centroid_x = moments['m10'] / moments['m00']
+                centroid_y = moments['m01'] / moments['m00']
+                self._centroids.append((centroid_x, centroid_y))
 
     @property
     def contours(self):
@@ -264,9 +264,11 @@ class Stream(object):
                 newval = self._video.get(key)
                 if newval != value:
                     logging.warning("Unable to set %s to %s, got %s." % (key, value, newval))
+            self.source = 'camera'
         elif os.path.isfile(source):
             # video file
             self._video = cv2.VideoCapture(source)
+            self.source = 'file'
         else:
             logging.error("Input file not found: %s\n" % source)
             sys.exit(1)
@@ -274,6 +276,14 @@ class Stream(object):
         if not self._video.isOpened():
             logging.error("Could not open video stream...\n")
             sys.exit(1)
+
+    def get_video_stats(self):
+        assert(self.source == 'file')
+
+        framecount = self._video.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
+        fps = self._video.get(cv2.cv.CV_CAP_PROP_FPS)
+
+        return framecount, fps
 
     def _cam_setup(self, source, w, h, fps, exposure):
         try:
@@ -298,28 +308,28 @@ class Stream(object):
         # Hacks using v4l2-ctl to set capture parameters we can't control through OpenCV
 
         # Set FPS (OpenCV requests 30, hardcoded)
-        os.system("v4l2-ctl -p %d" % fps)
+        subprocess.call("v4l2-ctl -p %d" % fps)
 
         # Turn off white balance (seems to need to be reset to non-zero first, then zero)
-        os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=1")
-        os.system("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
+        subprocess.call("v4l2-ctl --set-ctrl=white_balance_auto_preset=1")
+        subprocess.call("v4l2-ctl --set-ctrl=white_balance_auto_preset=0")
 
         # Set shutter speed
         # exposure_time_absolute is given in multiples of 0.1ms.
         # Make sure fps above is not set too high (exposure time
         # will be adjusted automatically to allow higher frame rate)
-        os.system("v4l2-ctl --set-ctrl=auto_exposure=1")
-        os.system("v4l2-ctl --set-ctrl=exposure_time_absolute=%d" % exposure)
+        subprocess.call("v4l2-ctl --set-ctrl=auto_exposure=1")
+        subprocess.call("v4l2-ctl --set-ctrl=exposure_time_absolute=%d" % exposure)
 
         return cap
 
     @property
     def width(self):
-        return self._video.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+        return int(self._video.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 
     @property
     def height(self):
-        return self._video.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+        return int(self._video.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 
     def set_crop(self, newcrop):
         '''Set the cropping for returned frames.
