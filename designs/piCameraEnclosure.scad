@@ -3,18 +3,19 @@
 module piCameraEnclosure() 
 {
 
-	module piCameraBackCoverBevel(clearance) {
+	module piCameraBackCoverBevel(width, height, clearance) {
 		c = clearance;
-		hw = ( 25 / 2 ) + c;
+		hh = height / 2;
+		hw = ( width / 2 ) + c;
 		he = hw + 1.5 + c;
 		polyhedron(
 			points = [
-				[ hw, -15-c, -1-c ],
-				[ hw,  15+c, -1-c ], 
-				[ hw,  15+c,  1 ], 
-				[ hw, -15-c,  1 ],
-				[ he, -15-c, -1-c ],
-				[ he,  15+c, -1-c ] 
+				[ hw, -15-c, -hh-c ],
+				[ hw,  15+c, -hh-c ], 
+				[ hw,  15+c, hh ], 
+				[ hw, -15-c, hh ],
+				[ he, -15-c, -hh-c ],
+				[ he,  15+c, -hh-c ] 
 				], 
 			faces = [
 				[ 5, 1, 0, 4],
@@ -26,28 +27,28 @@ module piCameraEnclosure()
 		);
 	}
 
-	module piCameraBackCoverBevels(clearance) {
+	module piCameraBackCoverBevels(width, height, clearance) {
 		union() {
-			piCameraBackCoverBevel(clearance);
+			piCameraBackCoverBevel(width, height, clearance);
 			mirror([1,0,0])
-				piCameraBackCoverBevel(clearance);
+				piCameraBackCoverBevel(width, height, clearance);
 		}
 	}
 
-	module piCameraBackCover(clearance=0, indent=true) {
+	module piCameraBackCover(width, height, clearance=0, indent=true) {
 		c = 2*clearance;
-		translate([0,-5.5,9])
+		translate([0,-5.5,10-height/2])
 			difference() {
 				union() {
-					piCameraBackCoverBevels(clearance);
-					cube(size=[25+c,30+c,2+c],center=true);
+					piCameraBackCoverBevels(width, height, clearance);
+					cube(size=[width+c,30+c,height+c],center=true);
 				}
 				translate([0,12,0])
-					cube(size=[20.5-c,7,3],center=true);
+					cube(size=[width-5-c,7,height+c],center=true);
 				if (indent)
-					translate([0,-12,1.5])
+					translate([0,-12,height/2])
 					rotate([0,90,0])
-						cylinder(r=1, h=40, center=true, $fn=20);
+						cylinder(r=1, h=width-0.5, center=true, $fn=20);
 			}
 	}
 
@@ -71,7 +72,7 @@ module piCameraEnclosure()
 	}
 
 	module boardOpening() {
-		clearance = 0.2;
+		clearance = 0.3;
 		c = 2 * clearance;
 		translate([0,-3,7.5])
 			cube(size=[25+c,24+c,5+clearance], center=true);
@@ -123,7 +124,7 @@ module piCameraEnclosure()
 			cableOpening();
 			lensOpening();
 			cornerRounding(radius=8);
-			piCameraBackCover(clearance=0.3, indent=false);
+			piCameraBackCover(width=27, height=2, clearance=0.3, indent=false);
 		}
 	}
 
@@ -132,7 +133,7 @@ module piCameraEnclosure()
 		// Comment out translate to see
 		// back cover in place.
 		translate([40,5,-8])
-			piCameraBackCover();
+			piCameraBackCover(width=27, height=2);
 	}
 }
 
