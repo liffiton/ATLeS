@@ -2,6 +2,7 @@ import argparse
 import atexit
 import ConfigParser
 import logging
+import os
 import signal
 import sys
 
@@ -20,6 +21,10 @@ def num(s):
 
 def get_conf(config_filename):
     '''Read a configuration file.'''
+    if not os.path.isfile(config_filename):
+        logging.error("Configuration file not found: %s" % config_filename)
+        sys.exit(1)
+
     parser = ConfigParser.RawConfigParser()
     parser.read(config_filename)
 
