@@ -2,6 +2,7 @@ import atexit
 import cv2
 import logging
 import math
+import numpy
 import os
 import random
 import subprocess
@@ -103,16 +104,12 @@ class SimpleTracker(object):
     def __init__(self, w, h):
         self._w = float(w)  # frame width (for scaling coordinates)
         self._h = float(h)  # frame height
-        self._pos = [0,0]
-        self._vel = [0,0]
+        self._pos = numpy.zeros(2)
+        self._vel = numpy.zeros(2)
 
         # How many frames have we not had something to track?
         # Initialized to 100 so status() is initially 'lost'
         self._missing_count = 100
-
-    @property
-    def _speed(self):
-        return math.sqrt(self._vel[0]**2 + self._vel[1]**2)
 
     @property
     def position_pixel(self):
@@ -139,61 +136,60 @@ class SimpleTracker(object):
         # is anything currently being tracked
         if self._missing_count == 0:
             return 'acquired'
-        elif 0 < self._missing_count < 5:
+        elif self._missing_count < 5:
             return 'missing'
         else:
             return 'lost'
 
     def _score_point(self, pt):
         '''Score a given detection point by its distance from the expected position of the fish.'''
-        expected = [self._pos[i] + self._vel[i] for i in 0,1]
-        delta = distance(pt, expected)
+        expected = self._pos + self._vel
+        delta = numpy.linalg.norm(expected - pt)
         return delta
 
     def update(self, obs):
-        if obs:
-            closest = min(obs, key=self._score_point)
-        else:
+        if not obs:
             closest = None
-
-        if self.status == 'lost':
-            self._vel = [0,0]
-            if closest is None:
-                self._missing_count += 1
-                # just use the last known position
-                return
-            else:
-                # closest position is new acquired position
-                self._missing_count = 0
-                self._pos = list(closest)
-
         else:
-            # status is missing or acquired
-
-            # skip if no centroids present
-            # or if closest is more than (XXX: magic number!) away
-            if (closest is None) or (distance(closest, self._pos) > (self._w / 4.0)):
-                self._missing_count += 1
-
-                # use the stored velocity
-                self._pos[0] += self._vel[0]
-                self._pos[1] += self._vel[1]
-
-                # taper velocity to zero
-                scale = 0.5
-                self._vel = [scale * x for x in self._vel]
+            if len(obs) == 1:
+                closest = obs[0]
             else:
-                self._missing_count = 0
-                dx = closest[0] - self._pos[0]
-                dy = closest[1] - self._pos[1]
+                closest = min(obs, key=self._score_point)
+            # If we think we have a decent fix, but closest is more than (XXX: magic number!) away,
+            # then consider this a bad detection.
+            if (self.status != 'lost') and (numpy.linalg.norm(closest - self._pos) > (self._w / 4.0)):
+                closest = None
 
-                # update estimate position
-                self._pos = list(closest)
+        if self.status == 'acquired':
+            # hold on to previous position
+            prevpos = self._pos.copy()
+        else:
+            prevpos = None
 
-                # update estimate velocity as a [very quickly] decaying average
+        if closest is None:
+            # If no good reading, increment missing_count
+            self._missing_count += 1
+        else:
+            # Closest position is new acquired position
+            self._missing_count = 0
+            self._pos[:] = closest
+
+        # self.status is derived from the [just updated] self._missing_count
+        if self.status == 'lost':
+            # We have no idea where it should be, so no more moving the point.
+            self._vel = numpy.zeros(2)
+        elif self.status == 'missing':
+            # use the stored velocity
+            self._pos += self._vel
+            # taper velocity to zero
+            self._vel *= 0.5
+        else:
+            if prevpos is not None:
+                # update estimated velocity as a [very quickly] decaying average
                 alpha = 0.75
-                self._vel[0] = alpha * dx + (1-alpha) * self._vel[0]
-                self._vel[1] = alpha * dy + (1-alpha) * self._vel[1]
+                self._vel = alpha * (self._pos - prevpos) + (1-alpha) * self._vel
+            # update estimated position
+            self._pos[:] = closest
 
 
 class ParticleFilter(object):
@@ -222,7 +218,7 @@ class ParticleFilter(object):
         weightsum = 0.0
         # reweight particles based on position measurement
         for p in self._particles:
-            p['weight'] = math.exp(-self.distance(position, (p[0],p[1]))**2 / 10000)
+            p['weight'] = math.exp(-distance(position, (p[0],p[1]))**2 / 10000)
             weightsum += p['weight']
             p[2] = position[0] - p[0]
             p[3] = position[1] - p[1]
