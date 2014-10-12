@@ -4,8 +4,8 @@ import numpy as np
 import sys
 
 _entry_wait = 1  # min seconds between counted entries to top
-_freeze_min_time = 0.1  # min seconds to count lack of motion as a "freeze"
-_freeze_max_speed = 0.01  # maximum speed to still consider a "freeze"
+_freeze_min_time = 1  # min seconds to count lack of motion as a "freeze"
+_freeze_max_speed = 0.3  # maximum speed to still consider a "freeze"
 
 
 # Source: https://gist.github.com/jasonmc/1160951
