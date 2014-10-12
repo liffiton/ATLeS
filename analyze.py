@@ -213,8 +213,8 @@ def main():
     valid_count = np.sum(valid)
     lost = status == 'lost'
     missing = status == 'missing'
-    in_top = y > 0.5
-    frozen = speed < _freeze_max_speed
+    in_top = valid & (y > 0.5)
+    frozen = valid & (speed < _freeze_max_speed)
 
     # initialize counters, etc.
     last_entry = None
@@ -231,21 +231,13 @@ def main():
     total_freeze_time = 0
     freeze_count = 0
 
-    cur_turn_time = 0
+    # TODO:  cur_turn_time = 0
 
     distance_total = 0
     time_total_valid = 0
 
     for i in xrange(1, len(time)):
         if not valid[i]:
-            # cancel any ongoing 'events'
-            if cur_freeze_time:
-                freeze_count -= 1
-                total_freeze_time -= cur_freeze_time
-                cur_freeze_time = 0
-            if cur_turn_time:
-                # TODO
-                pass
             continue
 
         distance_total += dist[i]
