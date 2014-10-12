@@ -1,20 +1,10 @@
 import atexit
 import cv2
 import logging
-import math
 import numpy
 import os
-import random
 import subprocess
 import sys
-
-
-def difference(p0, p1):
-    return [p0[i]-p1[i] for i in range(len(p0))]
-
-
-def distance(p0, p1):
-    return math.sqrt(sum(x**2 for x in difference(p0, p1)))
 
 
 class FrameProcessor(object):
@@ -190,64 +180,6 @@ class SimpleTracker(object):
                 self._vel = alpha * (self._pos - prevpos) + (1-alpha) * self._vel
             # update estimated position
             self._pos[:] = closest
-
-
-class ParticleFilter(object):
-    """A hacked-together, somewhat bogus particle filter... use at your own risk."""
-    def __init__(self, n, dims=[(0,1),(0,1),(-1,1),(-1,1)]):
-        self._n = n
-        self._repopulate(dims)
-
-    def _repopulate(self, dims):
-        self._particles = []
-        for i in range(self._n):
-            new_particle = {}
-            for i,dim in enumerate(dims):
-                new_particle[i] = random.uniform(*dim)
-            new_particle['weight'] = 1.0/self._n
-            self._particles.append(new_particle)
-
-    def update(self):
-        for particle in self._particles:
-            particle[0] += random.gauss(particle[2], particle[2]*0.1)
-            #particle[0] += particle[2]
-            particle[1] += random.gauss(particle[3], particle[3]*0.1)
-            #particle[1] += particle[3]
-
-    def measurement(self, position):
-        weightsum = 0.0
-        # reweight particles based on position measurement
-        for p in self._particles:
-            p['weight'] = math.exp(-distance(position, (p[0],p[1]))**2 / 10000)
-            weightsum += p['weight']
-            p[2] = position[0] - p[0]
-            p[3] = position[1] - p[1]
-
-        if weightsum == 0.0:
-            self._repopulate([(position[0],position[0]), (position[1],position[1]), (-1,1), (-1,1)])
-        else:
-            # normalize weights
-            while weightsum < 1.0:
-                for p in self._particles:
-                    p['weight'] /= weightsum
-                weightsum = sum(p['weight'] for p in self._particles)
-
-        # resample
-        new_particles = []
-        for i in range(self._n):
-            rnd = random.random()
-            i = 0
-            while rnd >= 0.0 and i < self._n:
-                chosen = self._particles[i]
-                rnd -= chosen['weight']
-                i += 1
-            new_particles.append(chosen.copy())
-
-        self._particles = new_particles
-
-    @property
-    def estimate(self):
-        return max(self._particles, key=lambda x: x['weight'])
 
 
 class Stream(object):
