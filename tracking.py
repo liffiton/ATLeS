@@ -178,6 +178,10 @@ class SimpleTracker(object):
                 # use the stored velocity
                 self._pos[0] += self._vel[0]
                 self._pos[1] += self._vel[1]
+
+                # taper velocity to zero
+                scale = 0.5
+                self._vel = [scale * x for x in self._vel]
             else:
                 self._missing_count = 0
                 dx = closest[0] - self._pos[0]
