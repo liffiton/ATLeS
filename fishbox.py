@@ -68,6 +68,10 @@ def get_args():
                         help='video capture exposure time, given in multiples of 0.1ms (default: 200)')
     parser.add_argument('--vidfile', type=str,
                         help='read video input from the given file (for testing purposes)')
+    parser.add_argument('--delay', type=int, default=0,
+                        help='delay in ms to add between frames (default: 0) -- useful for slowing video processing/display.')
+    parser.add_argument('--start-frame', type=int, default=300,
+                        help='start tracking at a given frame number (default: 300) -- allow the background learner to stabilize and/or to view a particular position in a video for testing.')
 
     return parser.parse_args()
 
@@ -107,9 +111,9 @@ def main():
     signal.signal(signal.SIGINT, sig_handler)
 
     exp = experiment.Experiment(conf, args, stream)
-
     if args.watch:
         cv2.setMouseCallback("preview", exp.mouse_callback)
+    atexit.register(exp.print_stats)
 
     exp.run()
 

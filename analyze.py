@@ -52,7 +52,7 @@ def set_backgroundcolor(ax, color):
         lh.legendPatch.set_facecolor(color)
 
 
-def plot(time, theta, speed, valid, lost, missing, frozen, in_top, x, y):
+def plot(time, theta, speed, valid, lost, missing, frozen, in_top, x, y, numpts):
     maxpts = 500
     numplots = 1 + len(time) / maxpts
 
@@ -72,7 +72,10 @@ def plot(time, theta, speed, valid, lost, missing, frozen, in_top, x, y):
             ax = plt.subplot(gs[i+1,0])
         else:
             ax = plt.subplot(gs[i+1,:])
-        subplot(ax, time[i*maxpts:(i+1)*maxpts], theta[i*maxpts:(i+1)*maxpts], np.median(speed), speed[i*maxpts:(i+1)*maxpts], valid[i*maxpts:(i+1)*maxpts], lost[i*maxpts:(i+1)*maxpts], missing[i*maxpts:(i+1)*maxpts], frozen[i*maxpts:(i+1)*maxpts], in_top[i*maxpts:(i+1)*maxpts], x[i*maxpts:(i+1)*maxpts], y[i*maxpts:(i+1)*maxpts])
+
+        start = i*maxpts
+        end = (i+1)*maxpts
+        subplot(ax, time[start:end], theta[start:end], np.median(speed), speed[start:end], valid[start:end], lost[start:end], missing[start:end], frozen[start:end], in_top[start:end], x[start:end], y[start:end], numpts[start:end])
 
     # Make a legend with proxy artists
     height_artist = lines.Line2D([],[], color='green')
@@ -108,7 +111,7 @@ def speed2color(speed, median_speed):
     return (r,g,b, 0.5)
 
 
-def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, in_top, x, y):
+def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, in_top, x, y, numpts):
     # Format nicely
     set_foregroundcolor(ax, '0.6')
     set_backgroundcolor(ax, '0.08')
@@ -160,6 +163,9 @@ def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, 
     # Plot height
     ax.plot(time, y, color='green', label='Height of fish')
 
+    # Plot numpts (scaled so 0 = bottom, 10 = top of subplot)
+    ax.plot(time, -1+(numpts/5.0), color='orange', label='# detected points')
+
     # Add stick plot of movement (where valid)
     ax.quiver(
         time, [0] * len(time),
@@ -180,11 +186,11 @@ def main():
 
     fname = sys.argv[1]
 
-    time, status, x, y = np.loadtxt(
+    time, status, x, y, numpts = np.loadtxt(
         fname,
         delimiter=',',
         unpack=True,
-        dtype={'names': ('time','status','x','y'), 'formats': ('f','S16','f','f')}
+        dtype={'names': ('time','status','x','y','numpts'), 'formats': ('f','S16','f','f','d')}
     )
 
     # calculate derivatives and other derived values
@@ -314,7 +320,7 @@ def main():
         print "Avg. time per freeze: %0.3f seconds" % (total_freeze_time / freeze_count)
         print "Freeze frequency: %0.2f per minute" % (60.0*(freeze_count / time_total_valid))
 
-    plot(time, theta, np.where(valid, speed, 0), valid, lost, missing, frozen, in_top, x, y)
+    plot(time, theta, np.where(valid, speed, 0), valid, lost, missing, frozen, in_top, x, y, numpts)
 
 if __name__ == '__main__':
     main()

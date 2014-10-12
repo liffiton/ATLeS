@@ -8,8 +8,12 @@ import subprocess
 import sys
 
 
+def difference(p0, p1):
+    return [p0[i]-p1[i] for i in range(len(p0))]
+
+
 def distance(p0, p1):
-    return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+    return math.sqrt(sum(x**2 for x in difference(p0, p1)))
 
 
 class FrameProcessor(object):
@@ -20,7 +24,7 @@ class FrameProcessor(object):
         #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
 
         # varThreshold: higher values detect fewer/smaller changed regions
-        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=16, bShadowDetection=False)
+        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=8, bShadowDetection=False)
 
         # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
 
@@ -29,12 +33,12 @@ class FrameProcessor(object):
         # A bit above 0 looks good.
         # Lower values are better for detecting slower movement, though it
         # takes a bit of time to learn the background initially.
-        self._learning_rate = 0.001  # for 10ish fps video?
+        self._learning_rate = 0.0005  # for 10ish fps video?
 
         # element to reuse in erode/dilate
         # RECT is more robust at removing noise in the erode
-        self._element33 = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-        self._element55 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+        self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
 
         # contours and centroids for the most recent frame
         self._contours = None
@@ -58,10 +62,10 @@ class FrameProcessor(object):
         self._gframe = self._gframe & mask
 
         # filter out single pixels
-        self._gframe = cv2.erode(self._gframe, self._element33)
+        self._gframe = cv2.erode(self._gframe, self._element_shrink)
 
         # restore and join nearby regions (in case one fish has a skinny middle...)
-        self._gframe = cv2.dilate(self._gframe, self._element55)
+        self._gframe = cv2.dilate(self._gframe, self._element_grow)
 
     def _get_contours(self):
         # find contours
@@ -96,19 +100,15 @@ class FrameProcessor(object):
 
 
 class SimpleTracker(object):
-    def __init__(self, w, h, conf):
+    def __init__(self, w, h):
         self._w = float(w)  # frame width (for scaling coordinates)
         self._h = float(h)  # frame height
-        self._tank_min_x = float(conf['tank_min_x'])   # left edge of tank, in normalized x-coordinates
-        self._tank_max_x = float(conf['tank_max_x'])   # right edge of tank, in normalized x-coordinates
-        self._tank_min_y = float(conf['tank_min_y'])   # bottom edge of tank, in normalized y-coordinates
-        self._tank_max_y = float(conf['tank_max_y'])   # top edge of tank, in normalized y-coordinates
-        self._fov_w = float(conf['fov_width'])   # field of view width at fish tank (in meters)
-        self._fov_h = float(conf['fov_height'])  # field of view height at fish tank (in meters)
         self._pos = [0,0]
         self._vel = [0,0]
-        self._missing_count = 100   # How many frames have we not had something to track?
-                                    # Initialized to 100 so status() is initially 'lost'
+
+        # How many frames have we not had something to track?
+        # Initialized to 100 so status() is initially 'lost'
+        self._missing_count = 100
 
     @property
     def _speed(self):
@@ -119,13 +119,12 @@ class SimpleTracker(object):
         '''Return the position in pixel coordinates.'''
         return tuple(self._pos)
 
-    @property
-    def position_frame(self):
-        '''Return the position in frame coordinates.
-        Both x- and y-coordinates are scaled to 0.0-1.0 relative to the entire captured image.
-        NOTE: y-axis is inverted from pixel coordinates, so y=0.0 is the **bottom** of the frame.
+    def _pixel_to_tank(self, pt):
+        '''Transform pixel coordinates to tank coordinates.
+        Both x- and y-coordinates are scaled to 0.0-1.0 relative to the view of the tank.
+        NOTE: y-axis is inverted from pixel coordinates, so y=0.0 is the **bottom** of the tank.
         '''
-        return (self._pos[0] / self._w, 1.0 - self._pos[1] / self._h)
+        return (pt[0] / self._w, 1.0 - (pt[1] / self._h))
 
     @property
     def position_tank(self):
@@ -133,10 +132,7 @@ class SimpleTracker(object):
         Both x- and y-coordinates are scaled to 0.0-1.0 relative to the view of the tank.
         NOTE: y-axis is inverted from pixel coordinates, so y=0.0 is the **bottom** of the tank.
         '''
-        return (
-            (self._pos[0] / self._w - self._tank_min_x) / (self._tank_max_x - self._tank_min_x),
-            1.0 - (self._pos[1] / self._h - self._tank_min_y) / (self._tank_max_y - self._tank_min_y)
-        )
+        return self._pixel_to_tank(self._pos)
 
     @property
     def status(self):
@@ -148,9 +144,15 @@ class SimpleTracker(object):
         else:
             return 'lost'
 
+    def _score_point(self, pt):
+        '''Score a given detection point by its distance from the expected position of the fish.'''
+        expected = [self._pos[i] + self._vel[i] for i in 0,1]
+        delta = distance(pt, expected)
+        return delta
+
     def update(self, obs):
         if obs:
-            closest = min(obs, key=lambda pt: distance(pt, self._pos))
+            closest = min(obs, key=self._score_point)
         else:
             closest = None
 
@@ -166,10 +168,11 @@ class SimpleTracker(object):
                 self._pos = list(closest)
 
         else:
-            # satus is missing or acquired
+            # status is missing or acquired
 
-            # skip if no centroids or if closest is more than 50px away (XXX: magic number!) but velocity is not 0.0 (i.e. no estimate yet)
-            if closest is None or distance(closest, self._pos) > 50 and self._speed != 0.0:
+            # skip if no centroids present
+            # or if closest is more than (XXX: magic number!) away
+            if (closest is None) or (distance(closest, self._pos) > (self._w / 4.0)):
                 self._missing_count += 1
 
                 # use the stored velocity
@@ -183,8 +186,8 @@ class SimpleTracker(object):
                 # update estimate position
                 self._pos = list(closest)
 
-                # update estimate velocity as a decaying average
-                alpha = 0.4
+                # update estimate velocity as a [very quickly] decaying average
+                alpha = 0.75
                 self._vel[0] = alpha * dx + (1-alpha) * self._vel[0]
                 self._vel[1] = alpha * dy + (1-alpha) * self._vel[1]
 
@@ -248,8 +251,7 @@ class ParticleFilter(object):
 
 
 class Stream(object):
-    def __init__(self, source, w=160, h=120, params=None, fps=6, exposure=200):
-        self._crop = None
+    def __init__(self, source, w=None, h=None, params=None, fps=None, exposure=None):
         if params is None:
             params = {}
 
@@ -339,20 +341,8 @@ class Stream(object):
     def height(self):
         return int(self._video.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 
-    def set_crop(self, newcrop):
-        '''Set the cropping for returned frames.
-
-        Inputs:
-          newcrop: (x1,x2, y1,y2) tuple or list of integers.
-                   Frame will be cropped to x=(x1..x2-1), y=(y1..y2-1).
-        '''
-        self._crop = newcrop
-
     def get_frame(self):
         rval, frame = self._video.read()
         if not rval:
             return rval, frame
-        if self._crop:
-            c = self._crop
-            frame = frame[c[0]:c[1], c[2]:c[3]]
         return rval, frame

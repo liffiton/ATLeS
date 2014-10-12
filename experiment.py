@@ -1,4 +1,6 @@
+import collections
 import logging
+import numpy
 import os
 import sys
 import time
@@ -108,6 +110,13 @@ class Experiment(object):
         self._logger = Logger(args.logdir, args.id)
         self._logger.record_setup(args, conf)
 
+        # Tank bounds in pixel coordinates
+        # NOTE: tank Y coordinate is inverted w.r.t. pixel coordinates, hence (1.0 - ...).
+        self._tx1 = int(self._stream.width * self._conf['camera']['tank_min_x'])
+        self._tx2 = int(self._stream.width * self._conf['camera']['tank_max_x'])
+        self._ty1 = int(self._stream.height * (1.0 - self._conf['camera']['tank_max_y']))
+        self._ty2 = int(self._stream.height * (1.0 - self._conf['camera']['tank_min_y']))
+
         # Experiment setup
         self._control, self._stim, self._behavior_test = get_experiment()
 
@@ -115,10 +124,15 @@ class Experiment(object):
         self._proc = tracking.FrameProcessor()
 
         # Tracking: Simple
-        self._track = tracking.SimpleTracker(w=stream.width, h=stream.height, conf=conf['camera'])
+        tank_width = self._tx2 - self._tx1
+        tank_height = self._ty2 - self._ty1
+        self._track = tracking.SimpleTracker(w=tank_width, h=tank_height)
 
         # For mouse interaction
         self._mouse_on = False
+
+        # For measuring status percentages
+        self._statuses = collections.defaultdict(int)
 
     def mouse_callback(self, event, x, y, flags, *args):
         if event == 1:  # mouse down
@@ -130,34 +144,54 @@ class Experiment(object):
         pos_pixel = track.position_pixel
         status = track.status
 
-        # draw a circle around the estimated position
-        position = tuple(int(x) for x in pos_pixel)
-        cv2.circle(frame, position, 5, self.STATUS_COLORS[status])
+        tx1 = self._tx1
+        tx2 = self._tx2
+        ty1 = self._ty1
+        ty2 = self._ty2
 
         # draw a red frame around the tank, according to the ini file
-        TL = (int(self._stream.width * self._conf['camera']['tank_min_x']),
-              int(self._stream.height * self._conf['camera']['tank_min_y']))
-        BR = (int(self._stream.width * self._conf['camera']['tank_max_x']),
-              int(self._stream.height * self._conf['camera']['tank_max_y']))
+        TL = (tx1, ty1)
+        BR = (tx2, ty2)
         cv2.rectangle(frame, TL, BR, self.RED)
 
+        # make an image for drawing tank-coord overlays
+        tank_overlay = numpy.zeros((ty2-ty1, tx2-tx1, 4), frame.dtype)
+
         # draw contours
-        #for c_i in range(len(proc.contours)):
-        #    cv2.drawContours(frame, proc.contours, c_i, self.GREEN, 1)
+        for c_i in range(len(proc.contours)):
+            cv2.drawContours(tank_overlay, proc.contours, c_i, self.GREEN, 1)
 
         # draw centroids
         for pt in proc.centroids:
+            if pt == pos_pixel:
+                continue  # will draw this one separately
             x = int(pt[0])
             y = int(pt[1])
-            cv2.line(frame, (x-5,y), (x+5,y), self.YELLOW)
-            cv2.line(frame, (x,y-5), (x,y+5), self.YELLOW)
+            cv2.line(tank_overlay, (x-5,y), (x+5,y), self.YELLOW)
+            cv2.line(tank_overlay, (x,y-5), (x,y+5), self.YELLOW)
+
+        # draw a cross at the known/estimated position
+        color = self.STATUS_COLORS[status]
+        x,y = tuple(int(x) for x in pos_pixel)
+        cv2.line(tank_overlay, (x-5,y), (x+5,y), color)
+        cv2.line(tank_overlay, (x,y-5), (x,y+5), color)
+
+        # draw a circle around the estimated position
+        #position = tuple(int(x) for x in pos_pixel)
+        #cv2.circle(tank_overlay, position, 5, self.STATUS_COLORS[status])
 
         # draw crosshair and frame coordinates at mouse
         if self._mouse_on:
             cv2.line(frame, (0, self._mousey), (self._stream.width, self._mousey), self.RED)
             cv2.line(frame, (self._mousex, 0), (self._mousex, self._stream.height), self.RED)
-            text = "%.3f %.3f" % (float(self._mousex) / self._stream.width, float(self._mousey) / self._stream.height)
+            # NOTE: tank Y coordinate is inverted: 0=bottom, 1=top of frame.
+            text = "%.3f %.3f" % (float(self._mousex) / self._stream.width, 1.0 - (float(self._mousey) / self._stream.height))
             cv2.putText(frame, text, (5, self._stream.height-5), cv2.FONT_HERSHEY_PLAIN, 1, self.RED)
+
+        # draw the overlay into the frame at the tank's location
+        alpha = tank_overlay[:,:,3]
+        for c in 0,1,2:
+            frame[ty1:ty2,tx1:tx2,c] = frame[ty1:ty2,tx1:tx2,c]*(1-alpha/255.0) + tank_overlay[:,:,c]*(alpha/255.0)
 
         cv2.imshow("preview", frame)
 
@@ -170,6 +204,7 @@ class Experiment(object):
         if from_file:
             # Get frame count, fps for calculating frame times
             framecount, fps = self._stream.get_video_stats()
+            logging.info("Video file: %d frames, %d fps" % (framecount, fps))
 
         self._logger.start_time()
 
@@ -185,18 +220,31 @@ class Experiment(object):
                 logging.warn("stream.get_frame() rval != True")
                 break
 
+            curframe += 1
+
             # Process the frame (finds contours, centroids, and updates background subtractor)
-            self._proc.process_frame(frame)
+            tank_crop = frame[self._ty1:self._ty2,self._tx1:self._tx2,:]
+            self._proc.process_frame(tank_crop)
+
+            # Wait for the background subtractor to learn/stabilize
+            # before logging or using data.
+            if curframe < self._args.start_frame:
+                continue
+            elif curframe == self._args.start_frame:
+                logging.info("Tracking started.")
+
             # Update tracker w/ latest set of centroids
             self._track.update(self._proc.centroids)
             # Get the position estimate of the fish and tracking status from the tracker
             # pos_pixel = self._track.position_pixel
             pos_tank = self._track.position_tank
-            # pos_frame = self._track.position_frame
             status = self._track.status
 
+            # Update status counts
+            self._statuses[status] += 1
+
             # Record data
-            data = "%s,%0.3f,%0.3f\n" % (status, pos_tank[0], pos_tank[1])
+            data = "%s,%0.3f,%0.3f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids))
             if from_file:
                 self._logger.write_data(data, frametime=curframe*1.0/fps)
             else:
@@ -221,9 +269,18 @@ class Experiment(object):
                 self._stim.show(None)
 
             # tracking performance / FPS
-            curframe += 1
             if curframe % 100 == 0:
                 curtime = time.time()
                 frame_time = (curtime - prevtime) / 100
                 logging.info("%dms / frame : %dfps" % (1000*frame_time, 1/frame_time))
                 prevtime = curtime
+
+            if self._args.delay:
+                time.sleep(self._args.delay / 1000.0)
+
+    def print_stats(self):
+        '''Print status percentages.'''
+        total = sum(self._statuses.values())
+        logging.info("Status percentages:")
+        for status, count in self._statuses.items():
+            logging.info("{0:>10}: {1:4.1f}".format(status, 100*count/float(total)))
