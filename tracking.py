@@ -15,7 +15,7 @@ class FrameProcessor(object):
         #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
 
         # varThreshold: higher values detect fewer/smaller changed regions
-        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=8, bShadowDetection=False)
+        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=6, bShadowDetection=False)
 
         # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
 
@@ -24,7 +24,7 @@ class FrameProcessor(object):
         # A bit above 0 looks good.
         # Lower values are better for detecting slower movement, though it
         # takes a bit of time to learn the background initially.
-        self._learning_rate = 0.0005  # for 10ish fps video?
+        self._learning_rate = 0.001  # for 10ish fps video?
 
         # element to reuse in erode/dilate
         # RECT is more robust at removing noise in the erode
