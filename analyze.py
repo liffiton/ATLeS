@@ -60,8 +60,9 @@ def plot(time, theta, speed, valid, lost, missing, frozen, in_top, x, y, numpts)
     # make final chart only as wide as needed
     last_width = (len(time) % maxpts) / float(maxpts)
     gs = gridspec.GridSpec(
-        numplots+1, 2,
-        height_ratios=[0.2] + ([1] * numplots),   # 0.2 for 'legend subplot'
+        numplots+2,  # +1 for legend, +1 for heatmap
+        2,           # 2 columns for final axis reduced size
+        height_ratios=[0.2] + ([1] * numplots) + [5],   # 0.2 for 'legend subplot', 5 for heatmap
         width_ratios=[last_width, 1-last_width],  # all but last will span both columns
     )
 
@@ -79,6 +80,7 @@ def plot(time, theta, speed, valid, lost, missing, frozen, in_top, x, y, numpts)
 
     # Make a legend with proxy artists
     height_artist = lines.Line2D([],[], color='green')
+    numpts_artist = lines.Line2D([],[], color='orange')
     intop_artist = patches.Rectangle((0,0), 1, 1, fc='blue', ec='None')
     frozen_artist = patches.Rectangle((0,0), 1, 1, fc='lightblue', ec='None')
     missing_artist = patches.Rectangle((0,0), 1, 1, fc='yellow', ec='None')
@@ -86,14 +88,20 @@ def plot(time, theta, speed, valid, lost, missing, frozen, in_top, x, y, numpts)
     # Place it in center of top "subplot" area
     legend_ax = plt.subplot(gs[0,:])
     legend_ax.legend(
-        [height_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
-        ['Height of fish', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
+        [height_artist, numpts_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
+        ['Height of fish', '# Detection pts', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
         loc='center',
-        ncol=5,
+        ncol=6,
     )
     legend_ax.axis('off')
     set_backgroundcolor(legend_ax, 'None')
     set_foregroundcolor(legend_ax, '0.6')
+
+    # Draw the heatmap at the bottom
+    heatmap_ax = plt.subplot(gs[-1,:])
+    heatmap, xedges, yedges = np.histogram2d(x, y, bins=100)
+    #extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+    heatmap_ax.imshow(heatmap, cmap=plt.get_cmap('afmhot'), origin='lower')
 
     # Format nicely
     fig.patch.set_facecolor('black')
@@ -105,8 +113,8 @@ def plot(time, theta, speed, valid, lost, missing, frozen, in_top, x, y, numpts)
 
 def speed2color(speed, median_speed):
     cutoff = median_speed*5
-    r = min(1, 0.8+speed/cutoff)
-    g = max(0, 0.8-speed/cutoff)
+    r = max(0,min(1, 0.8+speed/cutoff))
+    g = min(1,max(0, 0.8-speed/cutoff))
     b = g
     return (r,g,b, 0.5)
 
@@ -163,8 +171,8 @@ def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, 
     # Plot height
     ax.plot(time, y, color='green', label='Height of fish')
 
-    # Plot numpts (scaled so 0 = bottom, 10 = top of subplot)
-    ax.plot(time, -1+(numpts/5.0), color='orange', label='# detected points')
+    # Plot numpts (scaled so 0 = bottom, 20 = top of subplot)
+    ax.plot(time, -1+(numpts/10.0), color='orange', label='# detected points')
 
     # Add stick plot of movement (where valid)
     ax.quiver(
@@ -197,6 +205,13 @@ def main():
     dx = np.gradient(x)
     dy = np.gradient(y)
     dt = np.gradient(time)
+
+    if np.min(dt) < 0:
+        print("\n[31mWARNING:[m Time travel detected!\n[31mNegative time deltas in following indices:[m "
+              + " ".join(str(x) for x in np.where(dt < 0))
+              + "\n"
+              )
+
     movement = np.matrix([dx,dy])
     try:
         dist = np.linalg.norm(movement, axis=0)
