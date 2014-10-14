@@ -1,4 +1,24 @@
-New features:
+TODOs and Plans
+===============
+
+General
+-------
+ - Teach Brad git
+ - Decide whether to pursue tablet idea
+
+Enclosure
+---------
+
+Current:
+ - Rig lights to be in consistent, stable position
+
+New, laser-cut:
+
+
+Software
+--------
+
+Features:
  - Save video (if possible)
  - Save frame (and result of background subtraction) when status first becomes
    "missing" for troubleshooting
@@ -11,6 +31,6 @@ New features:
 Testing/validation:
  - Record a few real-world videos of fish w/ new setup and correct .ini files
    to match
- - Check carefully how invalid entries ('lost') will affect collected metrics
+ - Check carefully how invalid entries ['lost'] will affect collected metrics
 
 Bugs:
