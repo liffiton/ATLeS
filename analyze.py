@@ -134,9 +134,12 @@ class Grapher(object):
         self._set_foregroundcolor(legend_ax, '0.6')
 
     def plot_heatmap(self, heatmap_ax):
-        heatmap, xedges, yedges = np.histogram2d(self._x, self._y, bins=100)
-        extent = [0,1,0,1]
-        heatmap_ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest', aspect='equal')
+        # imshow expects y,x for the image, but x,y for the extents,
+        # so we have to manage that here...
+        heatmap, yedges, xedges = np.histogram2d(self._y, self._x, bins=100)
+        #extent = [0,1,0,1]
+        extent = [min(0,xedges[0]), max(1,xedges[-1]), min(0,yedges[0]), max(1,yedges[-1])]
+        heatmap_ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest')
 
     def _subplot(self, ax, start, end, median_speed):
         time = self._time[start:end]
