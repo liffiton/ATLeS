@@ -8,191 +8,225 @@ _freeze_min_time = 1  # min seconds to count lack of motion as a "freeze"
 _freeze_max_speed = 0.3  # maximum speed to still consider a "freeze"
 
 
-# Source: https://gist.github.com/jasonmc/1160951
-def set_foregroundcolor(ax, color):
-    '''For the specified axes, sets the color of the frame, major ticks,
-    tick labels, axis labels, title and legend
-    '''
-    for tl in ax.get_xticklines() + ax.get_yticklines():
-        tl.set_color(color)
-    for spine in ax.spines:
-        ax.spines[spine].set_edgecolor(color)
-    for tick in ax.xaxis.get_major_ticks():
-        tick.label1.set_color(color)
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label1.set_color(color)
-    ax.axes.xaxis.label.set_color(color)
-    ax.axes.yaxis.label.set_color(color)
-    ax.axes.xaxis.get_offset_text().set_color(color)
-    ax.axes.yaxis.get_offset_text().set_color(color)
-    ax.axes.title.set_color(color)
-    lh = ax.get_legend()
-    if lh is not None:
-        lh.get_title().set_color(color)
-        lh.legendPatch.set_edgecolor('none')
-        labels = lh.get_texts()
-        for lab in labels:
-            lab.set_color(color)
-    for tl in ax.get_xticklabels():
-        tl.set_color(color)
-    for tl in ax.get_yticklabels():
-        tl.set_color(color)
+class Grapher(object):
+    def __init__(self, time, theta, speed, valid, lost, missing, frozen, in_top, x, y, numpts):
+        self._len = len(time)
+        self._time = time
+        self._theta = theta
+        self._speed = speed
+        self._valid = valid
+        self._lost = lost
+        self._missing = missing
+        self._frozen = frozen
+        self._in_top = in_top
+        self._x = x
+        self._y = y
+        self._numpts = numpts
 
+    # Source: https://gist.github.com/jasonmc/1160951
+    @staticmethod
+    def _set_foregroundcolor(ax, color):
+        '''For the specified axes, sets the color of the frame, major ticks,
+        tick labels, axis labels, title and legend
+        '''
+        for tl in ax.get_xticklines() + ax.get_yticklines():
+            tl.set_color(color)
+        for spine in ax.spines:
+            ax.spines[spine].set_edgecolor(color)
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label1.set_color(color)
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label1.set_color(color)
+        ax.axes.xaxis.label.set_color(color)
+        ax.axes.yaxis.label.set_color(color)
+        ax.axes.xaxis.get_offset_text().set_color(color)
+        ax.axes.yaxis.get_offset_text().set_color(color)
+        ax.axes.title.set_color(color)
+        lh = ax.get_legend()
+        if lh is not None:
+            lh.get_title().set_color(color)
+            lh.legendPatch.set_edgecolor('none')
+            labels = lh.get_texts()
+            for lab in labels:
+                lab.set_color(color)
+        for tl in ax.get_xticklabels():
+            tl.set_color(color)
+        for tl in ax.get_yticklabels():
+            tl.set_color(color)
 
-# Source: https://gist.github.com/jasonmc/1160951
-def set_backgroundcolor(ax, color):
-    '''Sets the background color of the current axes (and legend).
-    Use 'None' (with quotes) for transparent. To get transparent
-    background on saved figures, use:
-    pp.savefig("fig1.svg", transparent=True)
-    '''
-    ax.patch.set_facecolor(color)
-    lh = ax.get_legend()
-    if lh is not None:
-        lh.legendPatch.set_facecolor(color)
+    # Source: https://gist.github.com/jasonmc/1160951
+    @staticmethod
+    def _set_backgroundcolor(ax, color):
+        '''Sets the background color of the current axes (and legend).
+        Use 'None' (with quotes) for transparent. To get transparent
+        background on saved figures, use:
+        pp.savefig("fig1.svg", transparent=True)
+        '''
+        ax.patch.set_facecolor(color)
+        lh = ax.get_legend()
+        if lh is not None:
+            lh.legendPatch.set_facecolor(color)
 
+    @staticmethod
+    def _speed2color(speed, median_speed):
+        cutoff = median_speed*5
+        r = max(0,min(1, 0.8+speed/cutoff))
+        g = min(1,max(0, 0.8-speed/cutoff))
+        b = g
+        return (r,g,b, 0.5)
 
-def plot(time, theta, speed, valid, lost, missing, frozen, in_top, x, y, numpts):
-    maxpts = 500
-    numplots = 1 + len(time) / maxpts
+    def plot(self):
+        maxpts = 500
+        numplots = 1 + self._len / maxpts
 
-    fig = plt.figure(figsize=(12,2*numplots))
-    # make final chart only as wide as needed
-    last_width = (len(time) % maxpts) / float(maxpts)
-    gs = gridspec.GridSpec(
-        numplots+2,  # +1 for legend, +1 for heatmap
-        2,           # 2 columns for final axis reduced size
-        height_ratios=[0.2] + ([1] * numplots) + [5],   # 0.2 for 'legend subplot', 5 for heatmap
-        width_ratios=[last_width, 1-last_width],  # all but last will span both columns
-    )
+        fig = plt.figure(figsize=(12,2*numplots))
+        # make final chart only as wide as needed
+        last_width = (self._len % maxpts) / float(maxpts)
+        gs = gridspec.GridSpec(
+            numplots+2,  # +1 for legend, +1 for heatmap
+            2,           # 2 columns for final axis reduced size
+            height_ratios=[0.2] + ([1] * numplots) + [5],   # 0.2 for 'legend subplot', 5 for heatmap
+            width_ratios=[last_width, 1-last_width],  # all but last will span both columns
+        )
 
-    for i in xrange(numplots):
-        # all plots but last span both columns,
-        # last plot only in the first column, to get the correct width
-        if i == numplots - 1:
-            ax = plt.subplot(gs[i+1,0])
-        else:
-            ax = plt.subplot(gs[i+1,:])
+        for i in xrange(numplots):
+            # all plots but last span both columns,
+            # last plot only in the first column, to get the correct width
+            if i == numplots - 1:
+                ax = plt.subplot(gs[i+1,0])
+            else:
+                ax = plt.subplot(gs[i+1,:])
 
-        start = i*maxpts
-        end = (i+1)*maxpts
-        subplot(ax, time[start:end], theta[start:end], np.median(speed), speed[start:end], valid[start:end], lost[start:end], missing[start:end], frozen[start:end], in_top[start:end], x[start:end], y[start:end], numpts[start:end])
+            start = i*maxpts
+            end = (i+1)*maxpts
+            self._subplot(ax, start, end, np.median(self._speed))
 
-    # Make a legend with proxy artists
-    height_artist = lines.Line2D([],[], color='green')
-    numpts_artist = lines.Line2D([],[], color='orange')
-    intop_artist = patches.Rectangle((0,0), 1, 1, fc='blue', ec='None')
-    frozen_artist = patches.Rectangle((0,0), 1, 1, fc='lightblue', ec='None')
-    missing_artist = patches.Rectangle((0,0), 1, 1, fc='yellow', ec='None')
-    lost_artist = patches.Rectangle((0,0), 1, 1, fc='red', ec='None')
-    # Place it in center of top "subplot" area
-    legend_ax = plt.subplot(gs[0,:])
-    legend_ax.legend(
-        [height_artist, numpts_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
-        ['Height of fish', '# Detection pts', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
-        loc='center',
-        ncol=6,
-    )
-    legend_ax.axis('off')
-    set_backgroundcolor(legend_ax, 'None')
-    set_foregroundcolor(legend_ax, '0.6')
+        # Draw the legend at the top
+        self.draw_legend(plt.subplot(gs[0,:]))
 
-    # Draw the heatmap at the bottom
-    heatmap_ax = plt.subplot(gs[-1,:])
-    heatmap, xedges, yedges = np.histogram2d(x, y, bins=100)
-    #extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-    heatmap_ax.imshow(heatmap, cmap=plt.get_cmap('afmhot'), origin='lower')
+        # Draw the heatmap at the bottom
+        self.plot_heatmap(plt.subplot(gs[-1,:]))
 
-    # Format nicely
-    fig.patch.set_facecolor('black')
-    plt.tight_layout()
+        # Format nicely
+        fig.patch.set_facecolor('black')
+        plt.tight_layout()
 
-    plt.show()
-    fig.savefig('plot.svg', facecolor=fig.get_facecolor(), edgecolor='none')
+        plt.show()
+        fig.savefig('plot.svg', facecolor=fig.get_facecolor(), edgecolor='none')
 
+    def draw_legend(self, legend_ax):
+        # Make a legend with proxy artists
+        height_artist = lines.Line2D([],[], color='green')
+        numpts_artist = lines.Line2D([],[], color='orange')
+        intop_artist = patches.Rectangle((0,0), 1, 1, fc='blue', ec='None')
+        frozen_artist = patches.Rectangle((0,0), 1, 1, fc='lightblue', ec='None')
+        missing_artist = patches.Rectangle((0,0), 1, 1, fc='yellow', ec='None')
+        lost_artist = patches.Rectangle((0,0), 1, 1, fc='red', ec='None')
+        # Place it in center of top "subplot" area
+        legend_ax.legend(
+            [height_artist, numpts_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
+            ['Height of fish', '# Detection pts', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
+            loc='center',
+            ncol=6,
+        )
+        legend_ax.axis('off')
+        self._set_backgroundcolor(legend_ax, 'None')
+        self._set_foregroundcolor(legend_ax, '0.6')
 
-def speed2color(speed, median_speed):
-    cutoff = median_speed*5
-    r = max(0,min(1, 0.8+speed/cutoff))
-    g = min(1,max(0, 0.8-speed/cutoff))
-    b = g
-    return (r,g,b, 0.5)
+    def plot_heatmap(self, heatmap_ax):
+        heatmap, xedges, yedges = np.histogram2d(self._x, self._y, bins=100)
+        extent = [0,1,0,1]
+        heatmap_ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest', aspect='equal')
 
+    def _subplot(self, ax, start, end, median_speed):
+        time = self._time[start:end]
+        theta = self._theta[start:end]
+        speed = self._speed[start:end]
+        #valid = self._valid[start:end]
+        lost = self._lost[start:end]
+        missing = self._missing[start:end]
+        frozen = self._frozen[start:end]
+        in_top = self._in_top[start:end]
+        #x = self._x[start:end]
+        y = self._y[start:end]
+        numpts = self._numpts[start:end]
 
-def subplot(ax, time, theta, median_speed, speed, valid, lost, missing, frozen, in_top, x, y, numpts):
-    # Format nicely
-    set_foregroundcolor(ax, '0.6')
-    set_backgroundcolor(ax, '0.08')
-    for spine in ax.spines:
-        ax.spines[spine].set_visible(False)
-    ax.axes.get_yaxis().set_visible(False)
+        # Format nicely
+        self._set_foregroundcolor(ax, '0.6')
+        self._set_backgroundcolor(ax, '0.08')
+        for spine in ax.spines:
+            ax.spines[spine].set_visible(False)
+        ax.axes.get_yaxis().set_visible(False)
 
-    # Get set axes (specifically, we don't want the y-axis to be autoscaled for us)
-    ax.axis([time[0], time[-1], -1, 1])
+        # Get set axes (specifically, we don't want the y-axis to be autoscaled for us)
+        ax.axis([time[0], time[-1], -1, 1])
 
-    # Mark lost/missing sections
-    lost_collection = collections.BrokenBarHCollection.span_where(
-        time,
-        -0.8, -0.85,
-        lost,
-        edgecolors='none',
-        facecolors='red',
-    )
-    ax.add_collection(lost_collection)
-    missing_collection = collections.BrokenBarHCollection.span_where(
-        time,
-        -0.8, -0.85,
-        missing,
-        edgecolors='none',
-        facecolors='yellow',
-    )
-    ax.add_collection(missing_collection)
+        # Mark lost/missing sections
+        lost_collection = collections.BrokenBarHCollection.span_where(
+            time,
+            -0.8, -0.85,
+            lost,
+            edgecolors='none',
+            facecolors='red',
+        )
+        ax.add_collection(lost_collection)
+        missing_collection = collections.BrokenBarHCollection.span_where(
+            time,
+            -0.8, -0.85,
+            missing,
+            edgecolors='none',
+            facecolors='yellow',
+        )
+        ax.add_collection(missing_collection)
 
-    # Mark frozen sections
-    frozen_collection = collections.BrokenBarHCollection.span_where(
-        time,
-        -0.75, -0.8,
-        frozen,
-        edgecolors='none',
-        facecolors='lightblue',
-    )
-    ax.add_collection(frozen_collection)
+        # Mark frozen sections
+        frozen_collection = collections.BrokenBarHCollection.span_where(
+            time,
+            -0.75, -0.8,
+            frozen,
+            edgecolors='none',
+            facecolors='lightblue',
+        )
+        ax.add_collection(frozen_collection)
 
-    # Mark in-top sections
-    intop_collection = collections.BrokenBarHCollection.span_where(
-        time,
-        -0.7, -0.75,
-        in_top,
-        edgecolors='none',
-        facecolors='blue',
-    )
-    ax.add_collection(intop_collection)
+        # Mark in-top sections
+        intop_collection = collections.BrokenBarHCollection.span_where(
+            time,
+            -0.7, -0.75,
+            in_top,
+            edgecolors='none',
+            facecolors='blue',
+        )
+        ax.add_collection(intop_collection)
 
-    # Plot height
-    ax.plot(time, y, color='green', label='Height of fish')
+        # Plot height
+        ax.plot(time, y, color='green', label='Height of fish')
 
-    # Plot numpts (scaled so 0 = bottom, 20 = top of subplot)
-    ax.plot(time, -1+(numpts/10.0), color='orange', label='# detected points')
+        # Plot numpts (scaled so 0 = bottom, 20 = top of subplot)
+        ax.plot(time, -1+(numpts/10.0), color='orange', label='# detected points')
 
-    # Add stick plot of movement (where valid)
-    ax.quiver(
-        time, [0] * len(time),
-        speed*np.cos(theta), speed*np.sin(theta),
-        color=[speed2color(s, median_speed) for s in speed],
-        scale=median_speed*4,
-        scale_units='y',
-        width=0.01,
-        units='inches',
-        headlength=0, headwidth=0, headaxislength=0     # no arrowheads
-    )
+        # Add stick plot of movement (where valid)
+        ax.quiver(
+            time, [0] * len(time),
+            speed*np.cos(theta), speed*np.sin(theta),
+            color=[self._speed2color(s, median_speed) for s in speed],
+            scale=median_speed*4,
+            scale_units='y',
+            width=0.01,
+            units='inches',
+            headlength=0, headwidth=0, headaxislength=0     # no arrowheads
+        )
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: %s track.csv" % sys.argv[0])
+        print("Usage: %s track.csv [heat]" % sys.argv[0])
         sys.exit(1)
 
     fname = sys.argv[1]
+
+    # hack for now
+    heat_only = len(sys.argv) > 2
 
     time, status, x, y, numpts = np.loadtxt(
         fname,
@@ -327,7 +361,15 @@ def main():
         print "Avg. time per freeze: %0.3f seconds" % (total_freeze_time / freeze_count)
         print "Freeze frequency: %0.2f per minute" % (60.0*(freeze_count / time_total_valid))
 
-    plot(time, theta, np.where(valid, speed, 0), valid, lost, missing, frozen, in_top, x, y, numpts)
+    g = Grapher(time, theta, np.where(valid, speed, 0), valid, lost, missing, frozen, in_top, x, y, numpts)
+
+    if heat_only:
+        fig = plt.figure(figsize=(6,6))
+        g.plot_heatmap(plt.subplot())
+        fig.savefig('heatmap.svg')  # , facecolor=fig.get_facecolor(), edgecolor='none')
+    else:
+        g.plot()
+
 
 if __name__ == '__main__':
     main()
