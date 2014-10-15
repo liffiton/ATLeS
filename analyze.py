@@ -366,7 +366,7 @@ def main():
     if heat_only:
         fig = plt.figure(figsize=(6,6))
         g.plot_heatmap(plt.subplot())
-        fig.savefig('heatmap.svg')  # , facecolor=fig.get_facecolor(), edgecolor='none')
+        fig.savefig('heatmap.svg')
     else:
         g.plot()
 
