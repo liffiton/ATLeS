@@ -75,7 +75,7 @@ class Grapher(object):
         b = g
         return (r,g,b, 0.5)
 
-    def plot(self):
+    def plot(self, outname):
         maxpts = 500
         numplots = 1 + self._len / maxpts
 
@@ -112,7 +112,7 @@ class Grapher(object):
         plt.tight_layout()
 
         plt.show()
-        fig.savefig('plot.svg', facecolor=fig.get_facecolor(), edgecolor='none')
+        fig.savefig(outname, facecolor=fig.get_facecolor(), edgecolor='none')
 
     def draw_legend(self, legend_ax):
         # Make a legend with proxy artists
@@ -220,13 +220,17 @@ class Grapher(object):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: %s track.csv [heat]" % sys.argv[0])
+        print("Usage: %s track.csv [outfile] [heat]" % sys.argv[0])
         sys.exit(1)
 
     fname = sys.argv[1]
 
     # hack for now
-    heat_only = len(sys.argv) > 2
+    if len(sys.argv) > 2:
+        outname = sys.argv[2]
+    else:
+        outname = 'plot.svg'
+    heat_only = len(sys.argv) > 3
 
     time, status, x, y, numpts = np.loadtxt(
         fname,
@@ -366,9 +370,9 @@ def main():
     if heat_only:
         fig = plt.figure(figsize=(6,6))
         g.plot_heatmap(plt.subplot())
-        fig.savefig('heatmap.svg')
+        fig.savefig(outname)
     else:
-        g.plot()
+        g.plot(outname)
 
 
 if __name__ == '__main__':
