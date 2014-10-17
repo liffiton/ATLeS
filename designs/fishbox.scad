@@ -11,35 +11,34 @@
 thickness = 3;
 
 // Interior box dimensions (from centerpoints of walls, so actual dimension is minus material thickness)
-width = 400;   // x
-depth = 300;   // y
-height = 180;  // z
+width = 400;     // x
+depth = 300;     // y
+i_height = 180;  // z  (i_height because 'height' is used for height of entire box)
+
+// amount faces extend past each other at corners
+overhang = 20;
+
+// amount horizontal support bars extend past side supports
+outset = overhang/2;
 
 // tank base plate
 base_width = width-thickness*2;
-base_height = 10;
+base_height = overhang;
+
+// create height var to account for raised base
+height = i_height + base_height;
 
 // light bar
 light_bar_width = 30;
 light_pos_x = 50;
 light_height = height-10;
 
-// height of side supports
-side_support_height = height/2; // full side walls
-//side_support_height = 20;
-
-// amount faces extend past each other at corners
-overhang = 10;
-
-// amount horizontal support bars extend past side supports
-outset = overhang/2;
-
 // for slight offsets/tweaks
 epsilon = 1;
 
 // components to include (comment out unwanted)
 vert_faces();
-side_supports();
+sides();
 tank_base();
 light_bar();
 camera_supports(x=width, y=depth/2, z=height/2, spacing=20);
@@ -59,14 +58,13 @@ module vert_faces() {
                 camera_supports(x=width+thickness*2, y=depth/2, z=height/2+10, spacing=20);
             }
 		}
-		side_support_base(height_scale=0.5);
-		side_support_top(height_scale=0.5);
+		sides_base(height_scale=0.5);
 	}
 }
 
 module vert_face(x) {
-	translate([x-thickness/2,-overhang,0])
-		cube([thickness,depth+overhang*2,height]);
+	translate([x-thickness/2,-overhang,overhang])
+		cube([thickness,depth+overhang*2,height-overhang]);
 }
 
 module camera_opening() {
@@ -104,11 +102,13 @@ module camera_support(x, y, z) {
 
 module top_cover() {
     color("Grey", alpha=0.5)
-    translate([thickness/2,-outset,height-thickness])
+    translate([-outset,-outset,height-thickness])
     difference() {
-        cube([width-thickness,depth+outset*2,thickness]);
-		cutouts(5,width-thickness,outset,far_side=false);
-		cutouts(5,width-thickness,outset,far_side=true);
+        cube([width+outset*2,depth+outset*2,thickness]);
+		cutouts(5,width-thickness,outset,rot=0,trans=[width/2+outset,0,0]);
+		cutouts(5,width-thickness,outset,rot=180,trans=[width/2+outset,depth+outset*2,0]);
+		cutouts(5,depth-thickness,outset,rot=-90,trans=[0,depth/2+outset,0]);
+		cutouts(5,depth-thickness,outset,rot=90,trans=[width+outset*2,depth/2+outset,0]);
     }
 }
 
@@ -116,8 +116,8 @@ module tank_base() {
 	translate([thickness,-outset,base_height])
 	difference() {
 		cube([base_width, depth+outset*2, thickness]);
-		cutouts(5,base_width,outset,far_side=false);
-        cutouts(5,base_width,outset,far_side=true);
+		cutouts(5,base_width,outset,rot=0,trans=[base_width/2,0,0]);
+		cutouts(5,base_width,outset,rot=180,trans=[base_width/2,depth+outset*2,0]);
 	}
 }
 
@@ -125,17 +125,18 @@ module light_bar() {
 	translate([light_pos_x-light_bar_width/2, -outset, light_height])
 	difference() {
 		cube([light_bar_width, depth+outset*2, thickness]);
-		cutouts(2,light_bar_width,outset,far_side=false);
-        cutouts(2,light_bar_width,outset,far_side=true);
+		cutouts(2,light_bar_width,outset,rot=0,trans=[light_bar_width/2,0,0]);
+		cutouts(2,light_bar_width,outset,rot=180,trans=[light_bar_width/2,depth+outset*2,0]);
 	}
 }
 
-module cutouts(num, width, outset, far_side=false) {
+module cutouts(num, width, outset, rot, trans) {
     w = width / ((num-1) * 2);
-    y = far_side ? depth+outset-thickness/2 : 0;
+    translate(trans)
+    rotate([0,0,1], a=rot)
     for (i = [0 : num-1]) {
-        translate([-w/2 + i*2*w, y, -epsilon])
-            cube([w, outset+thickness/2, thickness+epsilon*2]);
+        translate([-width/2 - w/2 + i*2*w, -thickness/2, -epsilon])
+            cube([w, outset+thickness, thickness+epsilon*2]);
     }
 }
 
@@ -146,12 +147,9 @@ module light_wire_opening() {
         cylinder(d=10, h=thickness+epsilon, center=true);
 }
 
-module side_supports() {
+module sides() {
 	difference() {
-		union() {
-			side_support_base();
-			side_support_top();
-		}
+        sides_base();
 		vert_faces();
 		tank_base();
         light_bar();
@@ -160,20 +158,15 @@ module side_supports() {
 	}
 }
 
-module side_support_top(height_scale=1) {
-	translate([0,0,height])
-        side_support_base(height_scale=-height_scale);
-}
-
-module side_support_base(height_scale=1) {
+module sides_base(height_scale=1) {
 	scale([1,1,height_scale])
 		union() {
-			side_support(y=0);
-			side_support(y=depth);
+			side(y=0);
+			side(y=depth);
 		}
 }
 
-module side_support(y) {
+module side(y) {
 	translate([-overhang,y-thickness/2,0])
-		cube([width+overhang*2, thickness, side_support_height]);
+		cube([width+overhang*2, thickness, height]);
 }
