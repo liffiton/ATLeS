@@ -13,6 +13,12 @@ Current:
  - Rig lights to be in consistent, stable position
 
 New, laser-cut:
+ - Add solid, removable top
+ - Add holes for wires
+ - Add holder for camera
+ - Add holder for Pi
+ - Add cable routing for HDMI, etc.?
+ - Add reinforcement/support/bracing for bottom?
 
 
 Software
