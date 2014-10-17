@@ -10,7 +10,8 @@ cover_width = 27;
 cover_height = 2;
 
 // For rounded corners
-radius = 8;
+radius1 = 10;
+radius2 = 4;
 
 piCameraAdapter();
 // Comment out translate to see
@@ -50,7 +51,7 @@ module piCameraBackCoverBevel(length, clearance) {
 
 module piCameraBackCover(for_subtraction=false) {
     indent = ! for_subtraction;
-    clearance = for_subtraction ? 0.3 : 0;
+    clearance = for_subtraction ? 0.25 : 0;
     c = 2*clearance;
     cov_l = length-8;
     difference() {
@@ -64,11 +65,11 @@ module piCameraBackCover(for_subtraction=false) {
                     piCameraBackCoverBevel(cov_l, clearance);
             }
             translate([0,15,0])
-                cube(size=[flex_adapter_width-c,11,cover_height+c],center=true);
+                cube(size=[flex_adapter_width-c,15,cover_height+c],center=true);
             if (indent)
-                translate([0,8-length/2,cover_height/2])
+                translate([0,8-length/2,cover_height/2+0.5])
                 rotate([0,90,0])
-                    cylinder(r=1, h=cover_width-0.5, center=true, $fn=20);
+                    cylinder(r=1, h=cover_width-4, center=true, $fn=20);
         }
         if (! for_subtraction) {
             cornerRounding();
@@ -99,7 +100,7 @@ module boardOpening() {
     clearance = 0.3;
     c = 2 * clearance;
     translate([0,-3,7.5])
-        cube(size=[25+c,24+c,5+clearance], center=true);
+        cube(size=[25+c,24+c,5], center=true);
 }
 
 module cameraFrame() {
@@ -119,25 +120,25 @@ module roundedCorner(r) {
 module cornerRounding() {
     // vertical corners
     translate([width/2,length/2,0])
-        roundedCorner(radius);
+        roundedCorner(radius1);
     translate([-width/2,length/2,0])
     rotate([0,0,90])
-        roundedCorner(radius);
+        roundedCorner(radius1);
     translate([-width/2,-length/2,0])
     rotate([0,0,180])
-        roundedCorner(radius);
+        roundedCorner(radius1);
     translate([width/2,-length/2,0])
     rotate([0,0,-90])
-        roundedCorner(radius);
+        roundedCorner(radius1);
 
     // top corners
     translate([-width/2,0,10])
     rotate([0,-90,0])
     rotate([90,0,0])
-        roundedCorner(radius/2);
+        roundedCorner(radius2);
     translate([width/2,0,10])
     rotate([90,0,0])
-        roundedCorner(radius/2);
+        roundedCorner(radius2);
 }
 
 module piCameraAdapter() {
