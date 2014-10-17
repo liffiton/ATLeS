@@ -16,17 +16,17 @@ depth = 300;   // y
 height = 180;  // z
 
 // tank base plate
-base_width = 80;
+base_width = width-thickness*2;
 base_height = 10;
 
 // light bar
-light_bar_width = 20;
-light_pos_x = thickness+base_width-light_bar_width;
+light_bar_width = 30;
+light_pos_x = 50;
 light_height = height-10;
 
 // height of side supports
-//side_support_height = height/2; // full side walls
-side_support_height = 20;
+side_support_height = height/2; // full side walls
+//side_support_height = 20;
 
 // amount faces extend past each other at corners
 overhang = 10;
@@ -64,8 +64,8 @@ module tank_base() {
 	translate([thickness,-outset,base_height])
 	difference() {
 		cube([base_width, depth+outset*2, thickness]);
-		cutouts(3,base_width,outset,far_side=false);
-        cutouts(3,base_width,outset,far_side=true);
+		cutouts(5,base_width,outset,far_side=false);
+        cutouts(5,base_width,outset,far_side=true);
 	}
 }
 
