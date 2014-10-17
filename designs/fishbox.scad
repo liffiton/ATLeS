@@ -56,7 +56,7 @@ module vert_faces() {
             difference() {
                 vert_face(x=width);
                 camera_opening();
-                camera_supports(x=width+10, y=depth/2, z=height/2+10, spacing=20);
+                camera_supports(x=width+thickness*2, y=depth/2, z=height/2+10, spacing=20);
             }
 		}
 		side_support_base(height_scale=0.5);
