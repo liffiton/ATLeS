@@ -75,7 +75,7 @@ class Grapher(object):
         b = g
         return (r,g,b, 0.5)
 
-    def plot(self, outname):
+    def plot(self):
         maxpts = 500
         numplots = 1 + self._len / maxpts
 
@@ -111,8 +111,7 @@ class Grapher(object):
         fig.patch.set_facecolor('black')
         plt.tight_layout()
 
-        plt.show()
-        fig.savefig(outname, facecolor=fig.get_facecolor(), edgecolor='none')
+        return fig
 
     def draw_legend(self, legend_ax):
         # Make a legend with proxy artists
@@ -373,10 +372,11 @@ def main():
     if heat_only:
         fig = plt.figure(figsize=(6,6))
         g.plot_heatmap(plt.subplot())
-        fig.savefig(outname)
     else:
-        g.plot(outname)
+        fig = g.plot()
 
+    plt.show()
+    fig.savefig(outname, facecolor=fig.get_facecolor(), edgecolor='none')
 
 if __name__ == '__main__':
     main()
