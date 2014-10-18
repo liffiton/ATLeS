@@ -171,8 +171,13 @@ class SimpleTracker(object):
         elif self.status == 'missing':
             # use the stored velocity
             self._pos += self._vel
-            # taper velocity to zero
-            self._vel *= 0.5
+            if numpy.min(self._pos) < 0 or numpy.max(self._pos) > 1:
+                # went past the border, so just reset and stop moving
+                self._pos -= self._vel
+                self._vel = numpy.zeros(2)
+            else:
+                # taper velocity to zero
+                self._vel *= 0.5
         else:
             if prevpos is not None:
                 # update estimated velocity as a [very quickly] decaying average
