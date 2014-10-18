@@ -1,7 +1,7 @@
+import argparse
 import matplotlib.pyplot as plt
 from matplotlib import collections, gridspec, lines, patches
 import numpy as np
-import sys
 
 _entry_wait = 1  # min seconds between counted entries to top
 _freeze_min_time = 1  # min seconds to count lack of motion as a "freeze"
@@ -83,9 +83,9 @@ class Grapher(object):
         # make final chart only as wide as needed
         last_width = (self._len % maxpts) / float(maxpts)
         gs = gridspec.GridSpec(
-            numplots+2,  # +1 for legend, +1 for heatmap
+            numplots+1,  # +1 for legend
             2,           # 2 columns for final axis reduced size
-            height_ratios=[0.2] + ([1] * numplots) + [5],   # 0.2 for 'legend subplot', 5 for heatmap
+            height_ratios=[0.2] + ([1] * numplots),   # 0.2 for 'legend subplot'
             width_ratios=[last_width, 1-last_width],  # all but last will span both columns
         )
 
@@ -103,13 +103,6 @@ class Grapher(object):
 
         # Draw the legend at the top
         self.draw_legend(plt.subplot(gs[0,:]))
-
-        # Draw the heatmap at the bottom
-        self.plot_heatmap(plt.subplot(gs[-1,:]))
-
-        # Format nicely
-        fig.patch.set_facecolor('black')
-        plt.tight_layout()
 
         return fig
 
@@ -132,13 +125,19 @@ class Grapher(object):
         self._set_backgroundcolor(legend_ax, 'None')
         self._set_foregroundcolor(legend_ax, '0.6')
 
-    def plot_heatmap(self, heatmap_ax):
-        # imshow expects y,x for the image, but x,y for the extents,
-        # so we have to manage that here...
-        heatmap, yedges, xedges = np.histogram2d(self._y, self._x, bins=100)
-        #extent = [0,1,0,1]
-        extent = [min(0,xedges[0]), max(1,xedges[-1]), min(0,yedges[0]), max(1,yedges[-1])]
-        heatmap_ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest')
+    def plot_heatmap(self, numplots=1):
+        plt.figure(numplots)
+        for i in range(numplots):
+            start = i * len(self._x) / numplots
+            end = (i+1) * len(self._x) / numplots
+            ax = plt.subplot(numplots, 1, i+1)
+            ax.axes.get_xaxis().set_visible(False)
+            ax.axes.get_yaxis().set_visible(False)
+            # imshow expects y,x for the image, but x,y for the extents,
+            # so we have to manage that here...
+            heatmap, yedges, xedges = np.histogram2d(self._y[start:end], self._x[start:end], bins=100)
+            extent = [min(0,xedges[0]), max(1,xedges[-1]), min(0,yedges[0]), max(1,yedges[-1])]
+            ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest')
 
     def _subplot(self, ax, start, end, median_speed):
         time = self._time[start:end]
@@ -221,21 +220,15 @@ class Grapher(object):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: %s track.csv [outfile] [heat]" % sys.argv[0])
-        sys.exit(1)
-
-    fname = sys.argv[1]
-
-    # hack for now
-    if len(sys.argv) > 2:
-        outname = sys.argv[2]
-    else:
-        outname = 'plot.svg'
-    heat_only = len(sys.argv) > 3
+    parser = argparse.ArgumentParser(description='Analyze zebrafish Skinner box experiment logs.')
+    parser.add_argument('infile', type=str)
+    parser.add_argument('outfile', type=str, nargs='?')
+    parser.add_argument('-H', '--heat-only', action='store_true')
+    parser.add_argument('--heat-num', type=int, default=1)
+    args = parser.parse_args()
 
     time, status, x, y, numpts = np.loadtxt(
-        fname,
+        args.infile,
         delimiter=',',
         unpack=True,
         dtype={'names': ('time','status','x','y','numpts'), 'formats': ('f','S16','f','f','d')}
@@ -369,14 +362,19 @@ def main():
 
     g = Grapher(time, theta, np.where(valid, speed, 0), valid, lost, missing, frozen, in_top, x, y, numpts)
 
-    if heat_only:
-        fig = plt.figure(figsize=(6,6))
-        g.plot_heatmap(plt.subplot())
+    if args.heat_only:
+        g.plot_heatmap(args.heat_num)
     else:
-        fig = g.plot()
+        g.plot()
 
-    plt.show()
-    fig.savefig(outname, facecolor=fig.get_facecolor(), edgecolor='none')
+    # Format nicely
+    plt.gcf().patch.set_facecolor('0.1')
+    #plt.tight_layout()
+
+    if args.outfile is None:
+        plt.show()
+    else:
+        plt.savefig(args.outfile)
 
 if __name__ == '__main__':
     main()
