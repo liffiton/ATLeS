@@ -28,7 +28,7 @@ def view(logname):
     name = logname.split('/')[-1]
     imgs = glob.glob("logs/img/%s*" % name)
     imgs.sort()
-    return dict(imgs=imgs)
+    return dict(imgs=imgs, logname=logname)
 
 
 @post('/analyze/')
