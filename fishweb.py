@@ -13,6 +13,7 @@ import analyze
 @view('index')
 def index():
     tracks = glob.glob("logs/*-track.csv")
+    tracks.sort()
     img_counts = []
     for track in tracks:
         name = track.split('/')[-1]
@@ -26,6 +27,7 @@ def index():
 def view(logname):
     name = logname.split('/')[-1]
     imgs = glob.glob("logs/img/%s*" % name)
+    imgs.sort()
     return dict(imgs=imgs)
 
 
