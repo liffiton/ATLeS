@@ -12,14 +12,18 @@ import analyze
 @route('/')
 @view('index')
 def index():
-    tracks = glob.glob("logs/*-track.csv")
-    tracks.sort()
-    img_counts = []
-    for track in tracks:
+    trackpaths = glob.glob("logs/*-track.csv")
+    trackpaths.sort()
+    tracks = []
+    for track in trackpaths:
+        with open(track) as f:
+            for i, l in enumerate(f):
+                    pass
+            lines = i+1
         name = track.split('/')[-1]
-        imgs = glob.glob("logs/img/%s*" % name)
-        img_counts.append(len(imgs))
-    return dict(tracks=zip(tracks, img_counts))
+        imgs = len(glob.glob("logs/img/%s*" % name))
+        tracks.append( (track, lines, imgs) )
+    return dict(tracks=tracks)
 
 
 @route('/view/<logname:path>')

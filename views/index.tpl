@@ -20,15 +20,19 @@
 <body>
 <div class="container">
 <h1>Fishybox Log Analyzer/Viewer</h1>
-<table class="table table-striped table-hover" style="max-width: 600px;">
+<table class="table table-hover" style="max-width: 600px;">
+    <thead>
     <tr>
         <th>Log file</th>
+        <th># Points</th>
         <th>Plots</th>
         <th>Analyze</th>
     </tr>
-%for path, img_count in tracks:
+    </thead>
+%for path, points, img_count in tracks:
     <tr>
         <td>{{path}}</td>
+        <td>{{points}}</td>
         <td>
         %if img_count:
             <a href="/view/{{path}}">View plots</a>
@@ -36,9 +40,15 @@
         </td>
         <td>
         %if img_count:
-            <button type="button" onclick="post_analyze('{{path}}');" style="font-size: 60%;">Re-analyze</button>
+            <button type="button" class="btn btn-xs" onclick="post_analyze('{{path}}');">
+                <span class="glyphicon glyphicon-refresh"></span>
+                Re-analyze
+            </button>
         %else:
-            <button type="button" onclick="post_analyze('{{path}}');">Analyze</button>
+            <button type="button" class="btn btn-xs" onclick="post_analyze('{{path}}');">
+                <span class="glyphicon glyphicon-plus"></span>
+                Analyze
+            </button>
         %end
         </td>
     </tr>
