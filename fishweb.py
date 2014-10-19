@@ -1,6 +1,11 @@
 from bottle import post, redirect, request, route, run, static_file, view
 import glob
 
+# Import matplotlib ourselves and make it use agg (not any GUI anything)
+# before the analyze module pulls it in.
+import matplotlib
+matplotlib.use('Agg')
+
 import analyze
 
 
