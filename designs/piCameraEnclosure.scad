@@ -5,7 +5,7 @@ width  = 36;  // x
 length = 36;  // y
 
 // For camera cover
-flex_adapter_width = 23;   // measures 21mm, but w/ a nominal 22mm opening it was still too tight.
+flex_adapter_width = 22;   // measures 21mm, but w/ a nominal 22mm opening it was still too tight.
 cover_width = 27;
 cover_height = 2;
 
@@ -16,7 +16,7 @@ radius2 = 4;
 piCameraAdapter();
 // Comment out translate to see
 // back cover in place.
-translate([40,0,-8])
+translate([width,4,-8])
     piCameraBackCover();
 
 
