@@ -10,7 +10,6 @@ General
 
 FishWeb
 -------
- - Add bar for "in left 25%"
  - Add frequency plot: "entries into the left 25% at a function of time with 20 second time bins."
  - Investigate missing heat plots and other errors:
     "The following graphs had problems. The predominant problem is that the first several heat maps were blank: 06 stim, 07 nostim, 08 nostim, 09 nostim, 10stim, 14stim, 15nostim, 16 no stim"
