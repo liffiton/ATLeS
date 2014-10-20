@@ -5,7 +5,7 @@ import numpy as np
 
 _entry_wait = 1  # min seconds between counted entries to top
 _freeze_min_time = 1  # min seconds to count lack of motion as a "freeze"
-_freeze_max_speed = 0.3  # maximum speed to still consider a "freeze"
+_freeze_max_speed = 0.1  # maximum speed to still consider a "freeze"
 
 
 class Grapher(object):
@@ -45,6 +45,7 @@ class Grapher(object):
         lost = status == 'lost'
         missing = status == 'missing'
         in_top = valid & (y > 0.5)
+        in_left25 = valid & (x < 0.25)
         frozen = valid & (speed < _freeze_max_speed)
 
         # initialize counters, etc.
@@ -153,6 +154,7 @@ class Grapher(object):
         self._missing = missing
         self._frozen = frozen
         self._in_top = in_top
+        self._in_left25 = in_left25
         self._x = x
         self._y = y
         self._numpts = numpts
@@ -221,7 +223,7 @@ class Grapher(object):
         gs = gridspec.GridSpec(
             numplots+1,  # +1 for legend
             2,           # 2 columns for final axis reduced size
-            height_ratios=[0.2] + ([1] * numplots),   # 0.2 for 'legend subplot'
+            height_ratios=[0.3] + ([1] * numplots),   # 0.2 for 'legend subplot'
             width_ratios=[last_width, 1-last_width],  # all but last will span both columns
         )
 
@@ -246,16 +248,17 @@ class Grapher(object):
         # Make a legend with proxy artists
         height_artist = lines.Line2D([],[], color='green')
         numpts_artist = lines.Line2D([],[], color='orange')
+        inleft25_artist = patches.Rectangle((0,0), 1, 1, fc='purple', ec='None')
         intop_artist = patches.Rectangle((0,0), 1, 1, fc='blue', ec='None')
         frozen_artist = patches.Rectangle((0,0), 1, 1, fc='lightblue', ec='None')
         missing_artist = patches.Rectangle((0,0), 1, 1, fc='yellow', ec='None')
         lost_artist = patches.Rectangle((0,0), 1, 1, fc='red', ec='None')
         # Place it in center of top "subplot" area
         legend_ax.legend(
-            [height_artist, numpts_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
-            ['Height of fish', '# Detection pts', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
+            [height_artist, numpts_artist, inleft25_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
+            ['Height of fish', '# Detection pts', 'In left 25%', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
             loc='center',
-            ncol=6,
+            ncol=4,
         )
         legend_ax.axis('off')
         self._set_backgroundcolor(legend_ax, 'None')
@@ -284,6 +287,7 @@ class Grapher(object):
         lost = self._lost[start:end]
         missing = self._missing[start:end]
         frozen = self._frozen[start:end]
+        in_left25 = self._in_left25[start:end]
         in_top = self._in_top[start:end]
         #x = self._x[start:end]
         y = self._y[start:end]
@@ -302,7 +306,7 @@ class Grapher(object):
         # Mark lost/missing sections
         lost_collection = collections.BrokenBarHCollection.span_where(
             time,
-            -0.8, -0.85,
+            -0.9, -1.0,
             lost,
             edgecolors='none',
             facecolors='red',
@@ -310,7 +314,7 @@ class Grapher(object):
         ax.add_collection(lost_collection)
         missing_collection = collections.BrokenBarHCollection.span_where(
             time,
-            -0.8, -0.85,
+            -0.9, -1.0,
             missing,
             edgecolors='none',
             facecolors='yellow',
@@ -320,7 +324,7 @@ class Grapher(object):
         # Mark frozen sections
         frozen_collection = collections.BrokenBarHCollection.span_where(
             time,
-            -0.75, -0.8,
+            -0.8, -0.85,
             frozen,
             edgecolors='none',
             facecolors='lightblue',
@@ -336,6 +340,16 @@ class Grapher(object):
             facecolors='blue',
         )
         ax.add_collection(intop_collection)
+
+        # Mark in-left25 sections
+        inleft25_collection = collections.BrokenBarHCollection.span_where(
+            time,
+            -0.6, -0.65,
+            in_left25,
+            edgecolors='none',
+            facecolors='purple',
+        )
+        ax.add_collection(inleft25_collection)
 
         # Plot height
         ax.plot(time, y, color='green', label='Height of fish')
