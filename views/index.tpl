@@ -3,7 +3,7 @@
 <head>
     <title>Fishybox Log Analyzer/Viewer</title>
     <script type="text/javascript">
-        function do_post(path, query, check=null) {
+        function do_post(path, query, check) {
             if (check) {
                 go = confirm("Are you sure?  (" + check + ")");
                 if (! go) return;
