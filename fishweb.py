@@ -1,14 +1,18 @@
-from bottle import post, redirect, request, route, run, static_file, view
 import glob
 import multiprocessing
 import os
 import shutil
+import sys
+
+# Import gevent and monkey-patch before importing bottle.
+from gevent import monkey
+monkey.patch_all()
+from bottle import post, redirect, request, route, run, static_file, view
 
 # Import matplotlib ourselves and make it use agg (not any GUI anything)
 # before the analyze module pulls it in.
 import matplotlib
 matplotlib.use('Agg')
-
 import analyze
 
 
@@ -98,4 +102,6 @@ def static_logs(filename):
 
 
 if __name__ == '__main__':
-    run(host='0.0.0.0', port=8080, debug=True, reloader=True)
+    testing = len(sys.argv) > 1
+    host = 'localhost' if testing else '0.0.0.0'
+    run(host=host, port=8080, server='gevent', debug=testing, reloader=testing)
