@@ -1,5 +1,6 @@
 from bottle import post, redirect, request, route, run, static_file, view
 import glob
+import multiprocessing
 
 # Import matplotlib ourselves and make it use agg (not any GUI anything)
 # before the analyze module pulls it in.
@@ -9,20 +10,25 @@ matplotlib.use('Agg')
 import analyze
 
 
+def _tracks():
+    return sorted(glob.glob("logs/*-track.csv"))
+
+
+def _imgs(name):
+    return sorted(glob.glob("logs/img/%s*" % name))
+
+
 @route('/')
 @view('index')
 def index():
-    trackpaths = glob.glob("logs/*-track.csv")
-    trackpaths.sort()
     tracks = []
-    for track in trackpaths:
+    for track in _tracks():
         with open(track) as f:
             for i, l in enumerate(f):
                     pass
             lines = i+1
         name = track.split('/')[-1]
-        imgs = len(glob.glob("logs/img/%s*" % name))
-        tracks.append( (track, lines, imgs) )
+        tracks.append( (track, lines, _imgs(name)) )
     return dict(tracks=tracks)
 
 
@@ -30,14 +36,10 @@ def index():
 @view('view')
 def view(logname):
     name = logname.split('/')[-1]
-    imgs = glob.glob("logs/img/%s*" % name)
-    imgs.sort()
-    return dict(imgs=imgs, logname=logname)
+    return dict(imgs=_imgs(name), logname=logname)
 
 
-@post('/analyze/')
-def do_analyze():
-    logname = request.query.path
+def _do_analyze(logname):
     name = logname.split('/')[-1]
     g = analyze.Grapher()
     g.load(logname)
@@ -48,7 +50,22 @@ def do_analyze():
     g.plot_heatmap(10)
     g.savefig("logs/img/%s.heat.10.png" % name)
 
+
+@post('/analyze/')
+def post_analyze():
+    logname = request.query.path
+    _do_analyze(logname)
     redirect("/view/%s" % logname)
+
+
+@post('/analyze_all/')
+def post_analyze_all():
+    def do_all():
+        for track in _tracks():
+            _do_analyze(track)
+    p = multiprocessing.Process(target=do_all)
+    p.start()
+    redirect("/")
 
 
 @route('/logs/<filename:path>')
