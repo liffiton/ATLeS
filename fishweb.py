@@ -26,6 +26,7 @@ def index():
     tracks = []
     for track in _tracks():
         with open(track) as f:
+            i = -1
             for i, l in enumerate(f):
                     pass
             lines = i+1
