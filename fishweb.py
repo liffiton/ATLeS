@@ -30,9 +30,9 @@ def index():
     tracks = []
     for track in _tracks():
         with open(track) as f:
-            i = -1
-            for i, l in enumerate(f):
-                    pass
+            i = -1  # so lines = 0 if file is empty
+            for i, _ in enumerate(f):
+                pass
             lines = i+1
         name = track.split('/')[-1]
         tracks.append( (track, lines, _imgs(name)) )
