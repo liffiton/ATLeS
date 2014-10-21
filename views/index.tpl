@@ -3,9 +3,9 @@
 <head>
     <title>Fishybox Log Analyzer/Viewer</title>
     <script type="text/javascript">
-        function post_analyze(path, query, check=false) {
+        function do_post(path, query, check=null) {
             if (check) {
-                go = confirm("Are you sure?  (This may take a while, and there will be no feedback as it runs.");
+                go = confirm("Are you sure?  (" + check + ")");
                 if (! go) return;
             }
             var form = document.createElement('form');
@@ -30,8 +30,8 @@
         <th>Log file</th>
         <th># Points</th>
         <th>Plots</th>
-        <th>Analyze
-            <button type="button" class="btn btn-xs" onclick="post_analyze('/analyze_all/', null, true);">
+        <th>Actions
+            <button type="button" class="btn btn-xs" onclick="do_post('/analyze_all/', null, 'This will take a long time with no feedback while running.');">
                 <span class="glyphicon glyphicon-refresh"></span>
                 All
             </button>
@@ -48,7 +48,7 @@
         %end
         </td>
         <td>
-            <button type="button" class="btn btn-xs" onclick="post_analyze('/analyze/', 'path={{path}}');">
+            <button type="button" class="btn btn-xs" onclick="do_post('/analyze/', 'path={{path}}');">
         %if img_count:
                 <span class="glyphicon glyphicon-refresh"></span>
                 Re-analyze
@@ -56,6 +56,9 @@
                 <span class="glyphicon glyphicon-plus"></span>
                 Analyze
         %end
+            </button>
+            <button type="button" class="btn btn-xs btn-danger" onclick="do_post('/archive/', 'path={{path}}', 'This is difficult to undo.');" title='Archive'>
+                <span class="glyphicon glyphicon-log-out"></span>
             </button>
         </td>
     </tr>

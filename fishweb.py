@@ -1,6 +1,8 @@
 from bottle import post, redirect, request, route, run, static_file, view
 import glob
 import multiprocessing
+import os
+import shutil
 
 # Import matplotlib ourselves and make it use agg (not any GUI anything)
 # before the analyze module pulls it in.
@@ -40,6 +42,11 @@ def view(logname):
 
 
 def _do_analyze(logname):
+    try:
+        os.makedirs("logs/img/")
+    except:
+        # exists already, fine.
+        pass
     name = logname.split('/')[-1]
     g = analyze.Grapher()
     g.load(logname)
@@ -65,6 +72,22 @@ def post_analyze_all():
             _do_analyze(track)
     p = multiprocessing.Process(target=do_all)
     p.start()
+    redirect("/")
+
+
+@post('/archive/')
+def post_archive():
+    try:
+        os.makedirs("logs/archive/")
+    except:
+        # exists already, fine.
+        pass
+    logname = request.query.path
+    name = logname.split('/')[-1].split('-track')[0]
+    allfiles = glob.glob("logs/%s*" % name)
+    for f in allfiles:
+        shutil.move(f, "logs/archive/")
+
     redirect("/")
 
 
