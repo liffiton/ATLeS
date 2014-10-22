@@ -8,14 +8,6 @@ General
  - Consider / keep in mind idea of setting up a centralized control/logging server
 
 
-FishWeb
--------
- - Investigate missing heat plots and other errors:
-    "The following graphs had problems. The predominant problem is that the first several heat maps were blank: 06 stim, 07 nostim, 08 nostim, 09 nostim, 10stim, 14stim, 15nostim, 16 no stim"
-      - confirmed, but only in web app - cannot reproduce in terminal
-    "The following looked like an error beyond the graphs; Profound tracking issues of some kind:  12 stim, 12nostim, 13 nostim"
-    "15 stim is just weird."
-
 Enclosure
 ---------
 
@@ -29,8 +21,18 @@ New, laser-cut:
  - Add reinforcement/support/bracing for bottom?
 
 
-Software
---------
+FishWeb / Analyze
+-----------------
+ - Investigate missing heat plots and other errors:
+    "The following graphs had problems. The predominant problem is that the first several heat maps were blank: 06 stim, 07 nostim, 08 nostim, 09 nostim, 10stim, 14stim, 15nostim, 16 no stim"
+      - confirmed, but only in web app - cannot reproduce in terminal
+    "The following looked like an error beyond the graphs; Profound tracking issues of some kind:  12 stim, 12nostim, 13 nostim"
+    "15 stim is just weird."
+ - Plot cumulative left 25% entries for two tracks at once
+
+
+FishBox
+-------
 
 Features:
  - Save video (if possible)
