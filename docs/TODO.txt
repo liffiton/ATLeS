@@ -16,6 +16,7 @@ FishWeb
       - confirmed, but only in web app - cannot reproduce in terminal
     "The following looked like an error beyond the graphs; Profound tracking issues of some kind:  12 stim, 12nostim, 13 nostim"
     "15 stim is just weird."
+ - Break load() into load() and print_stats()
 
 Enclosure
 ---------

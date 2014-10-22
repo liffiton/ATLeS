@@ -264,6 +264,20 @@ class Grapher(object):
         self._set_backgroundcolor(legend_ax, 'None')
         self._set_foregroundcolor(legend_ax, '0.6')
 
+    def plot_left(self):
+        plt.close('all')
+        plt.figure(figsize=(4, 4))
+
+        left25_starts, left25_lens = self._groups_where(self._in_left25)
+
+        plt.step(self._time[left25_starts], range(1, len(left25_starts)+1), where='post')
+        self._set_backgroundcolor(plt.gca(), 'None')
+        self._set_foregroundcolor(plt.gca(), '0.6')
+        plt.title("Cumulative Entries to Left 25%")
+        plt.xlabel("Time (seconds)")
+        plt.ylabel("Cumulative entries")
+        plt.xlim(0, self._time[-1])
+
     def plot_heatmap(self, numplots=1):
         plt.close('all')
         plt.figure(figsize=(4, 4*numplots))
@@ -394,15 +408,18 @@ def main():
     parser = argparse.ArgumentParser(description='Analyze zebrafish Skinner box experiment logs.')
     parser.add_argument('infile', type=str)
     parser.add_argument('outfile', type=str, nargs='?')
-    parser.add_argument('-H', '--heat-only', action='store_true')
+    parser.add_argument('-H', '--heat', action='store_true')
     parser.add_argument('--heat-num', type=int, default=1)
+    parser.add_argument('-L', '--left', action='store_true')
     args = parser.parse_args()
 
     g = Grapher()
     g.load(args.infile)
 
-    if args.heat_only:
+    if args.heat:
         g.plot_heatmap(args.heat_num)
+    elif args.left:
+        g.plot_left()
     else:
         g.plot()
 
