@@ -270,7 +270,7 @@ class Grapher(object):
 
         left25_starts, left25_lens = self._groups_where(self._in_left25)
 
-        plt.step(self._time[left25_starts], range(1, len(left25_starts)+1), where='post')
+        plt.step(self._time[left25_starts], range(1, len(left25_starts)+1), where='post', color='purple')
         self._set_backgroundcolor(plt.gca(), 'None')
         self._set_foregroundcolor(plt.gca(), '0.6')
         plt.title("Cumulative Entries to Left 25%")

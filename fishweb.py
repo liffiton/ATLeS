@@ -61,6 +61,8 @@ def _do_analyze(logname):
     g.savefig("logs/img/%s.heat.png" % name)
     g.plot_heatmap(10)
     g.savefig("logs/img/%s.heat.10.png" % name)
+    g.plot_left()
+    g.savefig("logs/img/%s.left.png" % name)
 
 
 @post('/analyze/')
