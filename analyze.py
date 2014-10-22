@@ -280,9 +280,10 @@ class Grapher(object):
             bins = np.concatenate( (np.arange(0,1.0,1.0/nbins), [1.0]) )
             heatmap, yedges, xedges = np.histogram2d(self._y[start:end], self._x[start:end], bins=bins)
             extent = [xedges[0],xedges[-1], yedges[0], yedges[-1]]
-            # make sure we always show the full extent of the tank, regardless of where the data lies in it
-            ax.set_xlim(0,1)
-            ax.set_ylim(0,1)
+            # make sure we always show the full extent of the tank and the full extent of the data,
+            # whichever is wider.
+            ax.set_xlim(min(0, xedges[0]), max(1, xedges[-1]))
+            ax.set_ylim(min(0, yedges[0]), max(1, yedges[-1]))
             ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest')
 
     def _subplot(self, ax, start, end, median_speed):
