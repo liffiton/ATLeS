@@ -96,15 +96,13 @@ class Grapher(object):
                 if not frozen[i-1]:
                     # start of a freeze
                     cur_freeze_time = 0
-                    freeze_count += 1
-                total_freeze_time += dt[i]
                 cur_freeze_time += dt[i]
             elif frozen[i-1]:
                 # end of a freeze
-                if cur_freeze_time < _freeze_min_time:
-                    # don't count this one
-                    freeze_count -= 1
-                    total_freeze_time -= cur_freeze_time
+                if cur_freeze_time >= _freeze_min_time:
+                    # count this one
+                    freeze_count += 1
+                    total_freeze_time += cur_freeze_time
 
             # count erratic movements
             # "Erratic movement" = a string of at least _erratic_count 'turns' in less than _erratic_time seconds
