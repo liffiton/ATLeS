@@ -212,7 +212,7 @@ class Grapher(object):
         return (r,g,b, 0.5)
 
     def plot(self):
-        plt.clf()
+        plt.close('all')
 
         maxpts = 500
         numplots = 1 + self._len / maxpts
@@ -265,8 +265,8 @@ class Grapher(object):
         self._set_foregroundcolor(legend_ax, '0.6')
 
     def plot_heatmap(self, numplots=1):
-        plt.clf()
-        plt.figure(numplots, (4, 4*numplots))
+        plt.close('all')
+        plt.figure(figsize=(4, 4*numplots))
         for i in range(numplots):
             start = i * len(self._x) / numplots
             end = (i+1) * len(self._x) / numplots
@@ -275,8 +275,14 @@ class Grapher(object):
             ax.axes.get_yaxis().set_visible(False)
             # imshow expects y,x for the image, but x,y for the extents,
             # so we have to manage that here...
-            heatmap, yedges, xedges = np.histogram2d(self._y[start:end], self._x[start:end], bins=100)
-            extent = [min(0,xedges[0]), max(1,xedges[-1]), min(0,yedges[0]), max(1,yedges[-1])]
+            nbins = 50
+            #heatmap, yedges, xedges = np.histogram2d(self._y[start:end], self._x[start:end], bins=nbins)
+            bins = np.concatenate( (np.arange(0,1.0,1.0/nbins), [1.0]) )
+            heatmap, yedges, xedges = np.histogram2d(self._y[start:end], self._x[start:end], bins=bins)
+            extent = [xedges[0],xedges[-1], yedges[0], yedges[-1]]
+            # make sure we always show the full extent of the tank, regardless of where the data lies in it
+            ax.set_xlim(0,1)
+            ax.set_ylim(0,1)
             ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest')
 
     def _subplot(self, ax, start, end, median_speed):
