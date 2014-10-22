@@ -18,9 +18,12 @@ class Grapher(object):
         )
 
         # calculate derivatives and other derived values
-        dx = np.gradient(x)
-        dy = np.gradient(y)
-        dt = np.gradient(time)
+        #dx = np.gradient(x)
+        #dy = np.gradient(y)
+        #dt = np.gradient(time)
+        dx = np.concatenate( ([0], np.diff(x)) )
+        dy = np.concatenate( ([0], np.diff(y)) )
+        dt = np.concatenate( ([0], np.diff(time)) )
 
         if np.min(dt) < 0:
             print("\n[31mWARNING:[m Time travel detected!\n[31mNegative time deltas in following indices:[m "
@@ -34,7 +37,7 @@ class Grapher(object):
         except TypeError:
             # older version of numpy w/o axis argument
             dist = map(np.linalg.norm, np.transpose(movement))
-        speed = dist / dt
+        speed = np.concatenate( ([0], dist[1:] / dt[1:]) )  # ignore invalid 0 entry in dt
         theta = np.arctan2(dy, dx)  # reversed params are correct for numpy.arctan2
         #dtheta = np.gradient(theta)
         #angular_velocity = dtheta / dt
@@ -48,104 +51,11 @@ class Grapher(object):
         in_left25 = valid & (x < 0.25)
         frozen = valid & (speed < _freeze_max_speed)
 
-        # initialize counters, etc.
-        last_entry = None
-        first_entry = None
-        entry_count = 0
-
-        time_in_top = 0
-        time_in_bottom = 0
-
-        distance_in_top = 0
-        distance_in_bottom = 0
-
-        cur_freeze_time = 0
-        total_freeze_time = 0
-        freeze_count = 0
-
-        # TODO:  cur_turn_time = 0
-
-        distance_total = 0
-        time_total_valid = 0
-
-        for i in xrange(1, len(time)):
-            if not valid[i]:
-                continue
-
-            distance_total += dist[i]
-            time_total_valid += dt[i]
-
-            # count entries to top
-            if in_top[i] and not in_top[i-1] and (last_entry is None or time[i] - last_entry > _entry_wait):
-                if first_entry is None:
-                    first_entry = time[i]
-                last_entry = time[i]
-                entry_count += 1
-
-            # sum time and distance in top/bottom
-            if in_top[i]:
-                time_in_top += dt[i]
-                distance_in_top += dist[i]
-            else:
-                time_in_bottom += dt[i]
-                distance_in_bottom += dist[i]
-
-            # count freezes
-            # "Freeze" = speed < _freeze_max_speed for at least _freeze_min_time seconds
-            if frozen[i]:
-                if not frozen[i-1]:
-                    # start of a freeze
-                    cur_freeze_time = 0
-                cur_freeze_time += dt[i]
-            elif frozen[i-1]:
-                # end of a freeze
-                if cur_freeze_time >= _freeze_min_time:
-                    # count this one
-                    freeze_count += 1
-                    total_freeze_time += cur_freeze_time
-
-            # count erratic movements
-            # "Erratic movement" = a string of at least _erratic_count 'turns' in less than _erratic_time seconds
-            # "Turn" = abs(angular_velocity) > _turn_vel for at least _turn_time seconds
-            # TODO
-
-        print "#Datapoints: %d" % len(valid)
-        print "#Valid: %d" % valid_count
-        print "%%Valid datapoints: %0.3f" % (valid_count / float(len(valid)))
-        print "Total time: %0.2f seconds" % time[-1]
-        print "Valid time: %0.2f seconds" % time_total_valid
-        print
-        print "Total distance traveled: %0.2f [units]" % (distance_total)
-        print "Average velocity: %0.3f [units]/second" % (distance_total / time_total_valid)
-        print
-        print "#Entries to top: %d" % entry_count
-        if entry_count:
-            print "Time of first entry: %0.2f seconds" % (first_entry)
-        print
-        print "Time in top:    %0.2f seconds" % time_in_top
-        print "Time in bottom: %0.2f seconds" % time_in_bottom
-        if time_in_bottom:
-            print "Top/bottom time ratio: %0.3f" % (time_in_top/time_in_bottom)
-        if entry_count:
-            print "Avg. time per entry: %0.2f seconds" % (time_in_top / entry_count)
-        print
-        print "Distance in top:    %0.3f [units]" % distance_in_top
-        print "Distance in bottom: %0.3f [units]" % distance_in_bottom
-        if distance_in_bottom:
-            print "Top/bottom distance ratio: %0.3f" % (distance_in_top/distance_in_bottom)
-        if entry_count:
-            print "Avg. distance per entry: %0.3f [units]" % (distance_in_top / entry_count)
-        print
-        print "#Freezes: %d" % freeze_count
-        if freeze_count:
-            print "Total time frozen: %0.3f seconds" % total_freeze_time
-            print "Avg. time per freeze: %0.3f seconds" % (total_freeze_time / freeze_count)
-            print "Freeze frequency: %0.2f per minute" % (60.0*(freeze_count / time_total_valid))
-
         # setup internal data
         self._len = len(time)
         self._time = time
         self._theta = theta
+        self._dist = dist
         self._speed = speed
         self._valid = valid
         self._lost = lost
@@ -156,6 +66,98 @@ class Grapher(object):
         self._x = x
         self._y = y
         self._numpts = numpts
+
+        dist_total = np.sum(dist[valid])
+        time_total = np.sum(dt[valid])
+
+        frozen_starts, frozen_lens = self._groups_where(frozen)
+        freeze_count, freeze_time, _ = self._sum_runs(frozen_starts, frozen_lens, min_runlength=_freeze_min_time)
+
+        left25_starts, left25_lens = self._groups_where(in_left25)
+        left25_count, left25_time, left25_dist = self._sum_runs(left25_starts, left25_lens)
+
+        top_starts, top_lens = self._groups_where(in_top)
+        top_count, top_time, top_dist = self._sum_runs(top_starts, top_lens)
+
+        #bottom_starts, bottom_lens = self._groups_where(y < 0.5)
+        #bottom_count, bottom_time, bottom_dist = self._sum_runs(bottom_starts, bottom_lens)
+        bottom_time = time_total - top_time
+        bottom_dist = dist_total - top_dist
+
+        # TODO:  cur_turn_time = 0
+        # count erratic movements
+        # "Erratic movement" = a string of at least _erratic_count 'turns' in less than _erratic_time seconds
+        # "Turn" = abs(angular_velocity) > _turn_vel for at least _turn_time seconds
+        # TODO
+
+        print "#Datapoints: %d" % len(valid)
+        print "#Valid: %d" % valid_count
+        print "%%Valid datapoints: %0.3f" % (valid_count / float(len(valid)))
+        print "Total time: %0.2f seconds" % time[-1]
+        print "Valid time: %0.2f seconds" % time_total
+        print
+        print "Total distance traveled: %0.2f [units]" % (dist_total)
+        print "Average velocity: %0.3f [units]/second" % (dist_total / time_total)
+        print
+        print "#Entries to top: %d" % top_count
+        if top_count:
+            print "Time of first entry: %0.2f seconds" % (time[top_starts[0]])
+        print
+        print "Time in top:    %0.2f seconds" % top_time
+        print "Time in bottom: %0.2f seconds" % bottom_time
+        if bottom_time:
+            print "Top/bottom time ratio: %0.3f" % (top_time/bottom_time)
+        if top_count:
+            print "Avg. time per entry: %0.2f seconds" % (top_time / top_count)
+        print
+        print "Distance in top:    %0.3f [units]" % top_dist
+        print "Distance in bottom: %0.3f [units]" % bottom_dist
+        if bottom_dist:
+            print "Top/bottom distance ratio: %0.3f" % (top_dist/bottom_dist)
+        if top_count:
+            print "Avg. distance per entry: %0.3f [units]" % (top_dist / top_count)
+        print
+        print "#Freezes: %d" % freeze_count
+        if freeze_count:
+            print "Total time frozen: %0.3f seconds" % freeze_time
+            print "Avg. time per freeze: %0.3f seconds" % (freeze_time / freeze_count)
+            print "Freeze frequency: %0.2f per minute" % (60.0*(freeze_count / time_total))
+
+    @staticmethod
+    def _groups_where(vals):
+        '''Return group start indices and lengths for all
+        groups of consecutive true entries in vals.
+
+        Adapted from: http://stackoverflow.com/q/4651683
+        '''
+        # where: convert vals from true/false to 1/0
+        # TODO: necessary? likely removable / work-aroundable
+        where = np.where(vals, 1, 0)
+        # diffs: 1 if start of 1s, -1 if start of 0s, 0 otherwise
+        diffs = np.concatenate( ([where[0]], np.diff(where)) )
+        # change_idx: indexes of starts of runs plus index at end of list
+        change_idx = np.concatenate( (np.where(diffs)[0], [len(where)-1]) )
+        # starts: start of 1 runs
+        starts = np.where(diffs > 0)[0]
+        # lens: length of 1 runs (every other length is for a 1 run)
+        lens = np.diff(change_idx)[::2]
+
+        return starts, lens
+
+    def _sum_runs(self, starts, lens, min_runlength=None, min_wait=None):
+        times = self._time[starts+lens] - self._time[starts]
+        cumdist = np.cumsum(self._dist)
+        dists = cumdist[starts+lens] - cumdist[starts]
+        if min_runlength is not None:
+            which = times > min_runlength
+        elif min_wait is not None:
+            which = np.concatenate( ([True], np.diff(starts) > min_wait) )
+        else:
+            which = np.repeat([True], len(starts))
+        count = which.sum()
+        total_time = times[which].sum()
+        total_dist = dists[which].sum()
+        return count, total_time, total_dist
 
     # Source: https://gist.github.com/jasonmc/1160951
     @staticmethod
