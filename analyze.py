@@ -44,7 +44,6 @@ class Grapher(object):
 
         # produce boolean arrays
         valid = (status != 'lost') & (np.roll(status, 1) != 'lost')  # valid if this index *and* previous are both not 'lost'
-        valid_count = np.sum(valid)
         lost = status == 'lost'
         missing = status == 'missing'
         in_top = valid & (y > 0.5)
@@ -54,6 +53,7 @@ class Grapher(object):
         # setup internal data
         self._len = len(time)
         self._time = time
+        self._dt = dt
         self._theta = theta
         self._dist = dist
         self._speed = speed
@@ -67,16 +67,19 @@ class Grapher(object):
         self._y = y
         self._numpts = numpts
 
-        dist_total = np.sum(dist[valid])
-        time_total = np.sum(dt[valid])
+    def print_stats(self):
+        valid_count = np.sum(self._valid)
 
-        frozen_starts, frozen_lens = self._groups_where(frozen)
+        dist_total = np.sum(self._dist[self._valid])
+        time_total = np.sum(self._dt[self._valid])
+
+        frozen_starts, frozen_lens = self._groups_where(self._frozen)
         freeze_count, freeze_time, _ = self._sum_runs(frozen_starts, frozen_lens, min_runlength=_freeze_min_time)
 
-        left25_starts, left25_lens = self._groups_where(in_left25)
+        left25_starts, left25_lens = self._groups_where(self._in_left25)
         left25_count, left25_time, left25_dist = self._sum_runs(left25_starts, left25_lens)
 
-        top_starts, top_lens = self._groups_where(in_top)
+        top_starts, top_lens = self._groups_where(self._in_top)
         top_count, top_time, top_dist = self._sum_runs(top_starts, top_lens)
 
         #bottom_starts, bottom_lens = self._groups_where(y < 0.5)
@@ -90,10 +93,10 @@ class Grapher(object):
         # "Turn" = abs(angular_velocity) > _turn_vel for at least _turn_time seconds
         # TODO
 
-        print "#Datapoints: %d" % len(valid)
+        print "#Datapoints: %d" % len(self._valid)
         print "#Valid: %d" % valid_count
-        print "%%Valid datapoints: %0.3f" % (valid_count / float(len(valid)))
-        print "Total time: %0.2f seconds" % time[-1]
+        print "%%Valid datapoints: %0.3f" % (valid_count / float(len(self._valid)))
+        print "Total time: %0.2f seconds" % self._time[-1]
         print "Valid time: %0.2f seconds" % time_total
         print
         print "Total distance traveled: %0.2f [units]" % (dist_total)
@@ -101,7 +104,7 @@ class Grapher(object):
         print
         print "#Entries to top: %d" % top_count
         if top_count:
-            print "Time of first entry: %0.2f seconds" % (time[top_starts[0]])
+            print "Time of first entry: %0.2f seconds" % (self._time[top_starts[0]])
         print
         print "Time in top:    %0.2f seconds" % top_time
         print "Time in bottom: %0.2f seconds" % bottom_time
@@ -415,6 +418,8 @@ def main():
 
     g = Grapher()
     g.load(args.infile)
+
+    g.print_stats()
 
     if args.heat:
         g.plot_heatmap(args.heat_num)
