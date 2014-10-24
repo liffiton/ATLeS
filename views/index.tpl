@@ -2,6 +2,10 @@
 <html>
 <head>
     <title>Fishybox Log Analyzer/Viewer</title>
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script> -->
     <script type="text/javascript">
         function do_post(path, query, check) {
             if (check) {
@@ -15,11 +19,30 @@
             document.body.appendChild(form)
             form.submit();
         }
+
+        // compare_selection holds one selected track for comparison, if any
+        var compare_selection = "";
+        function set_compare(el, path) {
+            e = $(el);
+            if (e.hasClass('active')) {
+                e.removeClass('active');
+                e.removeClass('btn-primary');
+                compare_selection = "";
+            }
+            else {
+                e.addClass('active');
+                e.addClass('btn-primary');
+                if (compare_selection != "") {
+                    // if another has been selected, compare the two
+                    do_post('/compare/', 'p1=' + compare_selection + '&p2=' + path);
+                }
+                else {
+                    // otherwise, make this the selected one
+                    compare_selection = path;
+                }
+            }
+        }
     </script>
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 </head>
 <body>
 <div class="container">
@@ -30,6 +53,7 @@
         <th>Log file</th>
         <th># Points</th>
         <th>Plots</th>
+        <th>Compare</th>
         <th>Actions
             <button type="button" class="btn btn-xs" onclick="do_post('/analyze_all/', null, 'This will take a long time with no feedback while running.');">
                 <span class="glyphicon glyphicon-refresh"></span>
@@ -48,14 +72,21 @@
         %end
         </td>
         <td>
-            <button type="button" class="btn btn-xs" onclick="do_post('/analyze/', 'path={{path}}');">
         %if img_count:
+            <button type="button" class="btn comparebtn btn-xs text-muted" onclick="set_compare(this, '{{path}}');" title='Compare'>
+                <span class="glyphicon glyphicon-ok"></span>
+            </button>
+        %end
+        </td>
+        <td>
+            <button type="button" class="btn btn-xs" onclick="do_post('/analyze/', 'path={{path}}');">
+                %if img_count:
                 <span class="glyphicon glyphicon-refresh"></span>
                 Re-analyze
-        %else:
+                %else:
                 <span class="glyphicon glyphicon-plus"></span>
                 Analyze
-        %end
+                %end
             </button>
             <button type="button" class="btn btn-xs btn-danger" onclick="do_post('/archive/', 'path={{path}}', 'This is difficult to undo.');" title='Archive'>
                 <span class="glyphicon glyphicon-log-out"></span>

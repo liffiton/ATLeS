@@ -82,6 +82,26 @@ def post_analyze_all():
     redirect("/")
 
 
+@post('/compare/')
+def post_compare():
+    log1 = request.query.p1
+    log2 = request.query.p2
+    g1 = analyze.Grapher()
+    g2 = analyze.Grapher()
+    g1.load(log1)
+    g2.load(log2)
+    g1.plot_left()
+    g2.plot_left(addplot=True)
+    name1 = log1.split('/')[-1]
+    name2 = log2.split('/')[-1]
+    # XXX: bit of a hack doing pyplot stuff outside of Grapher...
+    matplotlib.pyplot.legend([name1, name2], fontsize=8, loc=2)
+
+    imgname = "logs/img/%s_%s_lefts.png" % (name1, name2)
+    g1.savefig(imgname)
+    redirect("/" + imgname)
+
+
 @post('/archive/')
 def post_archive():
     try:

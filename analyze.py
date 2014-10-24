@@ -267,19 +267,23 @@ class Grapher(object):
         self._set_backgroundcolor(legend_ax, 'None')
         self._set_foregroundcolor(legend_ax, '0.6')
 
-    def plot_left(self):
-        plt.close('all')
-        plt.figure(figsize=(4, 4))
+    def plot_left(self, addplot=False):
+        if not addplot:
+            plt.close('all')
+            plt.figure(figsize=(6, 4))
 
         left25_starts, left25_lens = self._groups_where(self._in_left25)
 
-        plt.step(self._time[left25_starts], range(1, len(left25_starts)+1), where='post', color='purple')
-        self._set_backgroundcolor(plt.gca(), 'None')
-        self._set_foregroundcolor(plt.gca(), '0.6')
-        plt.title("Cumulative Entries to Left 25%")
-        plt.xlabel("Time (seconds)")
-        plt.ylabel("Cumulative entries")
-        plt.xlim(0, self._time[-1])
+        color = 'blue' if addplot else 'purple'
+        plt.step(self._time[left25_starts], range(1, len(left25_starts)+1), where='post', color=color)
+
+        if not addplot:
+            self._set_backgroundcolor(plt.gca(), 'None')
+            self._set_foregroundcolor(plt.gca(), '0.6')
+            plt.title("Cumulative Entries to Left 25%")
+            plt.xlabel("Time (seconds)")
+            plt.ylabel("Cumulative entries")
+            plt.xlim(0, self._time[-1])
 
     def plot_heatmap(self, numplots=1):
         plt.close('all')
