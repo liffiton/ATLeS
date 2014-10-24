@@ -1,8 +1,9 @@
 // Adapted from: https://github.com/luisibanez/ShapesFor3DPrinting/tree/master/OpenSCA
 
 // For case
-width  = 36;  // x
-length = 36;  // y
+width  = 35;  // x
+length = 35;  // y
+height = 11;  // z
 
 // For camera cover
 flex_adapter_width = 22;   // measures 21mm, but w/ a nominal 22mm opening it was still too tight.
@@ -10,7 +11,7 @@ cover_width = 27;
 cover_height = 2;
 
 // For rounded corners
-radius1 = 10;
+radius1 = 8;
 radius2 = 4;
 
 piCameraAdapter();
@@ -55,7 +56,7 @@ module piCameraBackCover(for_subtraction=false) {
     c = 2*clearance;
     cov_l = length-8;
     difference() {
-        translate([0,-5,10-cover_height/2])
+        translate([0,-5,height-cover_height/2])
         difference() {
             translate([0,1,0])
             union() {
@@ -65,7 +66,7 @@ module piCameraBackCover(for_subtraction=false) {
                     piCameraBackCoverBevel(cov_l, clearance);
             }
             translate([0,15,0])
-                cube(size=[flex_adapter_width-c,15,cover_height+c],center=true);
+                cube(size=[flex_adapter_width-c,15,100],center=true);
             if (indent)
                 translate([0,8-length/2,cover_height/2+0.5])
                 rotate([0,90,0])
@@ -78,34 +79,56 @@ module piCameraBackCover(for_subtraction=false) {
 }
 
 module cableOpening() {
-    translate([0,14,8.1])
-        cube(size=[17,12,4],center=true);
+    w = 17;
+    d = 12;
+    h = 100;
+    translate([-w/2,2+d/2,height-4+0.1])
+        cube(size=[w,d,h]);
 }
 
 module chipOpening() {
     clearance = 0.5;
     c = 2 * clearance;
-    translate([0,-9.5,5])
-        cube(size=[8+c,10+c,4],center=true);
+    w = 8+c;
+    d = 10+c;
+    h = 100;
+    translate([-w/2, -9.5-d/2, height-7])
+        cube(size=[w,d,h]);
+}
+
+module ledOpening() {
+    clearance = 0.5;
+    c = 2 * clearance;
+    w = 4+c;
+    d = 3+c;
+    h = 100;
+    translate([7-w/2, -11-d/2, height-6])
+        cube(size=[w,d,h]);
 }
 
 module lensOpening() {
     clearance = 0.5;
     c = 2 * clearance;
-    translate([0,0,2.5])
-        cube(size=[8+c,8+c,5+c], center=true);
+    w = 8+c;
+    d = 8+c;
+    h = 100;
+    translate([-w/2,-d/2,-1])
+        cube(size=[w,d,h]);
 }
 
 module boardOpening() {
     clearance = 0.3;
     c = 2 * clearance;
-    translate([0,-3,7.5])
-        cube(size=[25+c,24+c,5], center=true);
+    w = 25+c;
+    d = 24+c;
+    h = 100;
+    translate([-w/2,-d/2 - 3, height-5])
+        cube(size=[w,d,h]);
 }
 
 module cameraFrame() {
-    translate([0,0,5])
-        cube(size=[width,length,10], center=true);
+    translate([0,0,height/2])
+        cube(size=[width,length,height], center=true);
 }
 
 module roundedCorner(r) {
@@ -132,11 +155,11 @@ module cornerRounding() {
         roundedCorner(radius1);
 
     // top corners
-    translate([-width/2,0,10])
+    translate([-width/2,0,height])
     rotate([0,-90,0])
     rotate([90,0,0])
         roundedCorner(radius2);
-    translate([width/2,0,10])
+    translate([width/2,0,height])
     rotate([90,0,0])
         roundedCorner(radius2);
 }
@@ -146,6 +169,7 @@ module piCameraAdapter() {
         cameraFrame();
         boardOpening();
         chipOpening();
+        ledOpening();
         cableOpening();
         lensOpening();
         cornerRounding();
