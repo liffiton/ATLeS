@@ -8,6 +8,50 @@ _freeze_min_time = 1  # min seconds to count lack of motion as a "freeze"
 _freeze_max_speed = 0.1  # maximum speed to still consider a "freeze"
 
 
+# Source: https://gist.github.com/jasonmc/1160951
+def _set_foregroundcolor(ax, color):
+    '''For the specified axes, sets the color of the frame, major ticks,
+    tick labels, axis labels, title and legend
+    '''
+    for tl in ax.get_xticklines() + ax.get_yticklines():
+        tl.set_color(color)
+    for spine in ax.spines:
+        ax.spines[spine].set_edgecolor(color)
+    for tick in ax.xaxis.get_major_ticks():
+        tick.label1.set_color(color)
+    for tick in ax.yaxis.get_major_ticks():
+        tick.label1.set_color(color)
+    ax.axes.xaxis.label.set_color(color)
+    ax.axes.yaxis.label.set_color(color)
+    ax.axes.xaxis.get_offset_text().set_color(color)
+    ax.axes.yaxis.get_offset_text().set_color(color)
+    ax.axes.title.set_color(color)
+    lh = ax.get_legend()
+    if lh is not None:
+        lh.get_title().set_color(color)
+        lh.legendPatch.set_edgecolor('none')
+        labels = lh.get_texts()
+        for lab in labels:
+            lab.set_color(color)
+    for tl in ax.get_xticklabels():
+        tl.set_color(color)
+    for tl in ax.get_yticklabels():
+        tl.set_color(color)
+
+
+# Source: https://gist.github.com/jasonmc/1160951
+def _set_backgroundcolor(ax, color):
+    '''Sets the background color of the current axes (and legend).
+    Use 'None' (with quotes) for transparent. To get transparent
+    background on saved figures, use:
+    pp.savefig("fig1.svg", transparent=True)
+    '''
+    ax.patch.set_facecolor(color)
+    lh = ax.get_legend()
+    if lh is not None:
+        lh.legendPatch.set_facecolor(color)
+
+
 class Grapher(object):
     def load(self, infile):
         time, status, x, y, numpts = np.loadtxt(
@@ -162,50 +206,6 @@ class Grapher(object):
         total_dist = dists[which].sum()
         return count, total_time, total_dist
 
-    # Source: https://gist.github.com/jasonmc/1160951
-    @staticmethod
-    def _set_foregroundcolor(ax, color):
-        '''For the specified axes, sets the color of the frame, major ticks,
-        tick labels, axis labels, title and legend
-        '''
-        for tl in ax.get_xticklines() + ax.get_yticklines():
-            tl.set_color(color)
-        for spine in ax.spines:
-            ax.spines[spine].set_edgecolor(color)
-        for tick in ax.xaxis.get_major_ticks():
-            tick.label1.set_color(color)
-        for tick in ax.yaxis.get_major_ticks():
-            tick.label1.set_color(color)
-        ax.axes.xaxis.label.set_color(color)
-        ax.axes.yaxis.label.set_color(color)
-        ax.axes.xaxis.get_offset_text().set_color(color)
-        ax.axes.yaxis.get_offset_text().set_color(color)
-        ax.axes.title.set_color(color)
-        lh = ax.get_legend()
-        if lh is not None:
-            lh.get_title().set_color(color)
-            lh.legendPatch.set_edgecolor('none')
-            labels = lh.get_texts()
-            for lab in labels:
-                lab.set_color(color)
-        for tl in ax.get_xticklabels():
-            tl.set_color(color)
-        for tl in ax.get_yticklabels():
-            tl.set_color(color)
-
-    # Source: https://gist.github.com/jasonmc/1160951
-    @staticmethod
-    def _set_backgroundcolor(ax, color):
-        '''Sets the background color of the current axes (and legend).
-        Use 'None' (with quotes) for transparent. To get transparent
-        background on saved figures, use:
-        pp.savefig("fig1.svg", transparent=True)
-        '''
-        ax.patch.set_facecolor(color)
-        lh = ax.get_legend()
-        if lh is not None:
-            lh.legendPatch.set_facecolor(color)
-
     @staticmethod
     def _speed2color(speed, median_speed):
         cutoff = median_speed*5
@@ -264,8 +264,7 @@ class Grapher(object):
             ncol=4,
         )
         legend_ax.axis('off')
-        self._set_backgroundcolor(legend_ax, 'None')
-        self._set_foregroundcolor(legend_ax, '0.6')
+        self._format_axis(legend_ax)
 
     def plot_left(self, addplot=False):
         if not addplot:
@@ -278,8 +277,7 @@ class Grapher(object):
         plt.step(self._time[left25_starts], range(1, len(left25_starts)+1), where='post', color=color)
 
         if not addplot:
-            self._set_backgroundcolor(plt.gca(), 'None')
-            self._set_foregroundcolor(plt.gca(), '0.6')
+            self._format_axis(plt.gca())
             plt.title("Cumulative Entries to Left 25%")
             plt.xlabel("Time (seconds)")
             plt.ylabel("Cumulative entries")
@@ -287,13 +285,16 @@ class Grapher(object):
 
     def plot_heatmap(self, numplots=1):
         plt.close('all')
-        plt.figure(figsize=(4, 4*numplots))
+        plt.figure(figsize=(4*numplots, 4))
         for i in range(numplots):
             start = i * len(self._x) / numplots
             end = (i+1) * len(self._x) / numplots
-            ax = plt.subplot(numplots, 1, i+1)
-            ax.axes.get_xaxis().set_visible(False)
-            ax.axes.get_yaxis().set_visible(False)
+            ax = plt.subplot(1, numplots, i+1)
+            if numplots > 1:
+                ax.axes.get_xaxis().set_visible(False)
+                ax.axes.get_yaxis().set_visible(False)
+            else:
+                self._format_axis(ax)
             # imshow expects y,x for the image, but x,y for the extents,
             # so we have to manage that here...
             nbins = 50
@@ -322,10 +323,7 @@ class Grapher(object):
         numpts = self._numpts[start:end]
 
         # Format nicely
-        self._set_foregroundcolor(ax, '0.6')
-        self._set_backgroundcolor(ax, '0.08')
-        for spine in ax.spines:
-            ax.spines[spine].set_visible(False)
+        self._format_axis(ax)
         ax.axes.get_yaxis().set_visible(False)
 
         # Get set axes (specifically, we don't want the y-axis to be autoscaled for us)
@@ -397,17 +395,24 @@ class Grapher(object):
             headlength=0, headwidth=0, headaxislength=0     # no arrowheads
         )
 
-    def format(self):
-        # Format nicely
-        plt.gcf().patch.set_facecolor('0.1')
+    @staticmethod
+    def _format_axis(ax):
+        _set_foregroundcolor(ax, '0.5')
+        _set_backgroundcolor(ax, '0.08')
+        for spine in ax.spines:
+            ax.spines[spine].set_visible(False)
+
+    @staticmethod
+    def _format_figure():
+        plt.gcf().patch.set_facecolor('0.12')
         plt.tight_layout()
 
     def show(self):
-        self.format()
+        self._format_figure()
         plt.show()
 
     def savefig(self, outfile):
-        self.format()
+        self._format_figure()
         plt.savefig(outfile, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
 
 
