@@ -64,7 +64,7 @@
     </thead>
 %for path, points, img_count in tracks:
     <tr>
-        <td>{{path}}</td>
+        <td><a href="/{{path}}">{{path}}</a></td>
         <td>{{points}}</td>
         <td>
         %if img_count:

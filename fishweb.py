@@ -120,7 +120,10 @@ def post_archive():
 
 @route('/logs/<filename:path>')
 def static_logs(filename):
-    return static_file(filename, root='logs/')
+    if (filename.endswith('.csv')):
+        return static_file(filename, root='logs/', mimetype='text/plain')
+    else:
+        return static_file(filename, root='logs/')
 
 
 if __name__ == '__main__':

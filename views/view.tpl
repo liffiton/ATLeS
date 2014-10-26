@@ -9,7 +9,7 @@
 </head>
 <body>
 <div class="container">
-    <h1>Fishybox Log {{logname}}</h1>
+    <h1>Fishybox Log <a href="/{{logname}}">{{logname}}</a></h1>
 %for img in imgs:
     <p><img src="/{{img}}"></p>
 %end
