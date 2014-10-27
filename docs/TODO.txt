@@ -3,10 +3,11 @@ TODOs and Plans
 
 General
 -------
- - Investigate light level sensor for interior of box
  - Teach Brad git
  - Decide whether to pursue tablet idea
  - Consider / keep in mind idea of setting up a centralized control/logging server
+ - Investigate light level sensor for interior of box
+   * https://www.adafruit.com/products/439
 
 
 Enclosure
