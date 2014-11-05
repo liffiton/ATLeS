@@ -17,7 +17,7 @@ Current:
  - Rig lights to be in consistent, stable position
 
 New, laser-cut:
- - Add holder for Pi
+ - Add opening / holder for light sensor
  - Add cable routing for HDMI, etc.?
  - Add reinforcement/support/bracing for bottom?
 

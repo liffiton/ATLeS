@@ -41,7 +41,11 @@ vert_faces();
 sides();
 tank_base();
 light_bar();
-camera_supports(x=width, y=depth/2, z=height/2, spacing=20);
+// camera supports
+hanging_supports(x=width, y=depth/2, z=height/2, out=20, up=30, spacing=20);
+// rpi support
+hanging_support(x=width, y=depth/4+9, z=height/2, out=3, up=85);
+mock_rpi(x=width, y=depth/4, z=height/2);
 top_cover();
 
 //////////////////////////////////////////////////////////////////
@@ -55,7 +59,10 @@ module vert_faces() {
             difference() {
                 vert_face(x=width);
                 camera_opening();
-                camera_supports(x=width+thickness*2, y=depth/2, z=height/2+10, spacing=20);
+                // camera supports
+                hanging_supports(x=width+thickness*2, y=depth/2, z=height/2+10, out=20, up=30, spacing=20);
+                // rpi supports
+                hanging_support(x=width+thickness*2, y=depth/4+9, z=height/2+10, out=3, up=85);
             }
 		}
 		sides_base(height_scale=0.5);
@@ -72,14 +79,14 @@ module camera_opening() {
         cube([thickness*2,10,10], center=true);
 }
 
-module camera_supports(x, y, z, spacing) {
-    camera_support(x, y + spacing/2, z);
-    camera_support(x, y - spacing/2, z);
+module hanging_supports(x, y, z, out, up, spacing) {
+    hanging_support(x, y + spacing/2, z, out, up);
+    hanging_support(x, y - spacing/2, z, out, up);
 }
 
-module camera_support(x, y, z) {
-    inner_w = 20;
-    inner_h = 30;
+module hanging_support(x, y, z, out, up) {
+    inner_w = out+thickness;
+    inner_h = up;
     inner_offset = 5;
     translate([x,y,z])
     // shift down to center on camera opening
@@ -169,4 +176,19 @@ module sides_base(height_scale=1) {
 module side(y) {
 	translate([-overhang,y-thickness/2,0])
 		cube([width+overhang*2, thickness, height]);
+}
+
+module mock_rpi(x, y, z) {
+    translate([x+thickness, y, z])
+        rotate(v=[0,1,0], a=90)
+            translate([-85/2, -56/2, 0])
+                union() {
+                    cube([85, 56, 2]);
+                    // USB1
+                    translate([67, 41, 2])
+                        cube([20, 12, 12]);
+                    // USB2
+                    translate([67, 23, 2])
+                        cube([20, 12, 12]);
+                }
 }
