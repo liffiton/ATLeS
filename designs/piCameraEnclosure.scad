@@ -17,7 +17,7 @@ radius2 = 4;
 piCameraAdapter();
 // Comment out translate to see
 // back cover in place.
-translate([width,4,-8])
+translate([width,4,-(height-cover_height)])
     piCameraBackCover();
 
 
