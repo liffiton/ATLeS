@@ -25,6 +25,18 @@ New, laser-cut:
 FishWeb / Analyze
 -----------------
 
+Compute general statistics to be used for identifying startle response
+and/or behavior change in "absolute" darkness:
+ - Mean, median, max of:
+   - x position
+   - y position
+   - speed
+   - x speed
+   - y speed
+   - acceleration magnitude
+   - x acceleration magnitude
+   - y acceleration magnitude
+
 
 FishBox
 -------
