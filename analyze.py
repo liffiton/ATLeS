@@ -108,7 +108,9 @@ class Grapher(object):
         self._in_top = in_top
         self._in_left25 = in_left25
         self._x = x
+        self._dx = dx
         self._y = y
+        self._dy = dy
         self._numpts = numpts
 
     def get_stats(self):
@@ -145,7 +147,11 @@ class Grapher(object):
         stats["Total time (sec)"] = self._time[-1]
         stats["Valid time (sec)"] = time_total
         stats["Total distance traveled (?)"] = dist_total
-        stats["Average velocity (?/sec)"] = dist_total / time_total
+        stats["Avg. x coordinate"] = np.mean(self._x[self._valid])
+        stats["Avg. y coordinate"] = np.mean(self._y[self._valid])
+        stats["Avg. speed (?/sec)"] = dist_total / time_total
+        stats["Avg. x speed (?/sec)"] = np.sum(np.abs(self._dx[self._valid])) / time_total
+        stats["Avg. y speed (?/sec)"] = np.sum(np.abs(self._dy[self._valid])) / time_total
         stats["#Entries to top"] = top_count
         if top_count:
             stats["Time of first entry (sec)"] = self._time[top_starts[0]]

@@ -7,7 +7,7 @@ import sys
 # Import gevent and monkey-patch before importing bottle.
 from gevent import monkey
 monkey.patch_all()
-from bottle import post, redirect, request, route, run, static_file, view
+from bottle import post, redirect, request, route, run, static_file, view, template
 
 # Import matplotlib ourselves and make it use agg (not any GUI anything)
 # before the analyze module pulls it in.
@@ -44,6 +44,34 @@ def index():
 def view(logname):
     name = logname.split('/')[-1]
     return dict(imgs=_imgs(name), logname=logname)
+
+
+@post('/stats/')
+#@view('stats')  # using @view here fails with an inscrutable error message (12/3/2014)
+def post_stats():
+    logs = request.query.logs.split('|')
+    stats = []
+    all_keys = set()
+    for log in logs:
+        g = analyze.Grapher()
+        g.load(log)
+        curstats = g.get_stats()
+        all_keys.update(curstats.keys())
+        curstats['Log file'] = log
+        stats.append(curstats)
+    for i in range(len(stats)):
+        stat = stats[i]
+        for k in all_keys:
+            import numpy as np
+            if k in stat:
+                val = stat[k]
+                if type(val) is np.float32 or type(val) is np.float64:
+                    stat[k] = "%0.3f" % val
+            else:
+                stat[k] = ""
+
+    #return dict(keys=list(all_keys), stats=stats)  # can't use @view...
+    return template('stats', keys=sorted(list(all_keys)), stats=stats)
 
 
 def _do_analyze(logname):
