@@ -111,7 +111,7 @@ class Grapher(object):
         self._y = y
         self._numpts = numpts
 
-    def print_stats(self):
+    def get_stats(self):
         valid_count = np.sum(self._valid)
 
         dist_total = np.sum(self._dist[self._valid])
@@ -137,38 +137,37 @@ class Grapher(object):
         # "Turn" = abs(angular_velocity) > _turn_vel for at least _turn_time seconds
         # TODO
 
-        print "#Datapoints: %d" % len(self._valid)
-        print "#Valid: %d" % valid_count
-        print "%%Valid datapoints: %0.3f" % (valid_count / float(len(self._valid)))
-        print "Total time: %0.2f seconds" % self._time[-1]
-        print "Valid time: %0.2f seconds" % time_total
-        print
-        print "Total distance traveled: %0.2f [units]" % (dist_total)
-        print "Average velocity: %0.3f [units]/second" % (dist_total / time_total)
-        print
-        print "#Entries to top: %d" % top_count
+        stats = {}
+
+        stats["#Datapoints"] = len(self._valid)
+        stats["#Valid"] = valid_count
+        stats["%Valid datapoints"] = valid_count / float(len(self._valid))
+        stats["Total time (sec)"] = self._time[-1]
+        stats["Valid time (sec)"] = time_total
+        stats["Total distance traveled (?)"] = dist_total
+        stats["Average velocity (?/sec)"] = dist_total / time_total
+        stats["#Entries to top"] = top_count
         if top_count:
-            print "Time of first entry: %0.2f seconds" % (self._time[top_starts[0]])
-        print
-        print "Time in top:    %0.2f seconds" % top_time
-        print "Time in bottom: %0.2f seconds" % bottom_time
+            stats["Time of first entry (sec)"] = self._time[top_starts[0]]
+        stats["Time in top (sec)"] = top_time
+        stats["Time in bottom (sec)"] = bottom_time
         if bottom_time:
-            print "Top/bottom time ratio: %0.3f" % (top_time/bottom_time)
+            stats["Top/bottom time ratio"] = top_time/bottom_time
         if top_count:
-            print "Avg. time per entry: %0.2f seconds" % (top_time / top_count)
-        print
-        print "Distance in top:    %0.3f [units]" % top_dist
-        print "Distance in bottom: %0.3f [units]" % bottom_dist
+            stats["Avg. time per entry (sec)"] = top_time / top_count
+        stats["Distance in top (?)"] = top_dist
+        stats["Distance in bottom (?)"] = bottom_dist
         if bottom_dist:
-            print "Top/bottom distance ratio: %0.3f" % (top_dist/bottom_dist)
+            stats["Top/bottom distance ratio"] = top_dist/bottom_dist
         if top_count:
-            print "Avg. distance per entry: %0.3f [units]" % (top_dist / top_count)
-        print
-        print "#Freezes: %d" % freeze_count
+            stats["Avg. distance per entry (?)"] = top_dist / top_count
+        stats["#Freezes"] = freeze_count
         if freeze_count:
-            print "Total time frozen: %0.3f seconds" % freeze_time
-            print "Avg. time per freeze: %0.3f seconds" % (freeze_time / freeze_count)
-            print "Freeze frequency: %0.2f per minute" % (60.0*(freeze_count / time_total))
+            stats["Total time frozen (sec)"] = freeze_time
+            stats["Avg. time per freeze (sec)"] = freeze_time / freeze_count
+            stats["Freeze frequency (per min)"] = 60.0*(freeze_count / time_total)
+
+        return stats
 
     @staticmethod
     def _groups_where(vals):
@@ -428,7 +427,12 @@ def main():
     g = Grapher()
     g.load(args.infile)
 
-    g.print_stats()
+    stats = g.get_stats()
+    maxlen = max(len(key) for key in stats.keys())
+    for key, val in stats.items():
+        if type(val) is np.float32 or type(val) is np.float64:
+            val = "%0.3f" % val
+        print ("%*s: %s") % (maxlen, key, str(val))
 
     if args.heat:
         g.plot_heatmap(args.heat_num)
