@@ -1,8 +1,10 @@
+import csv
 import glob
 import multiprocessing
 import os
 import shutil
 import sys
+import StringIO
 
 # Import gevent and monkey-patch before importing bottle.
 from gevent import monkey
@@ -47,9 +49,9 @@ def view(logname):
 
 
 @post('/stats/')
-#@view('stats')  # using @view here fails with an inscrutable error message (12/3/2014)
 def post_stats():
     logs = request.query.logs.split('|')
+    do_csv = request.query.csv
     stats = []
     all_keys = set()
     for log in logs:
@@ -70,8 +72,17 @@ def post_stats():
             else:
                 stat[k] = ""
 
-    #return dict(keys=list(all_keys), stats=stats)  # can't use @view...
-    return template('stats', keys=sorted(list(all_keys)), stats=stats)
+    all_keys = sorted(list(all_keys))
+    if do_csv:
+        output = StringIO.StringIO()
+        writer = csv.DictWriter(output, fieldnames=all_keys)
+        writer.writeheader()
+        for stat in stats:
+            writer.writerow(stat)
+        return output.getvalue()
+        output.close()
+    else:
+        return template('stats', keys=sorted(list(all_keys)), stats=stats)
 
 
 def _do_analyze(logname):

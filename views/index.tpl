@@ -38,6 +38,8 @@
             $('#comparebutton').toggleClass('btn-primary', count == 2);
             $('#statsbutton').toggleClass('disabled', count == 0);
             $('#statsbutton').toggleClass('btn-primary', count > 0);
+            $('#statscsvbutton').toggleClass('disabled', count == 0);
+            $('#statscsvbutton').toggleClass('btn-primary', count > 0);
         }
         function toggle_select_all() {
             var count = Object.keys(selection).length;
@@ -59,6 +61,11 @@
         function do_stats() {
             var sels = Object.keys(selection).sort();
             do_post('/stats/', 'logs=' + sels.join('|'));
+        }
+        
+        function do_stats_csv() {
+            var sels = Object.keys(selection).sort();
+            do_post('/stats/', 'csv=true&logs=' + sels.join('|'));
         }
     </script>
 </head>
@@ -118,7 +125,7 @@
 </div>
 
 <div class="row">
-    <div class="col-lg-4 col-md-5 col-sm-6">
+    <div class="col-lg-6 col-md-8 col-sm-10">
         <div class="well">
             <p>
                 With selection:
@@ -127,6 +134,9 @@
                 </button>
                 <button type="button" class="btn btn-default disabled" id="statsbutton" onclick="do_stats();">
                     Statistics
+                </button>
+                <button type="button" class="btn btn-default disabled" id="statscsvbutton" onclick="do_stats_csv();">
+                    Statistics (CSV)
                 </button>
             </p>
             <p>
