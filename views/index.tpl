@@ -24,8 +24,8 @@
         var selection = Object.create(null);  // an empty object to be used as a set
         function toggle_select(el, path) {
             var e = $(el);
-            e.toggleClass('active btn-primary');
-            if (e.hasClass('active')) {
+            e.toggleClass('btn-primary');
+            if (e.hasClass('btn-primary')) {
                 // add to the set
                 selection[e.data('path')] = true;
             } else {
@@ -45,12 +45,12 @@
             var count = Object.keys(selection).length;
             var els = $('.selectbutton');
             els.each(function(i, el) {
-                if ((count < els.length) != ($(el).hasClass('active'))) {
+                if ((count < els.length) != ($(el).hasClass('btn-primary'))) {
                     $(el).click();
                 }
             });
             count = Object.keys(selection).length;
-            $('#selectallbutton').toggleClass('active btn-primary', count == els.length);
+            $('#selectallbutton').toggleClass('btn-primary', count == els.length);
         }
 
         function do_compare() {
