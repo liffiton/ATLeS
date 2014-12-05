@@ -7,7 +7,6 @@
 <body>
     <table class="table text-right">
         <tr>
-            <th>Log file</th>
         %for key in keys:
             <th>{{key}}</th>
         %end
@@ -15,7 +14,6 @@
         <tbody>
         %for stat in stats:
             <tr>
-                <td>{{stat['Log file']}}</td>
             %for key in keys:
                 <td>{{stat[key]}}</td>
             %end

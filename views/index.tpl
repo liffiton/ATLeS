@@ -133,10 +133,10 @@
                     Compare
                 </button>
                 <button type="button" class="btn btn-default disabled" id="statsbutton" onclick="do_stats();">
-                    Statistics
+                    View Statistics
                 </button>
                 <button type="button" class="btn btn-default disabled" id="statscsvbutton" onclick="do_stats_csv();">
-                    Statistics (CSV)
+                    Download Statistics (CSV)
                 </button>
             </p>
             <p>

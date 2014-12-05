@@ -9,7 +9,7 @@ import StringIO
 # Import gevent and monkey-patch before importing bottle.
 from gevent import monkey
 monkey.patch_all()
-from bottle import post, redirect, request, route, run, static_file, view, template
+from bottle import post, redirect, request, response, route, run, static_file, view, template
 
 # Import matplotlib ourselves and make it use agg (not any GUI anything)
 # before the analyze module pulls it in.
@@ -73,16 +73,21 @@ def post_stats():
                 stat[k] = ""
 
     all_keys = sorted(list(all_keys))
+    all_keys[:0] = ['Log file']  # prepend 'Log file' header
+
     if do_csv:
         output = StringIO.StringIO()
         writer = csv.DictWriter(output, fieldnames=all_keys)
         writer.writeheader()
         for stat in stats:
             writer.writerow(stat)
-        return output.getvalue()
+        csvstring = output.getvalue()
         output.close()
+        response.content_type = 'text/csv'
+        response.headers['Content-Disposition'] = 'attachment; filename=fishystats.csv'
+        return csvstring
     else:
-        return template('stats', keys=sorted(list(all_keys)), stats=stats)
+        return template('stats', keys=all_keys, stats=stats)
 
 
 def _do_analyze(logname):
