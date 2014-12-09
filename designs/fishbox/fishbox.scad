@@ -8,7 +8,7 @@
 
 // Set thickness to account for thickness of material
 // PLUS needed clearance for cuts into which material should fit.
-thickness = 3;
+thickness = 6.35;  // 6.35mm = 1/4"
 
 // Interior box dimensions (from centerpoints of walls, so actual dimension is minus material thickness)
 width = 400;     // x
@@ -31,7 +31,7 @@ height = i_height + base_height;
 // light bar
 light_bar_width = 30;
 light_pos_x = 50;
-light_height = height-10;
+light_height = height-thickness*3;
 
 // for slight offsets/tweaks
 epsilon = 1;
@@ -78,9 +78,9 @@ module vert_face(x=0) {
         vert_face_base(x);
         camera_opening();
         // camera supports
-        hanging_supports(x=width+thickness*2, y=depth/2, z=height/2+10, out=20, up=30, spacing=20);
+        hanging_supports(x=width+thickness, y=depth/2, z=height/2+10, out=20, up=30, spacing=20);
         // rpi supports
-        hanging_support(x=width+thickness*2, y=depth/4+9, z=height/2+10, out=3, up=85);
+        hanging_support(x=width+thickness, y=depth/4+9, z=height/2+10, out=3, up=85);
         scale([1,1,0.5])
             side_base(y=0);
         scale([1,1,0.5])
