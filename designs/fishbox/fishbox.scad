@@ -11,9 +11,11 @@
 thickness = 6.35;  // 6.35mm = 1/4"
 
 // Interior box dimensions (from centerpoints of walls, so actual dimension is minus material thickness)
-width = 400;     // x
-depth = 300;     // y
-i_height = 180;  // z  (i_height because 'height' is used for height of entire box)
+width = 290;    // x = 29cm wall-to-wall
+depth = 350;    // y = 35cm to accomodate 34.5cm tank length
+i_height = 180+thickness;
+                // z = 18cm to accomodate 16cm tank height plus light holder, plus cover
+                // (i_height because 'height' is used for height of entire box)
 
 // amount faces extend past each other at corners
 overhang = 20;
