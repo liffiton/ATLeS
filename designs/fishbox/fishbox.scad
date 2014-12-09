@@ -74,7 +74,7 @@ else {
 //
 
 module vert_face(x=0) {
-	difference() {
+    difference() {
         vert_face_base(x);
         camera_opening();
         // camera supports
@@ -85,12 +85,12 @@ module vert_face(x=0) {
             side_base(y=0);
         scale([1,1,0.5])
             side_base(y=depth);
-	}
+    }
 }
 
 module vert_face_base(x) {
-	translate([x-thickness/2,-overhang,overhang])
-		cube([thickness,depth+overhang*2,height-overhang]);
+    translate([x-thickness/2,-overhang,overhang])
+        cube([thickness,depth+overhang*2,height-overhang]);
 }
 
 module camera_opening() {
@@ -131,29 +131,29 @@ module top_cover() {
     translate([-outset,-outset,height-thickness])
     difference() {
         cube([width+outset*2,depth+outset*2,thickness]);
-		cutouts(5,width-thickness,outset,rot=0,trans=[width/2+outset,0,0]);
-		cutouts(5,width-thickness,outset,rot=180,trans=[width/2+outset,depth+outset*2,0]);
-		cutouts(5,depth-thickness,outset,rot=-90,trans=[0,depth/2+outset,0]);
-		cutouts(5,depth-thickness,outset,rot=90,trans=[width+outset*2,depth/2+outset,0]);
+        cutouts(5,width-thickness,outset,rot=0,trans=[width/2+outset,0,0]);
+        cutouts(5,width-thickness,outset,rot=180,trans=[width/2+outset,depth+outset*2,0]);
+        cutouts(5,depth-thickness,outset,rot=-90,trans=[0,depth/2+outset,0]);
+        cutouts(5,depth-thickness,outset,rot=90,trans=[width+outset*2,depth/2+outset,0]);
     }
 }
 
 module tank_base() {
-	translate([thickness,-outset,base_height])
-	difference() {
-		cube([base_width, depth+outset*2, thickness]);
-		cutouts(5,base_width,outset,rot=0,trans=[base_width/2,0,0]);
-		cutouts(5,base_width,outset,rot=180,trans=[base_width/2,depth+outset*2,0]);
-	}
+    translate([thickness,-outset,base_height])
+    difference() {
+        cube([base_width, depth+outset*2, thickness]);
+        cutouts(5,base_width,outset,rot=0,trans=[base_width/2,0,0]);
+        cutouts(5,base_width,outset,rot=180,trans=[base_width/2,depth+outset*2,0]);
+    }
 }
 
 module light_bar() {
-	translate([light_pos_x-light_bar_width/2, -outset, light_height])
-	difference() {
-		cube([light_bar_width, depth+outset*2, thickness]);
-		cutouts(2,light_bar_width,outset,rot=0,trans=[light_bar_width/2,0,0]);
-		cutouts(2,light_bar_width,outset,rot=180,trans=[light_bar_width/2,depth+outset*2,0]);
-	}
+    translate([light_pos_x-light_bar_width/2, -outset, light_height])
+    difference() {
+        cube([light_bar_width, depth+outset*2, thickness]);
+        cutouts(2,light_bar_width,outset,rot=0,trans=[light_bar_width/2,0,0]);
+        cutouts(2,light_bar_width,outset,rot=180,trans=[light_bar_width/2,depth+outset*2,0]);
+    }
 }
 
 module cutouts(num, width, outset, rot, trans) {
@@ -174,20 +174,20 @@ module light_wire_opening() {
 }
 
 module side(y=0) {
-	difference() {
+    difference() {
         side_base(y);
-		vert_face(x=0);
-		vert_face(x=width);
-		tank_base();
+        vert_face(x=0);
+        vert_face(x=width);
+        tank_base();
         light_bar();
         light_wire_opening();
         top_cover();
-	}
+    }
 }
 
 module side_base(y) {
-	translate([-overhang,y-thickness/2,0])
-		cube([width+overhang*2, thickness, height]);
+    translate([-overhang,y-thickness/2,0])
+        cube([width+overhang*2, thickness, height]);
 }
 
 module mock_rpi(x, y, z) {
