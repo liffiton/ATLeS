@@ -1,5 +1,10 @@
+# Use openscad binary from path unless specified in environment variable
+OPENSCAD?=openscad
 
 all: top.dxf bottom.dxf side1.dxf side2.dxf end1.dxf end2.dxf light_bar.dxf
+
+clean:
+	rm *.dxf
 
 top.dxf: fishbox.scad
 	"$(OPENSCAD)" -o $@ -D DXF_TOP=true fishbox.scad
