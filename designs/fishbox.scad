@@ -36,40 +36,59 @@ light_height = height-10;
 // for slight offsets/tweaks
 epsilon = 1;
 
-// components to include (comment out unwanted)
-vert_faces();
-sides();
-tank_base();
-light_bar();
-// camera supports
-hanging_supports(x=width, y=depth/2, z=height/2, out=20, up=30, spacing=20);
-// rpi support
-hanging_support(x=width, y=depth/4+9, z=height/2, out=3, up=85);
-mock_rpi(x=width, y=depth/4, z=height/2);
-top_cover();
+// vars to control projection for DXF export (see makefile)
+if (DXF_TOP) {
+    projection() top_cover();
+} else if (DXF_BOTTOM) {
+    projection() tank_base();
+} else if (DXF_SIDE1) {
+    projection() rotate(a=[90,0,0]) side(y=0);
+} else if (DXF_SIDE2) {
+    projection() rotate(a=[90,0,0]) side(y=depth);
+} else if (DXF_END1) {
+    projection() rotate(a=[0,90,0]) vert_face(x=0);
+} else if (DXF_END2) {
+    projection() rotate(a=[0,90,0]) vert_face(x=width);
+} else if (DXF_LIGHT_BAR) {
+    projection() light_bar();
+}
+else {
+    // 3D model
+    // components to include (comment out unwanted)
+    vert_face(x=0);
+    vert_face(x=width);
+    side(y=0);
+    side(y=depth);
+    tank_base();
+    light_bar();
+    // camera supports
+    hanging_supports(x=width, y=depth/2, z=height/2, out=20, up=30, spacing=20);
+    // rpi support
+    hanging_support(x=width, y=depth/4+9, z=height/2, out=3, up=85);
+    mock_rpi(x=width, y=depth/4, z=height/2);
+    top_cover();
+}
 
 //////////////////////////////////////////////////////////////////
 // Module definitions
 //
 
-module vert_faces() {
+module vert_face(x=0) {
 	difference() {
-		union() {
-			vert_face(x=0);
-            difference() {
-                vert_face(x=width);
-                camera_opening();
-                // camera supports
-                hanging_supports(x=width+thickness*2, y=depth/2, z=height/2+10, out=20, up=30, spacing=20);
-                // rpi supports
-                hanging_support(x=width+thickness*2, y=depth/4+9, z=height/2+10, out=3, up=85);
-            }
-		}
-		sides_base(height_scale=0.5);
+        vert_face_base(x);
+        camera_opening();
+        // camera supports
+        hanging_supports(x=width+thickness*2, y=depth/2, z=height/2+10, out=20, up=30, spacing=20);
+        // rpi supports
+        hanging_support(x=width+thickness*2, y=depth/4+9, z=height/2+10, out=3, up=85);
+        scale([1,1,0.5])
+            side_base(y=0);
+        scale([1,1,0.5])
+            side_base(y=depth);
 	}
 }
 
-module vert_face(x) {
+module vert_face_base(x) {
 	translate([x-thickness/2,-overhang,overhang])
 		cube([thickness,depth+overhang*2,height-overhang]);
 }
@@ -154,10 +173,11 @@ module light_wire_opening() {
         cylinder(d=10, h=thickness+epsilon, center=true);
 }
 
-module sides() {
+module side(y=0) {
 	difference() {
-        sides_base();
-		vert_faces();
+        side_base(y);
+		vert_face(x=0);
+		vert_face(x=width);
 		tank_base();
         light_bar();
         light_wire_opening();
@@ -165,15 +185,7 @@ module sides() {
 	}
 }
 
-module sides_base(height_scale=1) {
-	scale([1,1,height_scale])
-		union() {
-			side(y=0);
-			side(y=depth);
-		}
-}
-
-module side(y) {
+module side_base(y) {
 	translate([-overhang,y-thickness/2,0])
 		cube([width+overhang*2, thickness, height]);
 }
