@@ -6,9 +6,11 @@ import shutil
 import sys
 import StringIO
 
-# Import gevent and monkey-patch before importing bottle.
-from gevent import monkey
-monkey.patch_all()
+# 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
+## Import gevent and monkey-patch before importing bottle.
+#from gevent import monkey
+#monkey.patch_all()
+
 from bottle import post, redirect, request, response, route, run, static_file, view, template
 
 # Import matplotlib ourselves and make it use agg (not any GUI anything)
@@ -171,6 +173,35 @@ def static_logs(filename):
 
 
 if __name__ == '__main__':
-    testing = len(sys.argv) > 1
+    daemon = False
+    testing = False
+    if len(sys.argv) > 1:
+        arg1 = sys.argv[1]
+        if arg1 == "--daemon":
+            daemon = True
+        else:
+            testing = True
+
     host = 'localhost' if testing else '0.0.0.0'
-    run(host=host, port=8080, server='gevent', debug=testing, reloader=testing)
+
+    if daemon:
+        import daemon
+        logfile = os.path.join(
+                os.getcwd(),
+                "bottle.log"
+                )
+        log = open(logfile,"w+")
+        context = daemon.DaemonContext(
+                working_directory=os.getcwd(),
+                stdout=log,
+                stderr=log
+                )
+        with context:
+            # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
+            #run(host=host, port=8080, server='gevent', debug=False, reloader=False)
+            run(host=host, port=8080, debug=False, reloader=False)
+
+    else:
+        # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
+        #run(host=host, port=8080, server='gevent', debug=testing, reloader=testing)
+        run(host=host, port=8080, debug=testing, reloader=testing)
