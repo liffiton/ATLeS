@@ -92,6 +92,7 @@ class Grapher(object):
         missing = status == 'missing'
         in_top = valid & (y > 0.5)
         in_left25 = valid & (x < 0.25)
+        in_right25 = valid & (x > 0.75)
         frozen = valid & (speed < _freeze_max_speed)
 
         # setup internal data
@@ -107,6 +108,7 @@ class Grapher(object):
         self._frozen = frozen
         self._in_top = in_top
         self._in_left25 = in_left25
+        self._in_right25 = in_right25
         self._x = x
         self._dx = dx
         self._y = y
@@ -124,6 +126,9 @@ class Grapher(object):
 
         left25_starts, left25_lens = self._groups_where(self._in_left25)
         left25_count, left25_time, left25_dist = self._sum_runs(left25_starts, left25_lens)
+
+        right25_starts, right25_lens = self._groups_where(self._in_right25)
+        right25_count, right25_time, right25_dist = self._sum_runs(right25_starts, right25_lens)
 
         top_starts, top_lens = self._groups_where(self._in_top)
         top_count, top_time, top_dist = self._sum_runs(top_starts, top_lens)
@@ -257,21 +262,22 @@ class Grapher(object):
         height_artist = lines.Line2D([],[], color='green')
         numpts_artist = lines.Line2D([],[], color='orange')
         inleft25_artist = patches.Rectangle((0,0), 1, 1, fc='purple', ec='None')
+        inright25_artist = patches.Rectangle((0,0), 1, 1, fc='pink', ec='None')
         intop_artist = patches.Rectangle((0,0), 1, 1, fc='blue', ec='None')
         frozen_artist = patches.Rectangle((0,0), 1, 1, fc='lightblue', ec='None')
         missing_artist = patches.Rectangle((0,0), 1, 1, fc='yellow', ec='None')
         lost_artist = patches.Rectangle((0,0), 1, 1, fc='red', ec='None')
         # Place it in center of top "subplot" area
         legend_ax.legend(
-            [height_artist, numpts_artist, inleft25_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
-            ['Height of fish', '# Detection pts', 'In left 25%', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
+            [height_artist, numpts_artist, inleft25_artist, inright25_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
+            ['Height of fish', '# Detection pts', 'In left 25%', 'In right 25%', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
             loc='center',
             ncol=4,
         )
         legend_ax.axis('off')
         self._format_axis(legend_ax)
 
-    def plot_left(self, addplot=False):
+    def plot_leftright(self, addplot=False):
         if not addplot:
             plt.close('all')
             plt.figure(figsize=(6, 4))
@@ -281,12 +287,18 @@ class Grapher(object):
         color = 'blue' if addplot else 'purple'
         plt.step(self._time[left25_starts], range(1, len(left25_starts)+1), where='post', color=color)
 
+        right25_starts, right25_lens = self._groups_where(self._in_right25)
+
+        color = 'cyan' if addplot else 'pink'
+        plt.step(self._time[right25_starts], range(1, len(right25_starts)+1), where='post', color=color)
+
         if not addplot:
             self._format_axis(plt.gca())
-            plt.title("Cumulative Entries to Left 25%")
+            plt.title("Cumulative Entries to Left/Right 25%")
             plt.xlabel("Time (seconds)")
             plt.ylabel("Cumulative entries")
             plt.xlim(0, self._time[-1])
+            plt.legend(["Left", "Right"], fontsize=8, loc=2)
 
     def plot_heatmap(self, numplots=1):
         plt.close('all')
@@ -322,6 +334,7 @@ class Grapher(object):
         missing = self._missing[start:end]
         frozen = self._frozen[start:end]
         in_left25 = self._in_left25[start:end]
+        in_right25 = self._in_right25[start:end]
         in_top = self._in_top[start:end]
         #x = self._x[start:end]
         y = self._y[start:end]
@@ -382,6 +395,16 @@ class Grapher(object):
         )
         ax.add_collection(inleft25_collection)
 
+        # Mark in-right25 sections
+        inright25_collection = collections.BrokenBarHCollection.span_where(
+            time,
+            -0.6, -0.65,
+            in_right25,
+            edgecolors='none',
+            facecolors='pink',
+        )
+        ax.add_collection(inright25_collection)
+
         # Plot height
         ax.plot(time, y, color='green', label='Height of fish')
 
@@ -427,7 +450,7 @@ def main():
     parser.add_argument('outfile', type=str, nargs='?')
     parser.add_argument('-H', '--heat', action='store_true')
     parser.add_argument('--heat-num', type=int, default=1)
-    parser.add_argument('-L', '--left', action='store_true')
+    parser.add_argument('-L', '--leftright', action='store_true')
     args = parser.parse_args()
 
     g = Grapher()
@@ -442,8 +465,8 @@ def main():
 
     if args.heat:
         g.plot_heatmap(args.heat_num)
-    elif args.left:
-        g.plot_left()
+    elif args.leftright:
+        g.plot_leftright()
     else:
         g.plot()
 
