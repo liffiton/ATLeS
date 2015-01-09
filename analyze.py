@@ -406,7 +406,7 @@ class Grapher(object):
         ax.add_collection(inright25_collection)
 
         # Plot height
-        ax.plot(time, y, color='green', label='Height of fish')
+        ax.plot(time, y*2-1, color='green', label='Height of fish')
 
         # Plot numpts (scaled so 0 = bottom, 20 = top of subplot)
         ax.plot(time, -1+(numpts/10.0), color='orange', label='# detected points')
