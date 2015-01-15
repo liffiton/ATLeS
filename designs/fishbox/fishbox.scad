@@ -33,7 +33,7 @@ height = i_height + base_height;
 // light bar
 light_bar_width = 30;
 light_pos_x = 50;
-light_height = height-thickness*3;
+light_height = height-thickness*2-10;
 
 // for slight offsets/tweaks
 epsilon = 1;
@@ -149,6 +149,12 @@ module tank_base() {
     }
 }
 
+module light_bar_opening() {
+    // A wider opening, so the bar can slide out of the way of placing or removing the fish tank
+    translate([light_pos_x, -outset, light_height])
+        cube([light_bar_width*2, depth+outset*2, thickness]);
+}
+
 module light_bar() {
     translate([light_pos_x-light_bar_width/2, -outset, light_height])
     difference() {
@@ -181,7 +187,7 @@ module side(y=0) {
         vert_face(x=0);
         vert_face(x=width);
         tank_base();
-        light_bar();
+        light_bar_opening();
         light_wire_opening();
         top_cover();
     }
