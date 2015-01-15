@@ -3,6 +3,7 @@ TODOs and Plans
 
 General
 -------
+ - :!: Store fishtank measurements in notes somewhere (duh)
  - Teach Brad git
  - Decide whether to pursue tablet idea
  - Consider / keep in mind idea of setting up a centralized control/logging server
@@ -13,13 +14,12 @@ General
 Enclosure
 ---------
 
-Current:
- - Rig lights to be in consistent, stable position
+Double-check:
+ - Height of tank vs light position
 
 New, laser-cut:
  - Add opening / holder for light sensor
  - Add cable routing for HDMI, etc.?
- - Add reinforcement/support/bracing for bottom?
 
 
 FishWeb / Analyze
