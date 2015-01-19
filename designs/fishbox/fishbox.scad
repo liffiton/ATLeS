@@ -2,13 +2,13 @@
 //  - Enclosure design for zebrafish Skinner box
 //  
 //  Author: Mark Liffiton
-//  Date: Oct, 2014
+//  Date: Oct, 2014 - Jan, 2015
 //
 //  Units are mm
 
 // Set thickness to account for thickness of material
 // PLUS needed clearance for cuts into which material should fit.
-thickness = 6.35;  // 6.35mm = 1/4"
+thickness = 1.8;  // 1.8mm = 0.07" (looks good based on cut test piece)
 
 // Interior box dimensions (from centerpoints of walls, so actual dimension is minus material thickness)
 width = 290;    // x = 29cm wall-to-wall
@@ -24,7 +24,7 @@ overhang = 20;
 outset = overhang/2;
 
 // tank base plate
-base_width = width-thickness*2;
+base_depth = depth-thickness*2;
 base_height = overhang;
 
 // create height var to account for raised base
@@ -83,16 +83,15 @@ module vert_face(x=0) {
         hanging_supports(x=width+thickness, y=depth/2, z=height/2+10, out=20, up=30, spacing=20);
         // rpi supports
         hanging_support(x=width+thickness, y=depth/4+9, z=height/2+10, out=3, up=85);
-        scale([1,1,0.5])
-            side_base(y=0);
-        scale([1,1,0.5])
-            side_base(y=depth);
+        side(y=0);
+        side(y=depth);
+        tank_base();
     }
 }
 
 module vert_face_base(x) {
-    translate([x-thickness/2,-overhang,overhang])
-        cube([thickness,depth+overhang*2,height-overhang]);
+    translate([x-thickness/2,-overhang])
+        cube([thickness,depth+overhang*2,height]);
 }
 
 module camera_opening() {
@@ -141,11 +140,11 @@ module top_cover() {
 }
 
 module tank_base() {
-    translate([thickness,-outset,base_height])
+    translate([-outset,thickness,base_height])
     difference() {
-        cube([base_width, depth+outset*2, thickness]);
-        cutouts(5,base_width,outset,rot=0,trans=[base_width/2,0,0]);
-        cutouts(5,base_width,outset,rot=180,trans=[base_width/2,depth+outset*2,0]);
+        cube([width+outset*2, base_depth, thickness]);
+        cutouts(5,depth,outset,rot=-90,trans=[0,base_depth/2,0]);
+        cutouts(5,depth,outset,rot=90,trans=[width+outset*2,base_depth/2,0]);
     }
 }
 
@@ -184,18 +183,19 @@ module light_wire_opening() {
 module side(y=0) {
     difference() {
         side_base(y);
-        vert_face(x=0);
-        vert_face(x=width);
-        tank_base();
-        light_bar_opening();
+        scale([1,1,0.5])
+            vert_face_base(x=0);
+        scale([1,1,0.5])
+            vert_face_base(x=width);
+        light_bar();
         light_wire_opening();
         top_cover();
     }
 }
 
 module side_base(y) {
-    translate([-overhang,y-thickness/2,0])
-        cube([width+overhang*2, thickness, height]);
+    translate([-overhang,y-thickness/2,overhang/2])
+        cube([width+overhang*2, thickness, height-overhang/2]);
 }
 
 module mock_rpi(x, y, z) {
