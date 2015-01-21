@@ -63,8 +63,8 @@ else {
     side(y=depth);
     tank_base();
     light_bar();
-    // camera supports
-    hanging_supports(x=width, y=depth/2, z=height/2, out=20, up=30, spacing=20);
+    // camera supports (z -5 to center on camera opening)
+    hanging_supports(x=width, y=depth/2, z=height/2-5, out=20, up=30, spacing=20);
     // rpi support
     hanging_support(x=width, y=depth/4+9, z=height/2, out=3, up=85);
     mock_rpi(x=width, y=depth/4, z=height/2);
@@ -79,8 +79,8 @@ module vert_face(x=0) {
     difference() {
         vert_face_base(x);
         camera_opening();
-        // camera supports
-        hanging_supports(x=width+thickness, y=depth/2, z=height/2+10, out=20, up=30, spacing=20);
+        // camera supports (z -5 to center on camera opening)
+        hanging_supports(x=width+thickness, y=depth/2, z=height/2-5+10, out=20, up=30, spacing=20);
         // rpi supports
         hanging_support(x=width+thickness, y=depth/4+9, z=height/2+10, out=3, up=85);
         side(y=0);
@@ -107,23 +107,20 @@ module hanging_supports(x, y, z, out, up, spacing) {
 module hanging_support(x, y, z, out, up) {
     inner_w = out+thickness;
     inner_h = up;
-    inner_offset = 5;
+    cutout_w = 10;
     translate([x,y,z])
-    // shift down to center on camera opening
-    translate([0,0,-inner_offset])
     // push inner opening up against vert face
     translate([inner_w/2,0,0])
     difference() {
-        cube([inner_w+20, thickness, inner_h+30], center=true);
-        // cutout for camera
-        translate([0,0,inner_offset])
-            cube([inner_w, thickness*2, inner_h], center=true);
+        cube([inner_w+cutout_w*2, thickness, inner_h+cutout_w*3], center=true);
+        // cutout for object
+        cube([inner_w, thickness*2, inner_h], center=true);
         // cutout for passing through vertface
-        translate([-10-epsilon,0,0])
-            cube([inner_w, thickness*2, inner_h-10], center=true);
+        translate([-(inner_w/2+cutout_w/2),0,-cutout_w/2])
+            cube([cutout_w+2*epsilon, thickness*2, inner_h-10], center=true);
         // bottom cutout
-        translate([-inner_w/2,0,-25])
-            cube([thickness, thickness*2, 10], center=true);
+        translate([-inner_w/2,0,-(inner_h/2+cutout_w)])
+            cube([thickness, thickness*2, cutout_w], center=true);
     }
 }
 
