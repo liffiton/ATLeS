@@ -8,7 +8,7 @@
 
 // Set thickness to account for thickness of material
 // PLUS needed clearance for cuts into which material should fit.
-thickness = 1.8;  // 1.8mm = 0.07" (looks good based on cut test piece)
+thickness = 2.4;  // 2.4mm = 0.094" (looks good based on cut test piece)
 
 // Interior box dimensions (from centerpoints of walls, so actual dimension is minus material thickness)
 width = 290;    // x = 29cm wall-to-wall
