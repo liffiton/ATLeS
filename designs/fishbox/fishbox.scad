@@ -58,7 +58,7 @@ if (DXF_TOP) {
 } else if (DXF_LIGHT_BAR) {
     projection() light_bar();
 } else if (DXF_CAMERA_SUPPORT) {
-    projection() rotate(a=[90,0,0]) camera_supports();
+    projection() rotate(a=[90,0,0]) camera_supports(justone=true);
 } else if (DXF_RPI_SUPPORT) {
     projection() rotate(a=[90,0,0]) rpi_support();
 }
@@ -85,11 +85,14 @@ module vert_face(x=0) {
     difference() {
         vert_face_base(x);
         camera_opening();
-        camera_supports(x=width+thickness*3, y=depth/2, z=height/2+support_drop);
-        rpi_support(x=width+thickness*3, y=depth/3, z=height/2+support_drop);
+        camera_supports(x=width+thickness*2, y=depth/2, z=height/2+support_drop);
+        rpi_support(x=width+thickness*2, y=depth/3, z=height/2+support_drop);
+        // CAUTION: OpenSCAD won't let me make a projection of vert_face(x=0)
+        //   if tank_base is put after side(y=depth) here... bug.  :(
+        tank_base();
+        top_cover();
         side(y=0);
         side(y=depth);
-        tank_base();
     }
 }
 
@@ -103,12 +106,14 @@ module camera_opening() {
         cube([thickness*2,10,10], center=true);
 }
 
-module camera_supports(x, y, z) {
+module camera_supports(x, y, z, justone=false) {
     spacing = 20;
     out = 10;
     up = 36;
     hanging_support(x, y + spacing/2, z, out, up);
-    hanging_support(x, y - spacing/2, z, out, up);
+    if (!justone) {
+        hanging_support(x, y - spacing/2, z, out, up);
+    }
 }
 
 module rpi_support(x, y, z) {
@@ -158,7 +163,7 @@ module tank_base() {
 
 module light_bar_opening() {
     // A wider opening, so the bar can slide out of the way of placing or removing the fish tank
-    translate([light_pos_x, -outset, light_height])
+    translate([light_pos_x-light_bar_width/4, -outset, light_height])
         cube([light_bar_width*2, depth+outset*2, thickness]);
 }
 
