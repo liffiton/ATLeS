@@ -35,6 +35,10 @@ light_bar_width = 30;
 light_pos_x = 50;
 light_height = height-thickness*2-10;
 
+// hanging support thickness and drop (distance it "sits down" after in place)
+support_w = 8;
+support_drop = 4;
+
 // for slight offsets/tweaks
 epsilon = 1;
 
@@ -53,21 +57,23 @@ if (DXF_TOP) {
     projection() rotate(a=[0,90,0]) vert_face(x=width);
 } else if (DXF_LIGHT_BAR) {
     projection() light_bar();
+} else if (DXF_CAMERA_SUPPORT) {
+    projection() rotate(a=[90,0,0]) camera_supports();
+} else if (DXF_RPI_SUPPORT) {
+    projection() rotate(a=[90,0,0]) rpi_support();
 }
 else {
     // 3D model
     // components to include (comment out unwanted)
-    vert_face(x=0);
-    vert_face(x=width);
+    vert_face(x=0);      // "near face, transparent for monitor
+    vert_face(x=width);  // "far" face, with camera, rpi, etc.
     side(y=0);
     side(y=depth);
     tank_base();
     light_bar();
-    // camera supports (z -5 to center on camera opening)
-    hanging_supports(x=width, y=depth/2, z=height/2-5, out=20, up=30, spacing=20);
-    // rpi support
-    hanging_support(x=width, y=depth/4+9, z=height/2, out=3, up=85);
-    mock_rpi(x=width, y=depth/4, z=height/2);
+    camera_supports(x=width, y=depth/2, z=height/2);
+    rpi_support(x=width, y=depth/3, z=height/2);
+    mock_rpi(x=width, y=depth/3-10, z=height/2);
     top_cover();
 }
 
@@ -79,10 +85,8 @@ module vert_face(x=0) {
     difference() {
         vert_face_base(x);
         camera_opening();
-        // camera supports (z -5 to center on camera opening)
-        hanging_supports(x=width+thickness, y=depth/2, z=height/2-5+10, out=20, up=30, spacing=20);
-        // rpi supports
-        hanging_support(x=width+thickness, y=depth/4+9, z=height/2+10, out=3, up=85);
+        camera_supports(x=width+thickness*3, y=depth/2, z=height/2+support_drop);
+        rpi_support(x=width+thickness*3, y=depth/3, z=height/2+support_drop);
         side(y=0);
         side(y=depth);
         tank_base();
@@ -99,28 +103,35 @@ module camera_opening() {
         cube([thickness*2,10,10], center=true);
 }
 
-module hanging_supports(x, y, z, out, up, spacing) {
+module camera_supports(x, y, z) {
+    spacing = 20;
+    out = 10;
+    up = 36;
     hanging_support(x, y + spacing/2, z, out, up);
     hanging_support(x, y - spacing/2, z, out, up);
+}
+
+module rpi_support(x, y, z) {
+    hanging_support(x, y, z, out=3, up=85);
 }
 
 module hanging_support(x, y, z, out, up) {
     inner_w = out+thickness;
     inner_h = up;
-    cutout_w = 10;
+    color("Red", alpha=0.5)
     translate([x,y,z])
     // push inner opening up against vert face
     translate([inner_w/2,0,0])
     difference() {
-        cube([inner_w+cutout_w*2, thickness, inner_h+cutout_w*3], center=true);
+        cube([inner_w+support_w*2, thickness, inner_h+support_w*2], center=true);
         // cutout for object
         cube([inner_w, thickness*2, inner_h], center=true);
         // cutout for passing through vertface
-        translate([-(inner_w/2+cutout_w/2),0,-cutout_w/2])
-            cube([cutout_w+2*epsilon, thickness*2, inner_h-10], center=true);
+        translate([-(inner_w/2+support_w/2),0,-support_drop/2])
+            cube([support_w+2*epsilon, thickness*2, inner_h-support_drop], center=true);
         // bottom cutout
-        translate([-inner_w/2,0,-(inner_h/2+cutout_w)])
-            cube([thickness, thickness*2, cutout_w], center=true);
+        translate([-inner_w/2,0,-(inner_h/2+support_w-support_drop/2)])
+            cube([thickness, thickness*2, support_drop], center=true);
     }
 }
 
@@ -196,6 +207,7 @@ module side_base(y) {
 }
 
 module mock_rpi(x, y, z) {
+    color("Blue", alpha=0.5)
     translate([x+thickness, y, z])
         rotate(v=[0,1,0], a=90)
             translate([-85/2, -56/2, 0])

@@ -1,7 +1,7 @@
 # Use openscad binary from path unless specified in environment variable
 OPENSCAD?=openscad
 
-all: top.dxf bottom.dxf side1.dxf side2.dxf end1.dxf end2.dxf light_bar.dxf
+all: top.dxf bottom.dxf side1.dxf side2.dxf end1.dxf end2.dxf light_bar.dxf camera_support.dxf rpi_support.dxf
 
 clean:
 	rm *.dxf
@@ -26,4 +26,10 @@ end2.dxf: fishbox.scad
 
 light_bar.dxf: fishbox.scad
 	"$(OPENSCAD)" -o $@ -D DXF_LIGHT_BAR=true fishbox.scad
+
+camera_support.dxf: fishbox.scad
+	"$(OPENSCAD)" -o $@ -D DXF_CAMERA_SUPPORT=true fishbox.scad
+
+rpi_support.dxf: fishbox.scad
+	"$(OPENSCAD)" -o $@ -D DXF_RPI_SUPPORT=true fishbox.scad
 
