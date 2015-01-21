@@ -90,7 +90,7 @@ module vert_face(x=0) {
 }
 
 module vert_face_base(x) {
-    translate([x-thickness/2,-overhang])
+    translate([x-thickness/2,-overhang, 0])
         cube([thickness,depth+overhang*2,height]);
 }
 
@@ -187,7 +187,7 @@ module side(y=0) {
             vert_face_base(x=0);
         scale([1,1,0.5])
             vert_face_base(x=width);
-        light_bar();
+        light_bar_opening();
         light_wire_opening();
         top_cover();
     }
