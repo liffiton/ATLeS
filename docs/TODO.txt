@@ -37,6 +37,10 @@ and/or behavior change in "absolute" darkness:
    - x acceleration magnitude
    - y acceleration magnitude
 
+Bugs:
+ - Fails to reanalyze sometimes? (Reported by Brad - need to check)
+ - Crashes (sounds like) on reanalyze all when some traces are "missing"? (Reported by Brad - need to check)
+
 
 FishBox
 -------
