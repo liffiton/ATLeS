@@ -1,8 +1,8 @@
 // Adapted from: https://github.com/luisibanez/ShapesFor3DPrinting/tree/master/OpenSCA
 
 // For case
-width  = 35;  // x
-length = 35;  // y
+width  = 36;  // x
+length = 36;  // y
 height = 11;  // z
 
 // For camera cover
@@ -86,26 +86,6 @@ module cableOpening() {
         cube(size=[w,d,h]);
 }
 
-module chipOpening() {
-    clearance = 0.5;
-    c = 2 * clearance;
-    w = 8+c;
-    d = 10+c;
-    h = 100;
-    translate([-w/2, -9.5-d/2, height-7])
-        cube(size=[w,d,h]);
-}
-
-module ledOpening() {
-    clearance = 0.5;
-    c = 2 * clearance;
-    w = 4+c;
-    d = 3+c;
-    h = 100;
-    translate([7-w/2, -11-d/2, height-6])
-        cube(size=[w,d,h]);
-}
-
 module lensOpening() {
     clearance = 0.5;
     c = 2 * clearance;
@@ -123,6 +103,16 @@ module boardOpening() {
     d = 24+c;
     h = 100;
     translate([-w/2,-d/2 - 3, height-5])
+        cube(size=[w,d,h]);
+}
+
+module chipOpening() {
+    clearance = 0.3;
+    c = 2 * clearance;
+    w = 20+c;
+    d = 24+c;
+    h = 100;
+    translate([-w/2,-d/2 - 3, height-7])
         cube(size=[w,d,h]);
 }
 
@@ -169,7 +159,6 @@ module piCameraAdapter() {
         cameraFrame();
         boardOpening();
         chipOpening();
-        ledOpening();
         cableOpening();
         lensOpening();
         cornerRounding();
