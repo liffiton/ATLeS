@@ -1,0 +1,134 @@
+FishyCam
+========
+
+Overview
+--------
+
+The end goal is to make a Skinner box for zebrafish.  The box will sense the fish's position and give the fish visual feedback based on its position and the history thereof.
+
+Tanks are roughly 30cm x 15cm x 5cm (just guesses).  Position sensing will be on the x-y (30cm and 15cm) axes.  Feedback will be presented on one side of the tank in the same plane.
+
+
+Input
+-----
+
+Spec:
+ * Resolution of 100 positions across (longest dimension) is fine.  10x10 would be workable.
+ * Realtime sensing and feedback
+ * Ideally: automatic detection of position and orientation of tank within frame.
+   * For consistent, scaled coordinates across experiments
+
+Ideas:
+ * Camera
+   + Simple hardware -- cheap, easy to put together
+   - Issues with glare, filtering, etc.
+ * IR Camera (rpi)
+   + Simple hardware
+   + IR sensitivity / filtering (http://publiclab.org/wiki/near-infrared-camera)
+   * Note: RPI Python OpenCV V4L2 stuff: http://www.raspberrypi.org/forums/viewtopic.php?f=43&t=65026&start=25
+ * Photosensors
+   + More robust (?)
+   - More complex -- have to custom build it
+
+Automatic position/orientation detection:
+ * Apply markers to 4 corners of tank (at bottom and at water line)
+   * Differentiate by color?  (possibly easiest)
+   * Use a unique pattern?
+ * Detect prominent lines in tank and find 4 lines w/ most appropriate ratios/slopes to be the tank
+   * http://stackoverflow.com/a/17265438
+
+
+Output
+------
+
+Ideas:
+ * Monitor
+   + Most flexible -- any image/animation can be displayed
+   + Simple hardware -- no construction required
+   - Cost (potentially)
+   - Issues with glare, filtering, given the camera is facing the display
+ * Matrix of LEDs
+   + Potentially easier to filter out
+   + Inexpensive
+   - Requires custom building
+   - Low resolution
+
+
+Plan
+----
+
+Webcam for sensing, monitor for feedback.
+
+
+Software
+--------
+
+Interface needs:
+  * Setup
+    * ???
+  * Monitor
+    * Time experiment started, time running
+    * View experiment parameters?
+    * View current data?  (Form?)
+    * Current video feed
+      * Ideally live video, but a current still should be alright
+  * Control
+    * Stop experiment
+  * Download
+    * Data from previous experiment
+    * Data from all past experiments
+    * Data from selected experiment(s)
+    * ?Form?
+
+Interface options:
+  * Web-based or GUI app
+    * Web-based most accessible
+    * GUI app runs where?  Via SSH?  Or physically at the machine itself?
+  * Per-box or single centralized
+    * Per-box is actually simpler to setup, maintain
+    * Single centralized could be more usable
+
+Data:
+  * ???Form???
+  * Centralized database?
+    * Would be useful, but adds a lot of complexity
+
+Feedback:
+  * Animations?
+    * If so, run in a separate thread
+    * Thread 1: Track fish and make feedback decisions
+    * Queue for messages, thr1->thr2
+    * Thread 2: Animation, responding to messages in queue
+
+API flow:
+  frame = cv2.get...
+  proc.proc(frame)
+  tracker.update(proc.centroids)
+  track.store(tracker.position)
+  feedback.update(track)
+
+General coding:
+  * Use logging package, log any uncaught exceptions (crashes):
+      http://blog.tplus1.com/blog/2012/08/05/python-log-uncaught-exceptions-with-sys-excepthook/
+  * Animation:
+     * Use pyprocessing for animation?
+       http://code.google.com/p/pyprocessing/
+     * Or use pyglet directly?
+     * Pyprocessing will likely be easier for others to use for making new 'plugins'.
+  * Use multiprocessing.{Process|Queue} for 'threading' and communication
+  * Setup a 'plugin' architecture, with a directory for 'feedback' plugins and a directory for 'trigger' plugins?
+
+**OR**
+Build on pre-existing software:
+  https://en.wikipedia.org/wiki/Comparison_of_behavioral_experiment_software
+  * Python:
+    * OpenSesame looks feature-rich
+      * Uses PsychoPy or Expyriment for backends
+    * PsychoPy also has a graphical experiment builder
+    * Expyriment is code only, and it might not offer much we need...
+
+Scripting options:
+  * Let users create experiments in raw Python
+  * Use a graphical editor like OpenSesame or PsychoPy (or one of those directly)
+  * Blockly!  Can export to Python.  Can likely create custom blocks for various functions/variables of interest...!
+
