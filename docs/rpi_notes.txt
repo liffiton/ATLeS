@@ -4,7 +4,9 @@ FishyCam on the Raspberry Pi
 Package dependencies
 --------------------
 
-**TODO**
+python-smbus
+
+**TODO (others?)**
 
 
 Runtime dependencies
@@ -15,6 +17,17 @@ In order to use the camera via v4l, one must first load a module:
   sudo modprobe bcm2835-v4l2
 
 Then, OpenCV's v4l2 support works reasonably well (though see Framerate below).
+
+Using the i2c interface also requires a module:
+
+  sudo modprobe i2c-bcm2708
+  sudo modprobe i2c-dev
+
+Alternatively, you can add the modules to /etc/modules, one per line:
+
+   bcm2835-v4l2
+   i2c-bcm2708
+   i2c-dev
 
 
 Framerate
