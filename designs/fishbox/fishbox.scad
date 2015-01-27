@@ -8,24 +8,28 @@
 
 // Set thickness to account for thickness of material
 // PLUS needed clearance for cuts into which material should fit.
-thickness = 2.4;  // 2.4mm = 0.094" (looks good based on cut test piece)
 
-// Interior box dimensions (from centerpoints of walls, so actual dimension is minus material thickness)
+// 0.100" Acrylic:
+//thickness = 2.4;  // 2.4mm = 0.094" (looks good based on cut test piece)
+
+// 1/8" Hardboard:
+thickness = 3.1;  // 3.1mm = 0.122" (best guess for hardboard for now)
+
+// Interior box dimensions (NOTE: from centerpoints of walls, so actual dimension is minus material thickness)
 width = 290;    // x = 29cm wall-to-wall
 depth = 350;    // y = 35cm to accomodate 34.5cm tank length
-i_height = 180+thickness;
-                // z = 18cm to accomodate 16cm tank height plus light holder, plus cover
+i_height = 190; // z = 19cm to accomodate 16cm tank height plus light holder, plus cover
                 // (i_height because 'height' is used for height of entire box)
 
 // amount faces extend past each other at corners
-overhang = 20;
+overhang = 15;
 
-// amount horizontal support bars extend past side supports
-outset = overhang/2;
+// amount horizontal support tabs extend past side supports (technically, it will go this distance minus thickness/2)
+outset = thickness+2;
 
 // tank base plate
 base_depth = depth-thickness*2;
-base_height = overhang;
+base_height = overhang/2;
 
 // create height var to account for raised base
 height = i_height + base_height;
@@ -33,11 +37,11 @@ height = i_height + base_height;
 // light bar
 light_bar_width = 30;
 light_pos_x = 50;
-light_height = height-thickness*2-10;
+light_height = height-thickness*2-8;
 
 // hanging support thickness and drop (distance it "sits down" after in place)
-support_w = 8;
-support_drop = 4;
+support_w = 10;
+support_drop = support_w/2;
 
 // for slight offsets/tweaks
 epsilon = 1;
@@ -72,8 +76,8 @@ else {
     tank_base();
     light_bar();
     camera_supports(x=width, y=depth/2, z=height/2);
-    rpi_support(x=width, y=depth/3, z=height/2);
-    mock_rpi(x=width, y=depth/3-10, z=height/2);
+    rpi_support(x=width, y=depth/2-50, z=height/2);
+    mock_rpi(x=width, y=depth/2-60, z=height/2);
     top_cover();
 }
 
@@ -86,7 +90,7 @@ module vert_face(x=0) {
         vert_face_base(x);
         camera_opening();
         camera_supports(x=width+thickness*2, y=depth/2, z=height/2+support_drop);
-        rpi_support(x=width+thickness*2, y=depth/3, z=height/2+support_drop);
+        rpi_support(x=width+thickness*2, y=depth/2-50, z=height/2+support_drop);
         // CAUTION: OpenSCAD won't let me make a projection of vert_face(x=0)
         //   if tank_base is put after side(y=depth) here... bug.  :(
         tank_base();
@@ -98,7 +102,33 @@ module vert_face(x=0) {
 
 module vert_face_base(x) {
     translate([x-thickness/2,-overhang, 0])
+    difference() {
         cube([thickness,depth+overhang*2,height]);
+        translate([0, depth+overhang+thickness/2, 3/4*height])
+            rounded_truncation(up=true, rot=false);
+        translate([0, 0, 3/4*height])
+            rounded_truncation(up=true, rot=false);
+    }
+}
+
+module rounded_truncation(up, rot=[0,0,0]) {
+    real_overhang=overhang-thickness/2;
+    truncation_height=height/4;
+    rotate(a=rot)
+    difference() {
+        translate([-50,0,0])
+            cube([100, real_overhang, truncation_height]);
+        if (up) {
+            translate([-50, real_overhang/2, 0])
+            rotate(a=[0, 90, 0])
+                cylinder(d=real_overhang, h=100);
+        }
+        else {
+            translate([-50, real_overhang/2, truncation_height])
+            rotate(a=[0, 90, 0])
+                cylinder(d=real_overhang, h=100);
+        }
+    }
 }
 
 module camera_opening() {
@@ -117,7 +147,7 @@ module camera_supports(x, y, z, justone=false) {
 }
 
 module rpi_support(x, y, z) {
-    hanging_support(x, y, z, out=3, up=85);
+    hanging_support(x, y, z, out=3.2, up=85);
 }
 
 module hanging_support(x, y, z, out, up) {
@@ -208,7 +238,13 @@ module side(y=0) {
 
 module side_base(y) {
     translate([-overhang,y-thickness/2,overhang/2])
+    difference() {
         cube([width+overhang*2, thickness, height-overhang/2]);
+        translate([width+overhang+thickness/2, 0, 0])
+            rounded_truncation(up=false, rot=[0,0,-90]);
+        translate([0, 0, 0])
+            rounded_truncation(up=false, rot=[0,0,-90]);
+    }
 }
 
 module mock_rpi(x, y, z) {
