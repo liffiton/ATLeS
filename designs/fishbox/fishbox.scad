@@ -15,11 +15,13 @@
 // 1/8" Hardboard:
 thickness = 3.1;  // 3.1mm = 0.122" (best guess for hardboard for now)
 
-// Interior box dimensions (NOTE: from centerpoints of walls, so actual dimension is minus material thickness)
-width = 290;    // x = 29cm wall-to-wall
-depth = 350;    // y = 35cm to accomodate 34.5cm tank length
-i_height = 190; // z = 19cm to accomodate 16cm tank height plus light holder, plus cover
-                // (i_height because 'height' is used for height of entire box)
+// Interior box dimensions
+// The variables are used below to control placement of **centerpoints** centerpoints of walls,
+// so material thickness is added to account for that.
+width = 290 + thickness;    // x = 29cm wall-to-wall
+depth = 348 + thickness;    // y = 34.8cm to accomodate 34.8cm tank length
+i_height = 190 + thickness; // z = 19cm to accomodate 16cm tank height plus light holder, plus cover
+                            // (i_height because 'height' is used for height of entire box)
 
 // amount faces extend past each other at corners
 overhang = 15;
