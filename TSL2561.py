@@ -1,6 +1,7 @@
 # TSL2561.py - A class for using the TSL2561 chip via the i2c bus
-
-### Adapted from (2015-01-27):
+# Author: Mark Liffiton
+# Date: January, 2015
+### Adapted from:
 ###   https://github.com/seanbechhofer/raspberrypi/tree/master/python
 
 from Adafruit_I2C import Adafruit_I2C
@@ -17,7 +18,8 @@ _read_ir_only_command = 0xAE
 class TSL2561(object):
     i2c = None
 
-    def __init__(self, address=_default_address, debug=0):
+    def __init__(self, address=_default_address, debug=False):
+        self._debug = debug
         self.i2c = Adafruit_I2C(address, debug=debug)
         self.power_up()
         self._gain = -1  # don't know gain to start (board may be powered and configured)
@@ -92,5 +94,6 @@ class TSL2561(object):
         return lux
 
 if __name__ == "__main__":
-    tsl=TSL2561()
-    print tsl.readLux()
+    tsl = TSL2561(debug=True)
+    lux = tsl.read_lux()
+    print "%0.3f lux" % lux
