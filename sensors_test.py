@@ -2,12 +2,13 @@ from TSL2561 import TSL2561
 import time
 
 def main():
-    lightsensor = TSL2561()
-    lightsensor.setGain(1)
+    light = TSL2561(debug=0)
+    #light.set_gain(16)
     while True:
-        ambient = lightsensor.readFull()
-        ir = lightsensor.readIR()
-        print("%d,%d" % (ambient, ir))
+        full = light.read_full()
+        ir = light.read_IR()
+        lux = light.read_lux()
+        print("%d,%d = %d lux" % (full, ir, lux))
         time.sleep(1)
 
 
