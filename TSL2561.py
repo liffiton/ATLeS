@@ -41,17 +41,16 @@ class TSL2561(object):
         """
         if (gain != self._gain):
             if (gain == 1):
-                self.i2c.write8(_timing_command, 0x02) # set gain = 1X and timing = 402 ms
+                self.i2c.write8(_timing_command, 0x02)  # set gain = 1X and timing = 402 ms
             else:
-                self.i2c.write8(_timing_command, 0x12) # set gain = 16X and timing = 402 ms
+                self.i2c.write8(_timing_command, 0x12)  # set gain = 16X and timing = 402 ms
 
-            self._gain = gain;                         # save gain for calculation
+            self._gain = gain                           # save gain for calculation
 
             # store when new integration will be done (> 402 ms away)
             # 0.8 found to work experimentally
             # 0.402 and even 0.5 too short, give incorrect first readings sometimes
             self._integration_done = time.time() + 0.8
-
 
     def _wait_for_integration(self):
         ''' Wait for integration to complete if gain has been reset / new integration ongoing '''
@@ -74,11 +73,11 @@ class TSL2561(object):
         full = self.read_full()
         IR = self.read_IR()
 
-        if (self._gain==1):
-           full *= 16    # scale 1x to 16x
-           IR *= 16      # scale 1x to 16x
-                        
-        ratio = (IR / float(full)) # changed to make it run under python 2
+        if self._gain == 1:
+            full *= 16    # scale 1x to 16x
+            IR *= 16      # scale 1x to 16x
+
+        ratio = (IR / float(full))  # changed to make it run under python 2
 
         if ((ratio >= 0) & (ratio <= 0.52)):
             lux = (0.0315 * full) - (0.0593 * full * (ratio**1.4))

@@ -7,7 +7,7 @@ from Adafruit_I2C import Adafruit_I2C
 # Constants
 _default_address = 0x18
 _config_register = 0x01
-_read_temp_register  = 0x05
+_read_temp_register = 0x05
 
 
 class MCP9808(object):
@@ -34,10 +34,8 @@ class MCP9808(object):
         if self._debug:
             print("Data: %s = %s" % (hex(reading), bin(reading)))
 
-        if temp_sign:
-            temp = -0x1000 + temp_2scomp  # value of MSB (sign bit) is actually negative
-        else:
-            temp = temp_2scomp
+        # Convert 2's complement binary to integer value
+        temp = (temp_sign * -0x1000) + temp_2scomp  # value of MSB (sign bit) is actually negative
 
         temp /= 16.0  # default resolution is 1/16 degC per bit
 
