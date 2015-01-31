@@ -10,7 +10,7 @@
 // PLUS needed clearance for cuts into which material should fit.
 
 // 0.100" Acrylic:
-//thickness = 2.4;  // 2.4mm = 0.094" (looks good based on cut test piece)
+window_thickness = 2.4;  // 2.4mm = 0.094" (looks good based on cut test piece)
 
 // 1/8" Hardboard:
 thickness = 3.1;  // 3.1mm = 0.122" (best guess for hardboard for now)
@@ -89,10 +89,15 @@ else {
 
 module vert_face(x=0) {
     difference() {
-        vert_face_base(x);
-        camera_opening();
-        camera_supports(x=width+thickness*2, y=depth/2, z=height/2+support_drop);
-        rpi_support(x=width+thickness*2, y=depth/2-50, z=height/2+support_drop);
+        if (x == 0) {
+            vert_face_base(0, window_thickness);
+        }
+        else {
+            vert_face_base(x);
+            camera_opening();
+            camera_supports(x=width+thickness*2, y=depth/2, z=height/2+support_drop);
+            rpi_support(x=width+thickness*2, y=depth/2-50, z=height/2+support_drop);
+        }
         // CAUTION: OpenSCAD won't let me make a projection of vert_face(x=0)
         //   if tank_base is put after side(y=depth) here... bug.  :(
         tank_base();
@@ -102,10 +107,10 @@ module vert_face(x=0) {
     }
 }
 
-module vert_face_base(x) {
-    translate([x-thickness/2,-overhang, 0])
+module vert_face_base(x, face_thickness=thickness) {
+    translate([x-face_thickness/2,-overhang, 0])
     difference() {
-        cube([thickness,depth+overhang*2,height]);
+        cube([face_thickness,depth+overhang*2,height]);
         translate([0, depth+overhang+thickness/2, 3/4*height])
             rounded_truncation(up=true, rot=false);
         translate([0, 0, 3/4*height])
@@ -229,9 +234,9 @@ module side(y=0) {
     difference() {
         side_base(y);
         scale([1,1,0.5])
-            vert_face_base(x=0);
+            vert_face_base(0, window_thickness);
         scale([1,1,0.5])
-            vert_face_base(x=width);
+            vert_face_base(width);
         light_bar_opening();
         light_wire_opening();
         top_cover();
