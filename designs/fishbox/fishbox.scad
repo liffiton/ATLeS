@@ -10,10 +10,10 @@
 // PLUS needed clearance for cuts into which material should fit.
 
 // 0.100" Acrylic:
-window_thickness = 2.4;  // 2.4mm = 0.094" (looks good based on cut test piece)
+window_thickness = 2.4;  // 2.4mm = 0.094" (looks good based on cut test piece for acrylic slotting into itself)
 
 // 1/8" Hardboard:
-thickness = 3.1;  // 3.1mm = 0.122" (best guess for hardboard for now)
+thickness = 2.8;  // 2.8mm = 0.110" (looks good based on cut test piece for hardboard slotting into hardboard)
 
 // Interior box dimensions
 // The variables are used below to control placement of **centerpoints** centerpoints of walls,
