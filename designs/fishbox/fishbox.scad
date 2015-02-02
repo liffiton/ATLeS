@@ -112,9 +112,9 @@ module vert_face_base(x, face_thickness=thickness) {
     difference() {
         cube([face_thickness,depth+overhang*2,height]);
         translate([0, depth+overhang+thickness/2, 3/4*height])
-            rounded_truncation(up=true, rot=false);
+            rounded_truncation(up=true);
         translate([0, 0, 3/4*height])
-            rounded_truncation(up=true, rot=false);
+            rounded_truncation(up=true);
     }
 }
 
