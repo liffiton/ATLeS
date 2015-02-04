@@ -4,10 +4,14 @@ FishyCam on the Raspberry Pi
 Python Package dependencies
 ---------------------------
 
-smbus
-wiringpi2
+fishbox.py:
+  cv2         (for OpenCV)
+  smbus       (for reading sensor values)
+  wiringpi2   (for controlling light bar via PWM)
 
-**TODO (others?)**
+fishweb.py:
+  bottle
+  matplotlib
 
 
 Runtime dependencies
