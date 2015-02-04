@@ -1,10 +1,11 @@
 FishyCam on the Raspberry Pi
 ============================
 
-Package dependencies
---------------------
+Python Package dependencies
+---------------------------
 
-python-smbus
+smbus
+wiringpi2
 
 **TODO (others?)**
 
