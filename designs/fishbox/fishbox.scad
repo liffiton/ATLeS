@@ -94,10 +94,11 @@ module vert_face(x=0) {
         }
         else {
             vert_face_base(x);
-            camera_opening();
-            camera_supports(x=width+thickness*2, y=depth/2, z=height/2+support_drop);
-            rpi_support(x=width+thickness*2, y=depth/2-50, z=height/2+support_drop);
         }
+        camera_opening();
+        camera_supports(x=width+thickness*2, y=depth/2, z=height/2+support_drop);
+        rpi_support(x=width+thickness*2, y=depth/2-50, z=height/2+support_drop);
+        wire_opening();
         // CAUTION: OpenSCAD won't let me make a projection of vert_face(x=0)
         //   if tank_base is put after side(y=depth) here... bug.  :(
         tank_base();
@@ -223,10 +224,10 @@ module cutouts(num, width, outset, rot, trans) {
     }
 }
 
-module light_wire_opening() {
-    translate([light_pos_x, 0, light_height-10])
-    scale([2,1,1])
-    rotate(v=[1,0,0], a=90)
+module wire_opening() {
+    translate([width, depth/2-70, overhang+20])
+    scale([1,2,1])
+    rotate(a=[0,90,0])
         cylinder(d=10, h=thickness+epsilon, center=true);
 }
 
@@ -238,7 +239,6 @@ module side(y=0) {
         scale([1,1,0.5])
             vert_face_base(width);
         light_bar_opening();
-        light_wire_opening();
         top_cover();
     }
 }
