@@ -4,6 +4,7 @@ Fishypi raspi IP:
  - 10.2.53.121 [when in fishy room]
 New rpi B+:
  - 10.2.7.146  [in Mark's office]
+ - 10.2.52.154 [in fishy room]
 
 
 Fish tank measurements:
