@@ -1,0 +1,42 @@
+Installing an Updated OpenCV on the Raspbery Pi
+===============================================
+
+The following instructions assume an updated Raspbian system.
+
+Based on:
+  http://docs.opencv.org/doc/tutorials/introduction/linux_install/linux_install.html
+
+
+Build dependencies
+------------------
+
+Packages that need to be installed in addition to the defaults.  [There may be something missing here that isn't included in the default Raspbian install, but this is what I had to add to my current setup.]
+
+    cmake
+    libgtk2.0-dev
+    python-dev
+    libavcodec-dev
+    libavformat-dev
+    libswscale-dev
+    libjpeg8-dev
+    libpng12-dev
+
+
+Build instructions
+------------------
+
+In the opencv-2.x.xx directory:
+
+  mkdir release
+  cd release
+  cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_EXAMPLES=off -D BUILD_TESTS=off -D BUILD_PERF_TESTS=off ..
+
+Make sure "OpenCV modules">"To be built" lists python; make sure "GUI" has "YES" for GTK+; make sure "Python" section lists correct paths to binaries/libraries.
+Tests, examples, and performance tests are not built to save space.  It takes far too much space with those enabled (I ran out of space with 1.1GB free to start).
+
+  make
+
+Takes about 4 hours on the RPi B+.
+
+  sudo make install
+

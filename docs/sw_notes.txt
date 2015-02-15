@@ -5,7 +5,7 @@ Python Package dependencies
 ---------------------------
 
 fishbox.py:
-  cv2         (for OpenCV)
+  cv2         (for OpenCV; see opencv_notes.txt)
   smbus       (for reading sensor values)
   wiringpi2   (for controlling light bar via PWM)
 
