@@ -22,6 +22,16 @@ Packages that need to be installed in addition to the defaults.  [There may be s
     libpng12-dev
 
 
+Modifying OpenCV
+----------------
+
+OpenCV 2.4.10 does not allow the capture size to be modified when capturing via V4L.  The modifications suggested here correct this:
+  http://www.raspberrypi.org/forums/viewtopic.php?f=43&t=62364&start=322
+
+To make these modifications, apply the patch (found in the same directory as these notes):
+  opencv-2.4.10.v4l_capsize.patch
+
+
 Build instructions
 ------------------
 
