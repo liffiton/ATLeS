@@ -6,7 +6,7 @@ from MCP9808 import MCP9808
 import time
 
 
-def SensorsHelper(object):
+class SensorsHelper(object):
     def __init__(self, pipe):
         self._pipe = pipe
 
