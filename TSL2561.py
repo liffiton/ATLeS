@@ -77,6 +77,10 @@ class TSL2561(object):
             full *= 16    # scale 1x to 16x
             IR *= 16      # scale 1x to 16x
 
+        # avoid divide-by-zero
+        if full == 0:
+            return 0
+
         ratio = (IR / float(full))  # changed to make it run under python 2
 
         if ((ratio >= 0) & (ratio <= 0.52)):
