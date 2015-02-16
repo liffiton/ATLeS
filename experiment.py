@@ -1,3 +1,4 @@
+import atexit
 import collections
 import logging
 import numpy
@@ -10,6 +11,11 @@ import cv2
 import tracking
 import controllers
 import stimulus
+
+try:
+    import sensors
+except:
+    sensors = None
 
 
 #############################################################
@@ -59,9 +65,11 @@ class Logger(object):
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
         fh = logging.FileHandler(filename=self._logfilename)
-        fh.setFormatter(logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(message)s"))
+        fh.setFormatter(
+            logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(message)s"))
         sh = logging.StreamHandler()
-        sh.setFormatter(logging.Formatter(fmt="[%(levelname)s] %(message)s"))
+        sh.setFormatter(
+            logging.Formatter(fmt="[%(levelname)s] %(message)s"))
         logger.addHandler(fh)
         logger.addHandler(sh)
 
@@ -96,43 +104,26 @@ class Logger(object):
         self._trackfile.write("%0.4f,%s" % (frametime, str(data)))
 
 
-class Experiment(object):
+class Watcher(object):
+    ''' Class for creating, controlling the preview/"--watch" window '''
+
     RED = (0, 0, 255, 255)
     GREEN = (0, 255, 0, 255)
     BLUE = (255, 0, 0, 255)
     YELLOW = (0, 255, 255, 255)
     STATUS_COLORS = {'acquired': GREEN, 'missing': BLUE, 'lost': RED}
 
-    def __init__(self, conf, args, stream):
-        self._conf = conf
-        self._args = args
-        self._stream = stream
-        self._logger = Logger(args.logdir, args.id)
-        self._logger.record_setup(args, conf)
-
-        # Tank bounds in pixel coordinates
-        # NOTE: tank Y coordinate is inverted w.r.t. pixel coordinates, hence (1.0 - ...).
-        self._tx1 = int(self._stream.width * self._conf['camera']['tank_min_x'])
-        self._tx2 = int(self._stream.width * self._conf['camera']['tank_max_x'])
-        self._ty1 = int(self._stream.height * (1.0 - self._conf['camera']['tank_max_y']))
-        self._ty2 = int(self._stream.height * (1.0 - self._conf['camera']['tank_min_y']))
-
-        # Experiment setup
-        self._control, self._stim, self._behavior_test = get_experiment()
-
-        # Frame processor
-        self._proc = tracking.FrameProcessor()
-
-        # Tracking: Simple
-        tank_width = self._tx2 - self._tx1
-        tank_height = self._ty2 - self._ty1
-        self._track = tracking.SimpleTracker(w=tank_width, h=tank_height)
-
+    def __init__(self, tx1, tx2, ty1, ty2):
         # For mouse interaction
         self._mouse_on = False
-
-        # For measuring status percentages
-        self._statuses = collections.defaultdict(int)
+        cv2.namedWindow("preview")
+        atexit.register(cv2.destroyAllWindows)
+        cv2.setMouseCallback("preview", self.mouse_callback)
+        # Setup tank bounds
+        self._tx1 = tx1
+        self._tx2 = tx2
+        self._ty1 = ty1
+        self._ty2 = ty2
 
     def mouse_callback(self, event, x, y, flags, *args):
         if event == 1:  # mouse down
@@ -140,7 +131,7 @@ class Experiment(object):
         self._mousex = x
         self._mousey = y
 
-    def _draw_watch(self, frame, track, proc):
+    def draw_watch(self, frame, track, proc):
         pos_pixel = track.position_pixel
         status = track.status
 
@@ -195,6 +186,51 @@ class Experiment(object):
 
         cv2.imshow("preview", frame)
 
+
+class Experiment(object):
+
+    def __init__(self, conf, args, stream):
+        self._conf = conf
+        self._args = args
+        self._stream = stream
+        self._logger = Logger(args.logdir, args.id)
+        self._logger.record_setup(args, conf)
+
+        # Tank bounds in pixel coordinates
+        # NOTE: tank Y coordinate is inverted w.r.t. pixel coordinates, hence (1.0 - ...).
+        self._tx1 = int(self._stream.width * self._conf['camera']['tank_min_x'])
+        self._tx2 = int(self._stream.width * self._conf['camera']['tank_max_x'])
+        self._ty1 = int(self._stream.height * (1.0 - self._conf['camera']['tank_max_y']))
+        self._ty2 = int(self._stream.height * (1.0 - self._conf['camera']['tank_min_y']))
+
+        # Create Watcher
+        if self._args.watch:
+            self._watcher = Watcher(self._tx1, self._tx2, self._ty1, self._ty2)
+
+        # Create Sensors
+        if sensors is not None:
+            self._sensors = sensors.Sensors()
+            self._sensors.begin()
+        else:
+            logging.warn("sensors module not loaded")
+
+        # Experiment setup
+        self._control, self._stim, self._behavior_test = get_experiment()
+
+        # Frame processor
+        self._proc = tracking.FrameProcessor()
+
+        # Tracking: Simple
+        tank_width = self._tx2 - self._tx1
+        tank_height = self._ty2 - self._ty1
+        self._track = tracking.SimpleTracker(w=tank_width, h=tank_height)
+
+        # For measuring status percentages
+        self._statuses = collections.defaultdict(int)
+
+        # Setup printing stats on exit
+        atexit.register(self._print_stats)
+
     def run(self):
         self._stim.begin(self._conf['stimulus'])
         prevtime = time.time()
@@ -243,15 +279,21 @@ class Experiment(object):
             # Update status counts
             self._statuses[status] += 1
 
+            # Get latest sensor readings
+            if sensors is not None:
+                sensor_vals = self._sensors.get_latest()
+            else:
+                sensor_vals = {'temp': -1.0, 'lux': -1}
+
             # Record data
-            data = "%s,%0.3f,%0.3f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids))
+            data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
             if from_file:
                 self._logger.write_data(data, frametime=curframe*1.0/fps)
             else:
                 self._logger.write_data(data)
 
             if self._args.watch:
-                self._draw_watch(frame, self._track, self._proc)
+                self._watcher.draw_watch(frame, self._track, self._proc)
                 if cv2.waitKey(1) % 256 == 27:
                     logging.info("Escape pressed in preview window; exiting.")
                     break
@@ -278,7 +320,7 @@ class Experiment(object):
             if self._args.delay:
                 time.sleep(self._args.delay / 1000.0)
 
-    def print_stats(self):
+    def _print_stats(self):
         '''Print status percentages.'''
         total = sum(self._statuses.values())
         logging.info("Status percentages:")

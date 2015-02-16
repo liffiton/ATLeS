@@ -1,12 +1,9 @@
 import argparse
-import atexit
 import ConfigParser
 import logging
 import os
 import signal
 import sys
-
-import cv2
 
 import experiment
 import tracking
@@ -97,10 +94,6 @@ def main():
         params = {}
         stream = tracking.Stream(0, w=args.width, h=args.height, params=params, fps=args.fps, exposure=args.exposure)
 
-    if args.watch:
-        cv2.namedWindow("preview")
-        atexit.register(cv2.destroyAllWindows)
-
     # setup timeout alarm if needed
     # NOTE: not cross-platform (SIGALRM not available on Windows)
     if args.time:
@@ -111,9 +104,6 @@ def main():
     signal.signal(signal.SIGINT, sig_handler)
 
     exp = experiment.Experiment(conf, args, stream)
-    if args.watch:
-        cv2.setMouseCallback("preview", exp.mouse_callback)
-    atexit.register(exp.print_stats)
 
     exp.run()
 
