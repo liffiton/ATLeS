@@ -34,6 +34,10 @@ and/or behavior change in "absolute" darkness:
 FishBox [.py]
 -------------
 
+Important:
+ - Separate out experiment configuration from experiment.py
+   - Somehow include in a .ini file or something else that can be saved alongside each experiment's data.
+
 Features:
  - Save video (if possible)
  - Save frame (and result of background subtraction) when status first becomes
