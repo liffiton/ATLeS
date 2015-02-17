@@ -12,6 +12,7 @@ fishbox.py:
 fishweb.py:
   bottle
   matplotlib
+  python-daemon
 
 
 Runtime dependencies
