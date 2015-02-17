@@ -34,9 +34,9 @@ def get_experiment():
     else:
         stim = stimulus.DummyStimulus()
 
-    # Behavior test: xpos < 25%
+    # Behavior test: ypos > 75%
     def behavior_test(pos):
-        return pos[0] < 0.25
+        return pos[1] > 0.75
 
     return control, stim, behavior_test
 #
