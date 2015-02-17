@@ -191,6 +191,7 @@ if __name__ == '__main__':
                 "bottle.log"
                 )
         log = open(logfile,"w+")
+        print("Launching daemon in the background.")
         context = daemon.DaemonContext(
                 working_directory=os.getcwd(),
                 stdout=log,
