@@ -258,57 +258,58 @@ class Experiment(object):
 
             curframe += 1
 
-            # Process the frame (finds contours, centroids, and updates background subtractor)
-            tank_crop = frame[self._ty1:self._ty2,self._tx1:self._tx2,:]
-            self._proc.process_frame(tank_crop)
+            if not self._args.notrack:
+                # Process the frame (finds contours, centroids, and updates background subtractor)
+                tank_crop = frame[self._ty1:self._ty2,self._tx1:self._tx2,:]
+                self._proc.process_frame(tank_crop)
 
-            # Wait for the background subtractor to learn/stabilize
-            # before logging or using data.
-            if curframe < self._args.start_frame:
-                continue
-            elif curframe == self._args.start_frame:
-                logging.info("Tracking started.")
+                # Wait for the background subtractor to learn/stabilize
+                # before logging or using data.
+                if curframe < self._args.start_frame:
+                    continue
+                elif curframe == self._args.start_frame:
+                    logging.info("Tracking started.")
 
-            # Update tracker w/ latest set of centroids
-            self._track.update(self._proc.centroids)
-            # Get the position estimate of the fish and tracking status from the tracker
-            # pos_pixel = self._track.position_pixel
-            pos_tank = self._track.position_tank
-            status = self._track.status
+                # Update tracker w/ latest set of centroids
+                self._track.update(self._proc.centroids)
+                # Get the position estimate of the fish and tracking status from the tracker
+                # pos_pixel = self._track.position_pixel
+                pos_tank = self._track.position_tank
+                status = self._track.status
 
-            # Update status counts
-            self._statuses[status] += 1
+                # Update status counts
+                self._statuses[status] += 1
 
-            # Get latest sensor readings
-            if sensors is not None:
-                sensor_vals = self._sensors.get_latest()
-            else:
-                sensor_vals = {'temp': -1.0, 'lux': -1}
+                # Get latest sensor readings
+                if sensors is not None:
+                    sensor_vals = self._sensors.get_latest()
+                else:
+                    sensor_vals = {'temp': -1.0, 'lux': -1}
 
-            # Record data
-            data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
-            if from_file:
-                self._logger.write_data(data, frametime=curframe*1.0/fps)
-            else:
-                self._logger.write_data(data)
+                # Record data
+                data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
+                if from_file:
+                    self._logger.write_data(data, frametime=curframe*1.0/fps)
+                else:
+                    self._logger.write_data(data)
+
+                if status != 'lost' and self._behavior_test(pos_tank) and not self._args.nostim:
+                    # Only provide a stimulus if we know where the fish is
+                    # and the behavior test for that position says we should.
+                    self._control.add_hit(str(pos_tank))
+                    response = self._control.get_response()
+                    if not self._args.nostim:
+                        self._stim.show(response)
+                    else:
+                        self._stim.show(None)
+                else:
+                    self._stim.show(None)
 
             if self._args.watch:
                 self._watcher.draw_watch(frame, self._track, self._proc)
                 if cv2.waitKey(1) % 256 == 27:
                     logging.info("Escape pressed in preview window; exiting.")
                     break
-
-            if status != 'lost' and self._behavior_test(pos_tank) and not self._args.nostim:
-                # Only provide a stimulus if we know where the fish is
-                # and the behavior test for that position says we should.
-                self._control.add_hit(str(pos_tank))
-                response = self._control.get_response()
-                if not self._args.nostim:
-                    self._stim.show(response)
-                else:
-                    self._stim.show(None)
-            else:
-                self._stim.show(None)
 
             # tracking performance / FPS
             if curframe % 100 == 0:
