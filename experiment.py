@@ -113,7 +113,7 @@ class Watcher(object):
     YELLOW = (0, 255, 255, 255)
     STATUS_COLORS = {'acquired': GREEN, 'missing': BLUE, 'lost': RED}
 
-    def __init__(self, tx1, tx2, ty1, ty2):
+    def __init__(self, tx1, tx2, ty1, ty2, tracking):
         # For mouse interaction
         self._mouse_on = False
         cv2.namedWindow("preview")
@@ -124,6 +124,8 @@ class Watcher(object):
         self._tx2 = tx2
         self._ty1 = ty1
         self._ty2 = ty2
+        # Record whether we have any tracking to display
+        self._tracking = tracking
 
     def mouse_callback(self, event, x, y, flags, *args):
         if event == 1:  # mouse down
@@ -132,9 +134,6 @@ class Watcher(object):
         self._mousey = y
 
     def draw_watch(self, frame, track, proc):
-        pos_pixel = track.position_pixel
-        status = track.status
-
         tx1 = self._tx1
         tx2 = self._tx2
         ty1 = self._ty1
@@ -145,44 +144,46 @@ class Watcher(object):
         BR = (tx2, ty2)
         cv2.rectangle(frame, TL, BR, self.RED)
 
-        # make an image for drawing tank-coord overlays
-        tank_overlay = numpy.zeros((ty2-ty1, tx2-tx1, 4), frame.dtype)
+        if self._tracking:
+            # make an image for drawing tank-coord overlays
+            tank_overlay = numpy.zeros((ty2-ty1, tx2-tx1, 4), frame.dtype)
 
-        # draw contours
-        for c_i in range(len(proc.contours)):
-            cv2.drawContours(tank_overlay, proc.contours, c_i, self.GREEN, 1)
+            # draw contours
+            for c_i in range(len(proc.contours)):
+                cv2.drawContours(tank_overlay, proc.contours, c_i, self.GREEN, 1)
 
-        # draw centroids
-        for pt in proc.centroids:
-            if pt == pos_pixel:
-                continue  # will draw this one separately
-            x = int(pt[0])
-            y = int(pt[1])
-            cv2.line(tank_overlay, (x-5,y), (x+5,y), self.YELLOW)
-            cv2.line(tank_overlay, (x,y-5), (x,y+5), self.YELLOW)
+            # draw centroids
+            for pt in proc.centroids:
+                if pt == track.position_pixel:
+                    continue  # will draw this one separately
+                x = int(pt[0])
+                y = int(pt[1])
+                cv2.line(tank_overlay, (x-5,y), (x+5,y), self.YELLOW)
+                cv2.line(tank_overlay, (x,y-5), (x,y+5), self.YELLOW)
 
-        # draw a cross at the known/estimated position
-        color = self.STATUS_COLORS[status]
-        x,y = tuple(int(x) for x in pos_pixel)
-        cv2.line(tank_overlay, (x-5,y), (x+5,y), color)
-        cv2.line(tank_overlay, (x,y-5), (x,y+5), color)
+            # draw a cross at the known/estimated position
+            color = self.STATUS_COLORS[track.status]
+            x,y = tuple(int(x) for x in track.position_pixel)
+            cv2.line(tank_overlay, (x-5,y), (x+5,y), color)
+            cv2.line(tank_overlay, (x,y-5), (x,y+5), color)
 
-        # draw a circle around the estimated position
-        #position = tuple(int(x) for x in pos_pixel)
-        #cv2.circle(tank_overlay, position, 5, self.STATUS_COLORS[status])
+            # draw a circle around the estimated position
+            #position = tuple(int(x) for x in track.position_pixel)
+            #cv2.circle(tank_overlay, position, 5, self.STATUS_COLORS[track.status])
+
+            # draw the overlay into the frame at the tank's location
+            alpha = tank_overlay[:,:,3]
+            for c in 0,1,2:
+                frame[ty1:ty2,tx1:tx2,c] = frame[ty1:ty2,tx1:tx2,c]*(1-alpha/255.0) + tank_overlay[:,:,c]*(alpha/255.0)
 
         # draw crosshair and frame coordinates at mouse
         if self._mouse_on:
-            cv2.line(frame, (0, self._mousey), (self._stream.width, self._mousey), self.RED)
-            cv2.line(frame, (self._mousex, 0), (self._mousex, self._stream.height), self.RED)
+            height, width = frame.shape[:2]
+            cv2.line(frame, (0, self._mousey), (width, self._mousey), self.RED)
+            cv2.line(frame, (self._mousex, 0), (self._mousex, height), self.RED)
             # NOTE: tank Y coordinate is inverted: 0=bottom, 1=top of frame.
-            text = "%.3f %.3f" % (float(self._mousex) / self._stream.width, 1.0 - (float(self._mousey) / self._stream.height))
-            cv2.putText(frame, text, (5, self._stream.height-5), cv2.FONT_HERSHEY_PLAIN, 1, self.RED)
-
-        # draw the overlay into the frame at the tank's location
-        alpha = tank_overlay[:,:,3]
-        for c in 0,1,2:
-            frame[ty1:ty2,tx1:tx2,c] = frame[ty1:ty2,tx1:tx2,c]*(1-alpha/255.0) + tank_overlay[:,:,c]*(alpha/255.0)
+            text = "%.3f %.3f" % (float(self._mousex) / width, 1.0 - (float(self._mousey) / height))
+            cv2.putText(frame, text, (5, height-5), cv2.FONT_HERSHEY_PLAIN, 1, self.RED)
 
         cv2.imshow("preview", frame)
 
@@ -205,7 +206,7 @@ class Experiment(object):
 
         # Create Watcher
         if self._args.watch:
-            self._watcher = Watcher(self._tx1, self._tx2, self._ty1, self._ty2)
+            self._watcher = Watcher(self._tx1, self._tx2, self._ty1, self._ty2, not self._args.notrack)
 
         # Create Sensors
         if sensors is not None:
@@ -217,19 +218,23 @@ class Experiment(object):
         # Experiment setup
         self._control, self._stim, self._behavior_test = get_experiment()
 
-        # Frame processor
-        self._proc = tracking.FrameProcessor()
+        if not self._args.notrack:
+            # Frame processor
+            self._proc = tracking.FrameProcessor()
 
-        # Tracking: Simple
-        tank_width = self._tx2 - self._tx1
-        tank_height = self._ty2 - self._ty1
-        self._track = tracking.SimpleTracker(w=tank_width, h=tank_height)
+            # Tracking: Simple
+            tank_width = self._tx2 - self._tx1
+            tank_height = self._ty2 - self._ty1
+            self._track = tracking.SimpleTracker(w=tank_width, h=tank_height)
 
-        # For measuring status percentages
-        self._statuses = collections.defaultdict(int)
+            # For measuring status percentages
+            self._statuses = collections.defaultdict(int)
 
-        # Setup printing stats on exit
-        atexit.register(self._print_stats)
+            # Setup printing stats on exit
+            atexit.register(self._print_stats)
+        else:
+            self._proc = None
+            self._track = None
 
     def run(self):
         self._stim.begin(self._conf['stimulus'])
