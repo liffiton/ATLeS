@@ -204,6 +204,12 @@ class Experiment(object):
         self._ty1 = int(self._stream.height * (1.0 - self._conf['camera']['tank_max_y']))
         self._ty2 = int(self._stream.height * (1.0 - self._conf['camera']['tank_min_y']))
 
+        # Vidfile stats, if relevant
+        if self._stream.source == 'file':
+            # Get frame count, fps for calculating frame times
+            self._framecount, self._fps = self._stream.get_video_stats()
+            logging.info("Video file: %d frames, %d fps" % (self._framecount, self._fps))
+
         # Create Watcher
         if self._args.watch:
             self._watcher = Watcher(self._tx1, self._tx2, self._ty1, self._ty2, not self._args.notrack)
@@ -213,6 +219,7 @@ class Experiment(object):
             self._sensors = sensors.Sensors()
             self._sensors.begin()
         else:
+            self._sensors = None
             logging.warn("sensors module not loaded")
 
         # Experiment setup
@@ -236,16 +243,57 @@ class Experiment(object):
             self._proc = None
             self._track = None
 
+    def _do_tracking(self, frame, frame_num):
+        # Process the frame (finds contours, centroids, and updates background subtractor)
+        tank_crop = frame[self._ty1:self._ty2,self._tx1:self._tx2,:]
+        self._proc.process_frame(tank_crop)
+
+        # Wait for the background subtractor to learn/stabilize
+        # before logging or using data.
+        if frame_num < self._args.start_frame:
+            return
+        elif frame_num == self._args.start_frame:
+            logging.info("Tracking started at frame %d." % frame_num)
+
+        # Update tracker w/ latest set of centroids
+        self._track.update(self._proc.centroids)
+        # Get the position estimate of the fish and tracking status from the tracker
+        # pos_pixel = self._track.position_pixel
+        pos_tank = self._track.position_tank
+        status = self._track.status
+
+        # Update status counts
+        self._statuses[status] += 1
+
+        # Get latest sensor readings
+        if self._sensors is not None:
+            sensor_vals = self._sensors.get_latest()
+        else:
+            sensor_vals = {'temp': -1.0, 'lux': -1}
+
+        # Record data
+        data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
+        if self._stream.source == 'file':
+            self._logger.write_data(data, frametime=frame_num*1.0/self._fps)
+        else:
+            self._logger.write_data(data)
+
+        if status != 'lost' and self._behavior_test(pos_tank) and not self._args.nostim:
+            # Only provide a stimulus if we know where the fish is
+            # and the behavior test for that position says we should.
+            self._control.add_hit(str(pos_tank))
+            response = self._control.get_response()
+            if not self._args.nostim:
+                self._stim.show(response)
+            else:
+                self._stim.show(None)
+        else:
+            self._stim.show(None)
+
     def run(self):
         self._stim.begin(self._conf['stimulus'])
         prevtime = time.time()
-        curframe = 0
-
-        from_file = self._stream.source == 'file'
-        if from_file:
-            # Get frame count, fps for calculating frame times
-            framecount, fps = self._stream.get_video_stats()
-            logging.info("Video file: %d frames, %d fps" % (framecount, fps))
+        frame_num = 0
 
         self._logger.start_time()
 
@@ -261,54 +309,10 @@ class Experiment(object):
                 logging.warn("stream.get_frame() rval != True")
                 break
 
-            curframe += 1
+            frame_num += 1
 
             if not self._args.notrack:
-                # Process the frame (finds contours, centroids, and updates background subtractor)
-                tank_crop = frame[self._ty1:self._ty2,self._tx1:self._tx2,:]
-                self._proc.process_frame(tank_crop)
-
-                # Wait for the background subtractor to learn/stabilize
-                # before logging or using data.
-                if curframe < self._args.start_frame:
-                    continue
-                elif curframe == self._args.start_frame:
-                    logging.info("Tracking started.")
-
-                # Update tracker w/ latest set of centroids
-                self._track.update(self._proc.centroids)
-                # Get the position estimate of the fish and tracking status from the tracker
-                # pos_pixel = self._track.position_pixel
-                pos_tank = self._track.position_tank
-                status = self._track.status
-
-                # Update status counts
-                self._statuses[status] += 1
-
-                # Get latest sensor readings
-                if sensors is not None:
-                    sensor_vals = self._sensors.get_latest()
-                else:
-                    sensor_vals = {'temp': -1.0, 'lux': -1}
-
-                # Record data
-                data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
-                if from_file:
-                    self._logger.write_data(data, frametime=curframe*1.0/fps)
-                else:
-                    self._logger.write_data(data)
-
-                if status != 'lost' and self._behavior_test(pos_tank) and not self._args.nostim:
-                    # Only provide a stimulus if we know where the fish is
-                    # and the behavior test for that position says we should.
-                    self._control.add_hit(str(pos_tank))
-                    response = self._control.get_response()
-                    if not self._args.nostim:
-                        self._stim.show(response)
-                    else:
-                        self._stim.show(None)
-                else:
-                    self._stim.show(None)
+                self._do_tracking(frame, frame_num)
 
             if self._args.watch:
                 self._watcher.draw_watch(frame, self._track, self._proc)
@@ -317,7 +321,7 @@ class Experiment(object):
                     break
 
             # tracking performance / FPS
-            if curframe % 100 == 0:
+            if frame_num % 100 == 0:
                 curtime = time.time()
                 frame_time = (curtime - prevtime) / 100
                 logging.info("%dms / frame : %dfps" % (1000*frame_time, 1/frame_time))
