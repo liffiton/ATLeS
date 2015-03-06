@@ -13,7 +13,11 @@
 window_thickness = 2.4;  // 2.4mm = 0.094" (looks good based on cut test piece for acrylic slotting into itself)
 
 // 1/8" Hardboard:
-thickness = 2.8;  // 2.8mm = 0.110" (looks good based on cut test piece for hardboard slotting into hardboard)
+thickness = 3.0;
+    // 2.8mm = 0.110"
+    //   * looked good based on cut test piece for hardboard slotting into hardboard
+    //   * 2015-03-06: Hanging supports didn't fit into cutouts (or did only with lots of force)
+    // 3.0mm for some breathing room
 
 // Interior box dimensions
 // The variables are used below to control placement of **centerpoints** centerpoints of walls,
@@ -105,18 +109,18 @@ module vert_face(x=0) {
         top_cover();
         side(y=0);
         side(y=depth);
+        translate([x-thickness/2, -overhang, 0]) {
+            translate([0, depth+overhang+thickness/2, 3/4*height])
+                rounded_truncation(up=true);
+            translate([0, 0, 3/4*height])
+                rounded_truncation(up=true);
+        }
     }
 }
 
 module vert_face_base(x, face_thickness=thickness) {
-    translate([x-face_thickness/2,-overhang, 0])
-    difference() {
+    translate([x-face_thickness/2, -overhang, 0])
         cube([face_thickness,depth+overhang*2,height]);
-        translate([0, depth+overhang+thickness/2, 3/4*height])
-            rounded_truncation(up=true);
-        translate([0, 0, 3/4*height])
-            rounded_truncation(up=true);
-    }
 }
 
 module rounded_truncation(up, rot=[0,0,0]) {
@@ -124,8 +128,8 @@ module rounded_truncation(up, rot=[0,0,0]) {
     truncation_height=height/4;
     rotate(a=rot)
     difference() {
-        translate([-50,0,0])
-            cube([100, real_overhang, truncation_height]);
+        translate([-50,-epsilon/2,0])
+            cube([100, real_overhang+epsilon, truncation_height]);
         if (up) {
             translate([-50, real_overhang/2, 0])
             rotate(a=[0, 90, 0])
@@ -219,8 +223,8 @@ module cutouts(num, width, outset, rot, trans) {
     translate(trans)
     rotate([0,0,1], a=rot)
     for (i = [0 : num-1]) {
-        translate([-width/2 - w/2 + i*2*w, -thickness/2, -epsilon])
-            cube([w, outset+thickness, thickness+epsilon*2]);
+        translate([-width/2 - w/2 + i*2*w, -thickness/2, -thickness/2])
+            cube([w, outset+thickness, thickness*2]);
     }
 }
 
