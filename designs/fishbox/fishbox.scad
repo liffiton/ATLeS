@@ -48,6 +48,9 @@ light_height = height-thickness*2-8;
 support_w = 10;
 support_drop = support_w/2;
 
+// position of rpi and related parts
+rpi_ypos = depth/2 + 60;
+
 // for slight offsets/tweaks
 epsilon = 1;
 
@@ -81,8 +84,8 @@ else {
     tank_base();
     light_bar();
     camera_supports(x=width, y=depth/2, z=height/2);
-    rpi_support(x=width, y=depth/2-50, z=height/2);
-    mock_rpi(x=width, y=depth/2-60, z=height/2);
+    rpi_support(x=width, y=rpi_ypos-10, z=height/2);
+    mock_rpi(x=width, y=rpi_ypos, z=height/2);
     top_cover();
 }
 
@@ -100,7 +103,7 @@ module vert_face(x=0) {
         }
         camera_opening();
         camera_supports(x=width+thickness*2, y=depth/2, z=height/2+support_drop);
-        rpi_support(x=width+thickness*2, y=depth/2-50, z=height/2+support_drop);
+        rpi_support(x=width+thickness*2, y=rpi_ypos-10, z=height/2+support_drop);
         wire_opening();
         // CAUTION: OpenSCAD won't let me make a projection of vert_face(x=0)
         //   if tank_base is put after side(y=depth) here... bug.  :(
@@ -158,7 +161,7 @@ module camera_supports(x, y, z, justone=false) {
 }
 
 module rpi_support(x, y, z) {
-    hanging_support(x, y, z, out=3.2, up=85);
+    hanging_support(x, y, z, out=4, up=85);
 }
 
 module hanging_support(x, y, z, out, up) {
@@ -260,7 +263,7 @@ module cutouts(num, width, outset, rot, trans) {
 }
 
 module wire_opening() {
-    translate([width, depth/2-70, overhang+20])
+    translate([width, rpi_ypos-35, overhang+20])
     scale([1,2,1])
     rotate(a=[0,90,0])
         cylinder(d=12, h=thickness+epsilon, center=true, $fn=50);
@@ -292,7 +295,7 @@ module side_base(y) {
 module mock_rpi(x, y, z) {
     color("Blue", alpha=0.5)
     translate([x+thickness, y, z])
-        rotate(v=[0,1,0], a=90)
+        rotate(a=[0,-90,180])
             translate([-85/2, -56/2, 0])
                 union() {
                     cube([85, 56, 2]);
