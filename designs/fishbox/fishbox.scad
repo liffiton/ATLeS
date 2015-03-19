@@ -13,11 +13,11 @@
 window_thickness = 2.4;  // 2.4mm = 0.094" (looks good based on cut test piece for acrylic slotting into itself)
 
 // 1/8" Hardboard:
-thickness = 3.0;
+thickness = 3.1;
     // 2.8mm = 0.110"
     //   * looked good based on cut test piece for hardboard slotting into hardboard
     //   * 2015-03-06: Hanging supports didn't fit into cutouts (or did only with lots of force)
-    // 3.0mm for some breathing room
+    // 3.1mm for some breathing room
 
 // Interior box dimensions
 // The variables are used below to control placement of **centerpoints** centerpoints of walls,
@@ -34,7 +34,6 @@ overhang = 15;
 outset = thickness+2;
 
 // tank base plate
-base_depth = depth-thickness*2;
 base_height = overhang/2;
 
 // create height var to account for raised base
@@ -168,17 +167,49 @@ module hanging_support(x, y, z, out, up) {
     color("Red", alpha=0.5)
     translate([x,y,z])
     // push inner opening up against vert face
-    translate([inner_w/2,0,0])
+    translate([out/2,0,0])
     difference() {
-        cube([inner_w+support_w*2, thickness, inner_h+support_w*2], center=true);
+        rounded_rect(inner_w+support_w*2, thickness, inner_h+support_w*2, center=true, radius=support_w);
         // cutout for object
         cube([inner_w, thickness*2, inner_h], center=true);
         // cutout for passing through vertface
         translate([-(inner_w/2+support_w/2),0,-support_drop/2])
             cube([support_w+2*epsilon, thickness*2, inner_h-support_drop], center=true);
         // bottom cutout
-        translate([-inner_w/2,0,-(inner_h/2+support_w-support_drop/2)])
+        translate([-out/2,0,-(inner_h/2+support_w-support_drop/2)])
             cube([thickness, thickness*2, support_drop], center=true);
+    }
+}
+
+// rounded corners in x,z directions
+module rounded_rect(x,y,z, center, radius) {
+    difference() {
+        cube([x,y,z], center);
+
+        translate([x/2-radius, 50, z/2-radius])
+        rotate(a=[90,0,0])
+        difference() {
+            cube([radius,radius,100]);
+            cylinder(r=radius, h=100, $fn=50);
+        }
+        translate([-x/2+radius, 50, z/2-radius])
+        rotate(a=[90,-90,0])
+        difference() {
+            cube([radius,radius,100]);
+            cylinder(r=radius, h=100, $fn=50);
+        }
+        translate([x/2-radius, 50, -z/2+radius])
+        rotate(a=[90,90,0])
+        difference() {
+            cube([radius,radius,100]);
+            cylinder(r=radius, h=100, $fn=50);
+        }
+        translate([-x/2+radius, 50, -z/2+radius])
+        rotate(a=[90,180,0])
+        difference() {
+            cube([radius,radius,100]);
+            cylinder(r=radius, h=100, $fn=50);
+        }
     }
 }
 
@@ -195,11 +226,11 @@ module top_cover() {
 }
 
 module tank_base() {
-    translate([-outset,thickness,base_height])
+    translate([-outset,thickness/2,base_height])
     difference() {
-        cube([width+outset*2, base_depth, thickness]);
-        cutouts(5,depth,outset,rot=-90,trans=[0,base_depth/2,0]);
-        cutouts(5,depth,outset,rot=90,trans=[width+outset*2,base_depth/2,0]);
+        cube([width+outset*2, depth-thickness, thickness]);
+        cutouts(5,depth,outset,rot=-90,trans=[0,(depth-thickness)/2,0]);
+        cutouts(5,depth,outset,rot=90,trans=[width+outset*2,(depth-thickness)/2,0]);
     }
 }
 
@@ -232,7 +263,7 @@ module wire_opening() {
     translate([width, depth/2-70, overhang+20])
     scale([1,2,1])
     rotate(a=[0,90,0])
-        cylinder(d=10, h=thickness+epsilon, center=true);
+        cylinder(d=12, h=thickness+epsilon, center=true, $fn=50);
 }
 
 module side(y=0) {
