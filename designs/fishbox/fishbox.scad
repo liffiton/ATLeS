@@ -102,8 +102,9 @@ module vert_face(x=0) {
             vert_face_base(x);
         }
         camera_opening();
-        camera_supports(x=width+thickness*2, y=depth/2, z=height/2+support_drop);
-        rpi_support(x=width+thickness*2, y=rpi_ypos-10, z=height/2+support_drop);
+        // round=false so we get the full width of the piece in the cutout, not reduced because we hit the rounded corner
+        camera_supports(x=width+thickness*2, y=depth/2, z=height/2+support_drop, round=false);
+        rpi_support(x=width+thickness*2, y=rpi_ypos-10, z=height/2+support_drop, round=false);
         wire_opening();
         // CAUTION: OpenSCAD won't let me make a projection of vert_face(x=0)
         //   if tank_base is put after side(y=depth) here... bug.  :(
@@ -150,21 +151,21 @@ module camera_opening() {
         cube([thickness*2,10,10], center=true);
 }
 
-module camera_supports(x, y, z, justone=false) {
+module camera_supports(x, y, z, justone=false, round=true) {
     spacing = 20;
     out = 10;
     up = 36;
-    hanging_support(x, y + spacing/2, z, out, up);
+    hanging_support(x, y + spacing/2, z, out, up, round=round);
     if (!justone) {
-        hanging_support(x, y - spacing/2, z, out, up);
+        hanging_support(x, y - spacing/2, z, out, up, round=round);
     }
 }
 
-module rpi_support(x, y, z) {
-    hanging_support(x, y, z, out=4, up=85);
+module rpi_support(x, y, z, round=true) {
+    hanging_support(x, y, z, out=4, up=85, round=round);
 }
 
-module hanging_support(x, y, z, out, up) {
+module hanging_support(x, y, z, out, up, round=true) {
     inner_w = out+thickness;
     inner_h = up;
     color("Red", alpha=0.5)
@@ -172,7 +173,12 @@ module hanging_support(x, y, z, out, up) {
     // push inner opening up against vert face
     translate([out/2,0,0])
     difference() {
-        rounded_rect(inner_w+support_w*2, thickness, inner_h+support_w*2, center=true, radius=support_w);
+        if (round) {
+            rounded_rect(inner_w+support_w*2, thickness, inner_h+support_w*2, center=true, radius=inner_w);
+        }
+        else {
+            cube([inner_w+support_w*2, thickness, inner_h+support_w*2], center=true);
+        }
         // cutout for object
         cube([inner_w, thickness*2, inner_h], center=true);
         // cutout for passing through vertface
