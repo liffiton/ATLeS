@@ -174,7 +174,7 @@ module hanging_support(x, y, z, out, up, round=true) {
     translate([out/2,0,0])
     difference() {
         if (round) {
-            rounded_rect(inner_w+support_w*2, thickness, inner_h+support_w*2, center=true, radius=inner_w);
+            rounded_rect(inner_w+support_w*2, thickness, inner_h+support_w*2, center=true, radius=support_w);
         }
         else {
             cube([inner_w+support_w*2, thickness, inner_h+support_w*2], center=true);
