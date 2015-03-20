@@ -153,7 +153,7 @@ module camera_opening() {
 
 module camera_supports(x, y, z, justone=false, round=true) {
     spacing = 20;
-    out = 10;
+    out = 11;
     up = 36;
     hanging_support(x, y + spacing/2, z, out, up, round=round);
     if (!justone) {
