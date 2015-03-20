@@ -54,6 +54,9 @@ rpi_ypos = depth/2 + 60;
 // for slight offsets/tweaks
 epsilon = 1;
 
+// set precision of all arcs/spheres/cylinders/etc.
+$fn = 50;
+
 // vars to control projection for DXF export (see makefile)
 if (DXF_TOP) {
     projection() top_cover();
@@ -114,9 +117,9 @@ module vert_face(x=0) {
         side(y=depth);
         translate([x-thickness/2, -overhang, 0]) {
             translate([0, depth+overhang+thickness/2, 3/4*height])
-                rounded_truncation(up=true);
+                rounded_truncation(width=overhang-thickness/2, up=true);
             translate([0, 0, 3/4*height])
-                rounded_truncation(up=true);
+                rounded_truncation(width=overhang-thickness/2, up=true);
         }
     }
 }
@@ -126,22 +129,21 @@ module vert_face_base(x, face_thickness=thickness) {
         cube([face_thickness,depth+overhang*2,height]);
 }
 
-module rounded_truncation(up, rot=[0,0,0]) {
-    real_overhang=overhang-thickness/2;
+module rounded_truncation(width, up, rot=[0,0,0]) {
     truncation_height=height/4;
     rotate(a=rot)
     difference() {
-        translate([-50,-epsilon/2,0])
-            cube([100, real_overhang+epsilon, truncation_height]);
+        translate([-50,-epsilon,0])
+            cube([100, width+2*epsilon, truncation_height]);
         if (up) {
-            translate([-50, real_overhang/2, 0])
+            translate([-50, width/2, 0])
             rotate(a=[0, 90, 0])
-                cylinder(d=real_overhang, h=100);
+                cylinder(d=width, h=100);
         }
         else {
-            translate([-50, real_overhang/2, truncation_height])
+            translate([-50, width/2, truncation_height])
             rotate(a=[0, 90, 0])
-                cylinder(d=real_overhang, h=100);
+                cylinder(d=width, h=100);
         }
     }
 }
@@ -199,25 +201,25 @@ module rounded_rect(x,y,z, center, radius) {
         rotate(a=[90,0,0])
         difference() {
             cube([radius,radius,100]);
-            cylinder(r=radius, h=100, $fn=50);
+            cylinder(r=radius, h=100);
         }
         translate([-x/2+radius, 50, z/2-radius])
         rotate(a=[90,-90,0])
         difference() {
             cube([radius,radius,100]);
-            cylinder(r=radius, h=100, $fn=50);
+            cylinder(r=radius, h=100);
         }
         translate([x/2-radius, 50, -z/2+radius])
         rotate(a=[90,90,0])
         difference() {
             cube([radius,radius,100]);
-            cylinder(r=radius, h=100, $fn=50);
+            cylinder(r=radius, h=100);
         }
         translate([-x/2+radius, 50, -z/2+radius])
         rotate(a=[90,180,0])
         difference() {
             cube([radius,radius,100]);
-            cylinder(r=radius, h=100, $fn=50);
+            cylinder(r=radius, h=100);
         }
     }
 }
@@ -272,7 +274,7 @@ module wire_opening() {
     translate([width, rpi_ypos-35, overhang+20])
     scale([1,2,1])
     rotate(a=[0,90,0])
-        cylinder(d=12, h=thickness+epsilon, center=true, $fn=50);
+        cylinder(d=12, h=thickness+epsilon, center=true);
 }
 
 module side(y=0) {
@@ -292,9 +294,9 @@ module side_base(y) {
     difference() {
         cube([width+overhang*2, thickness, height-overhang/2]);
         translate([width+overhang+thickness/2, 0, 0])
-            rounded_truncation(up=false, rot=[0,0,-90]);
+            rounded_truncation(width=overhang-thickness/2, up=false, rot=[0,0,-90]);
         translate([0, 0, 0])
-            rounded_truncation(up=false, rot=[0,0,-90]);
+            rounded_truncation(width=overhang-window_thickness/2, up=false, rot=[0,0,-90]);
     }
 }
 
