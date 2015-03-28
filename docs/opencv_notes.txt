@@ -6,6 +6,8 @@ The following instructions assume an updated Raspbian system.
 Based on:
   http://docs.opencv.org/doc/tutorials/introduction/linux_install/linux_install.html
 
+[To build/install on Cygwin, see here: http://hvrl.ics.keio.ac.jp/kimura/opencv/]
+
 
 Build dependencies
 ------------------
