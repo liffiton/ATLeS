@@ -37,18 +37,20 @@ To make these modifications, apply the patch (found in the same directory as the
 Build instructions
 ------------------
 
-In the opencv-2.x.xx directory:
+In the opencv-2.x.xx directory, run:
 
-  mkdir release
-  cd release
-  cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_EXAMPLES=off -D BUILD_TESTS=off -D BUILD_PERF_TESTS=off ..
+  $ mkdir release
+  $ cd release
+  $ cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_EXAMPLES=off -D BUILD_TESTS=off -D BUILD_PERF_TESTS=off ..
 
-Make sure "OpenCV modules">"To be built" lists python; make sure "GUI" has "YES" for GTK+; make sure "Python" section lists correct paths to binaries/libraries.
+In the output of cmake, verify that "OpenCV modules">"To be built" lists python, "GUI" has "YES" for GTK+, and the "Python" section lists correct paths to binaries/libraries.
 Tests, examples, and performance tests are not built to save space.  It takes far too much space with those enabled (I ran out of space with 1.1GB free to start).
 
-  make
+  $ make
 
-Takes about 4 hours on the RPi B+.
+This step, building OpenCV with the above configuration, takes about 4 hours on the RPi B+.
 
-  sudo make install
+  $ sudo make install
+
+The easiest way to check the installation now is to launch the python interpreter and type "import cv2".  If it does not report an error when importing the module, the installation is probably complete.
 
