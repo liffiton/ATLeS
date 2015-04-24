@@ -95,11 +95,13 @@ class FrameProcessor(object):
 
 
 class SimpleTracker(object):
+    '''A simple tracking class.  Only ever reports last-known position.  No estimates/predictions.'''
     def __init__(self, w, h):
         self._w = float(w)  # frame width (for scaling coordinates)
         self._h = float(h)  # frame height
-        self._pos = numpy.zeros(2)
-        self._vel = numpy.zeros(2)
+        self._pos = numpy.array((None, None))
+
+        self._positions = []
 
         # How many frames have we not had something to track?
         # Initialized to 100 so status() is initially 'lost'
@@ -123,11 +125,16 @@ class SimpleTracker(object):
         Both x- and y-coordinates are scaled to 0.0-1.0 relative to the view of the tank.
         NOTE: y-axis is inverted from pixel coordinates, so y=0.0 is the **bottom** of the tank.
         '''
-        return self._pixel_to_tank(self._pos)
+        if self._have_pos:
+            return self._pixel_to_tank(self._pos)
+        else:
+            return self._pos
 
     @property
     def status(self):
         # is anything currently being tracked
+        if not self._have_pos:
+            return 'init'
         if self._missing_count == 0:
             return 'acquired'
         elif self._missing_count < 5:
@@ -137,9 +144,12 @@ class SimpleTracker(object):
 
     def _score_point(self, pt):
         '''Score a given detection point by its distance from the expected position of the fish.'''
-        expected = self._pos + self._vel
-        delta = numpy.linalg.norm(expected - pt)
-        return delta
+        if self._have_pos:
+            expected = self._expected_loc()
+            delta = numpy.linalg.norm(expected - pt)
+            return delta
+        else:
+            return 0
 
     def _get_closest(self, obs):
         if not obs:
@@ -158,6 +168,14 @@ class SimpleTracker(object):
 
         return closest
 
+    def _expected_loc(self):
+        # Don't assume anything; just use the last-known position
+        return self._pos
+
+    def _update_estimates(self, prevpos):
+        # SimpleTracker has no estimates
+        pass
+
     def update(self, obs):
         closest = self._get_closest(obs)
 
@@ -175,27 +193,50 @@ class SimpleTracker(object):
             self._missing_count = 0
             self._pos[:] = closest
 
+        self._update_estimates(prevpos)
+
+        if self._have_pos:
+            self._positions.append(tuple(int(x) for x in self.position_pixel))
+
+    @property
+    def _have_pos(self):
+        return not any(x is None for x in self._pos)
+
+    @property
+    def positions(self):
+        return self._positions
+
+
+class VelocityTracker(SimpleTracker):
+    '''A predictive tracking class.  Estimates position when fish is lost based on recent velocity.'''
+    def __init__(self):
+        self._vel = numpy.zeros(2)
+        super(VelocityTracker, self).__init__()
+
+    def _expected_loc(self):
+        return self._pos + self._vel
+
+    def _update_estimates(self, prevpos):
         # self.status is derived from the [just updated] self._missing_count
         if self.status == 'lost':
             # We have no idea where it should be, so no more moving the point.
             self._vel = numpy.zeros(2)
         elif self.status == 'missing':
-            # use the stored velocity
-            self._pos += self._vel
-            if numpy.min(self._pos) < 0 or numpy.max(self._pos) > 1:
+            # use the expected location
+            self._pos = self._expected_loc()
+            if numpy.min(self._pos) < 0 or self._pos[0] > self._w or self._pos[1] > self._h:
                 # went past the border, so just reset and stop moving
                 self._pos -= self._vel
                 self._vel = numpy.zeros(2)
             else:
                 # taper velocity to zero
                 self._vel *= 0.5
-        else:
+        elif self.status == 'acquired':
+            # current self._pos is fine, just update estimate velocity if appropriate
             if prevpos is not None:
-                # update estimated velocity as a [very quickly] decaying average
+                # estimated velocity is a [very quickly] decaying average
                 alpha = 0.75
                 self._vel = alpha * (self._pos - prevpos) + (1-alpha) * self._vel
-            # update estimated position
-            self._pos[:] = closest
 
 
 class Stream(object):

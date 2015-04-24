@@ -111,7 +111,7 @@ class Watcher(object):
     GREEN = (0, 255, 0, 255)
     BLUE = (255, 0, 0, 255)
     YELLOW = (0, 255, 255, 255)
-    STATUS_COLORS = {'acquired': GREEN, 'missing': BLUE, 'lost': RED}
+    STATUS_COLORS = {'acquired': GREEN, 'missing': BLUE, 'lost': RED, 'init': RED}
 
     def __init__(self, tx1, tx2, ty1, ty2, tracking):
         # For mouse interaction
@@ -161,15 +161,23 @@ class Watcher(object):
                 cv2.line(tank_overlay, (x-5,y), (x+5,y), self.YELLOW)
                 cv2.line(tank_overlay, (x,y-5), (x,y+5), self.YELLOW)
 
-            # draw a cross at the known/estimated position
-            color = self.STATUS_COLORS[track.status]
-            x,y = tuple(int(x) for x in track.position_pixel)
-            cv2.line(tank_overlay, (x-5,y), (x+5,y), color)
-            cv2.line(tank_overlay, (x,y-5), (x,y+5), color)
+            if track.status != 'init':
+                # draw a larger cross at the known/estimated position
+                color = self.STATUS_COLORS[track.status]
+                x,y = tuple(int(x) for x in track.position_pixel)
+                cv2.line(tank_overlay, (x-10,y), (x+10,y), color)
+                cv2.line(tank_overlay, (x,y-10), (x,y+10), color)
 
-            # draw a circle around the estimated position
-            #position = tuple(int(x) for x in track.position_pixel)
-            #cv2.circle(tank_overlay, position, 5, self.STATUS_COLORS[track.status])
+                # draw a circle around the estimated position
+                #position = tuple(int(x) for x in track.position_pixel)
+                #cv2.circle(tank_overlay, position, 5, self.STATUS_COLORS[track.status])
+
+                # draw a trace of the past k positions recorded
+                start = max(0, len(track.positions) - 200)
+                prevpt = track.positions[start]
+                for pt in track.positions[start:]:
+                    cv2.line(tank_overlay, prevpt, pt, self.YELLOW)
+                    prevpt = pt
 
             # draw the overlay into the frame at the tank's location
             alpha = tank_overlay[:,:,3]
