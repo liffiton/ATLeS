@@ -35,15 +35,19 @@ class FrameProcessor(object):
         self._contours = None
         self._centroids = None
 
-    def process_frame(self, frame):
+    def process_frame(self, frame, channel=2):
+        ''' Process a single frame, using just the given channel.
+
+        Channels:  BGR -> Blue = 0, Green = 1, Red = 2 (default)
+        For fishybox: use the red channel (most IR, least visible light)
+        '''
+
         # reset contours and centroids
         self._contours = None
         self._centroids = None
 
         # grayscale copy
-        # use the red channel (most IR, least visible light)
-        # BGR -> Blue = 0, Green = 1, Red = 2
-        self._gframe = frame[:,:,2]
+        self._gframe = frame[:,:,channel]
 
         # subtract background, clean up image
         self._sub_bg()
@@ -137,7 +141,7 @@ class SimpleTracker(object):
         delta = numpy.linalg.norm(expected - pt)
         return delta
 
-    def update(self, obs):
+    def _get_closest(self, obs):
         if not obs:
             closest = None
         else:
@@ -145,10 +149,17 @@ class SimpleTracker(object):
                 closest = obs[0]
             else:
                 closest = min(obs, key=self._score_point)
+
             # If we think we have a decent fix, but closest is more than (XXX: magic number!) away,
             # then consider this a bad detection.
-            if (self.status != 'lost') and (numpy.linalg.norm(closest - self._pos) > (self._w / 4.0)):
+            if self.status != 'lost' and self.status != 'init' \
+                    and numpy.linalg.norm(closest - self._pos) > (max(self._w, self._h) / 4.0):
                 closest = None
+
+        return closest
+
+    def update(self, obs):
+        closest = self._get_closest(obs)
 
         if self.status == 'acquired':
             # hold on to previous position
@@ -204,11 +215,11 @@ class Stream(object):
                 newval = self._video.get(key)
                 if newval != value:
                     logging.warning("Unable to set %s to %s, got %s." % (key, value, newval))
-            self.source = 'camera'
+            self.sourcetype = 'camera'
         elif os.path.isfile(source):
             # video file
             self._video = cv2.VideoCapture(source)
-            self.source = 'file'
+            self.sourcetype = 'file'
         else:
             logging.error("Input file not found: %s\n" % source)
             sys.exit(1)
@@ -218,7 +229,7 @@ class Stream(object):
             sys.exit(1)
 
     def get_video_stats(self):
-        assert(self.source == 'file')
+        assert(self.sourcetype == 'file')
 
         framecount = self._video.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
         fps = self._video.get(cv2.cv.CV_CAP_PROP_FPS)

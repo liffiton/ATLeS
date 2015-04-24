@@ -205,7 +205,7 @@ class Experiment(object):
         self._ty2 = int(self._stream.height * (1.0 - self._conf['camera']['tank_min_y']))
 
         # Vidfile stats, if relevant
-        if self._stream.source == 'file':
+        if self._stream.sourcetype == 'file':
             # Get frame count, fps for calculating frame times
             self._framecount, self._fps = self._stream.get_video_stats()
             logging.info("Video file: %d frames, %d fps" % (self._framecount, self._fps))
@@ -273,7 +273,7 @@ class Experiment(object):
 
         # Record data
         data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
-        if self._stream.source == 'file':
+        if self._stream.sourcetype == 'file':
             self._logger.write_data(data, frametime=frame_num*1.0/self._fps)
         else:
             self._logger.write_data(data)
