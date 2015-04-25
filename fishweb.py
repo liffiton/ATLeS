@@ -1,4 +1,5 @@
 import csv
+import errno
 import glob
 import multiprocessing
 import os
@@ -19,13 +20,28 @@ import matplotlib
 matplotlib.use('Agg')
 import analyze
 
+_LOGDIR = "logs/"
+_IMGDIR = _LOGDIR + "img/"
+_ARCHIVEDIR = _LOGDIR + "archive/"
+
 
 def _tracks():
-    return sorted(glob.glob("logs/*-track.csv"))
+    return sorted(glob.glob(_LOGDIR + "*-track.csv"))
 
 
 def _imgs(name):
-    return sorted(glob.glob("logs/img/%s*" % name))
+    return sorted(glob.glob(_IMGDIR + "%s*" % name))
+
+
+def _mkdir(path):
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            # exists already, fine.
+            pass
+        else:
+            raise
 
 
 @route('/')
@@ -45,7 +61,7 @@ def index():
 
 @route('/view/<logname:path>')
 @view('view')
-def view(logname):
+def view_log(logname):
     name = logname.split('/')[-1]
     return dict(imgs=_imgs(name), logname=logname)
 
@@ -69,7 +85,7 @@ def post_stats():
             import numpy as np
             if k in stat:
                 val = stat[k]
-                if type(val) is np.float32 or type(val) is np.float64:
+                if isinstance(val, (np.float32, np.float64)):
                     stat[k] = "%0.3f" % val
             else:
                 stat[k] = ""
@@ -93,22 +109,17 @@ def post_stats():
 
 
 def _do_analyze(logname):
-    try:
-        os.makedirs("logs/img/")
-    except:
-        # exists already, fine.
-        pass
     name = logname.split('/')[-1]
     g = analyze.Grapher()
     g.load(logname)
     g.plot()
-    g.savefig("logs/img/%s.plot.png" % name)
+    g.savefig(_IMGDIR + "%s.plot.png" % name)
     g.plot_heatmap()
-    g.savefig("logs/img/%s.heat.png" % name)
+    g.savefig(_IMGDIR + "%s.heat.png" % name)
     g.plot_heatmap(10)
-    g.savefig("logs/img/%s.heat.10.png" % name)
+    g.savefig(_IMGDIR + "%s.heat.10.png" % name)
     g.plot_leftright()
-    g.savefig("logs/img/%s.leftright.png" % name)
+    g.savefig(_IMGDIR + "%s.leftright.png" % name)
 
 
 @post('/analyze/')
@@ -143,64 +154,63 @@ def post_compare():
     # XXX: bit of a hack doing pyplot stuff outside of Grapher...
     matplotlib.pyplot.legend([name1 + " Left", name2 + " Left", name1 + " Right", name2 + " Right"], fontsize=8, loc=2)
 
-    imgname = "logs/img/%s_%s_leftrights.png" % (name1, name2)
+    imgname = _IMGDIR + "%s_%s_leftrights.png" % (name1, name2)
     g1.savefig(imgname)
     redirect("/" + imgname)
 
 
 @post('/archive/')
 def post_archive():
-    try:
-        os.makedirs("logs/archive/")
-    except:
-        # exists already, fine.
-        pass
     logname = request.query.path
     name = logname.split('/')[-1].split('-track')[0]
-    allfiles = glob.glob("logs/%s*" % name)
+    allfiles = glob.glob(_LOGDIR + "%s*" % name)
     for f in allfiles:
-        shutil.move(f, "logs/archive/")
+        shutil.move(f, _ARCHIVEDIR)
 
     redirect("/")
 
 
 @route('/logs/<filename:path>')
 def static_logs(filename):
-    if (filename.endswith('.csv')):
-        return static_file(filename, root='logs/', mimetype='text/plain')
+    if filename.endswith('.csv'):
+        return static_file(filename, root=_LOGDIR, mimetype='text/plain')
     else:
-        return static_file(filename, root='logs/')
+        return static_file(filename, root=_LOGDIR)
 
 
 if __name__ == '__main__':
-    daemon = False
+    daemonize = False
     testing = False
     if len(sys.argv) > 1:
         arg1 = sys.argv[1]
         if arg1 == "--daemon":
-            daemon = True
+            daemonize = True
         else:
             testing = True
 
     host = 'localhost' if testing else '0.0.0.0'
 
-    if daemon:
+    # Create needed directories if not already there
+    _mkdir(_IMGDIR)
+    _mkdir(_ARCHIVEDIR)
+
+    if daemonize:
         import daemon
-        logfile = os.path.join(
-                os.getcwd(),
-                "bottle.log"
-                )
-        log = open(logfile,"w+")
         print("Launching daemon in the background.")
-        context = daemon.DaemonContext(
+        logfile = os.path.join(
+            os.getcwd(),
+            "bottle.log"
+        )
+        with open(logfile, 'w+') as log:
+            context = daemon.DaemonContext(
                 working_directory=os.getcwd(),
                 stdout=log,
                 stderr=log
-                )
-        with context:
-            # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
-            #run(host=host, port=8080, server='gevent', debug=False, reloader=False)
-            run(host=host, port=8080, debug=False, reloader=False)
+            )
+            with context:
+                # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
+                #run(host=host, port=8080, server='gevent', debug=False, reloader=False)
+                run(host=host, port=8080, debug=False, reloader=False)
 
     else:
         # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
