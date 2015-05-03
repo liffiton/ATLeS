@@ -13,6 +13,7 @@ Fish tank measurements:
  - Width:             7.0cm
  - Length w/ lid:    34.8cm
  - Length w/o lid:   33.3cm
+ - Diagonal (approx. screen size needed): 14.4" (36.7cm)
 
 
 
