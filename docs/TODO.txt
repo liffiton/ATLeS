@@ -1,18 +1,12 @@
 TODOs and Plans
 ===============
 
-General
--------
- - Teach Brad git
- - Decide whether to pursue tablet idea
- - Consider / keep in mind idea of setting up a centralized control/logging server
-
 
 Enclosure
 ---------
-
-New, laser-cut:
- - Add cable routing for HDMI, etc.?
+ - Secure, wiggleless mount for camera
+ - Integrate frameless LCD display
+ ? Add cable routing for HDMI, etc.
 
 
 FishWeb / Analyze
@@ -37,17 +31,17 @@ FishBox [.py]
 Big / Important:
  - Separate out experiment configuration from experiment.py
    - Somehow include in a .ini file or something else that can be saved alongside each experiment's data.
- - Make background subtractor adaptive, modifying sensitivity to hit 1 detection exactly.
+ - Make background subtractor adaptive, modifying sensitivity to hit 1 detection exactly. (See babyfish code.)
 
 Medium:
+ - Utility to create an .ini file interactively (w/ camera view, clicking,
+   etc.)
  - Save video (if possible)
  - Save frame (and result of background subtraction) when status first becomes
    "missing" for troubleshooting
  - Report m/s velocities in analyze.py (requires figuring out best way to get
    different position data (frame- and tank-coords and tank phys size) into
    analyze.py...)
- - Utility to create an .ini file interactively (w/ camera view, clicking,
-   etc.)
 
 Testing/validation:
  - Record a few real-world videos of fish w/ new setup and correct .ini files

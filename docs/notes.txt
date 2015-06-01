@@ -16,7 +16,6 @@ Fish tank measurements:
  - Diagonal (approx. screen size needed): 14.4" (36.7cm)
 
 
-
-For rpi-specific notes, see rpi_notes.txt.
-For mounting/enclosure notes, see mounting_notes.txt.
-For (old) thoughts on the specification and plan, see spec_and_plan.txt.
+For rpi-specific software notes, see sw_notes.txt.
+For (old) mounting/enclosure notes, see old/mounting_notes.txt.
+For (old) thoughts on the specification and plan, see old/spec_and_plan.txt.
