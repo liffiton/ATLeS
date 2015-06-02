@@ -3,12 +3,14 @@ import multiprocessing
 
 from TSL2561 import TSL2561
 from MCP9808 import MCP9808
+import datetime
 import time
 
 
 class SensorsHelper(object):
-    def __init__(self, pipe):
+    def __init__(self, pipe, intervalsec=1):
         self._pipe = pipe
+        self._interval = intervalsec
 
     def sensors_thread(self):
         tsl = TSL2561(debug=0)
@@ -24,7 +26,7 @@ class SensorsHelper(object):
             lux = tsl.read_lux()
             #print("%d,%d = %d lux" % (full, ir, lux))
 
-            self._pipe.send({'temp': temp, 'lux': lux})
+            self._pipe.send({'time': datetime.datetime.now(), 'temp': temp, 'lux': lux})
 
             # check for end signal
             while self._pipe.poll():
@@ -32,14 +34,14 @@ class SensorsHelper(object):
                 if val == 'end':
                     return
 
-            time.sleep(1)
+            time.sleep(self._interval)
 
 
 class Sensors(object):
     ''' Class for reading and reporting sensor values '''
     def __init__(self):
         self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=True)
-        self._helper = SensorsHelper(self._child_pipe)
+        self._helper = SensorsHelper(self._child_pipe, intervalsec=1)
         self._readings = None
 
     def begin(self):

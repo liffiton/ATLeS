@@ -1,5 +1,6 @@
 import atexit
 import collections
+import datetime
 import logging
 import numpy
 import os
@@ -29,10 +30,11 @@ def get_experiment():
 
     # Stimulus: Visual stimulus or Dummy stimulus (just prints to terminal)
     # Check for whether pygame loaded in stimulus module or not
-    if stimulus.pygame is not None:
-        stim = stimulus.VisualStimulus()
-    else:
-        stim = stimulus.DummyStimulus()
+#    if stimulus.pygame is not None:
+#        stim = stimulus.VisualStimulus()
+#    else:
+#        stim = stimulus.DummyStimulus()
+    stim = stimulus.LightBarStimulus(freq_Hz=4)
 
     # Behavior test: ypos > 75%
     def behavior_test(pos):
@@ -277,7 +279,7 @@ class Experiment(object):
         if self._sensors is not None:
             sensor_vals = self._sensors.get_latest()
         else:
-            sensor_vals = {'temp': -1.0, 'lux': -1}
+            sensor_vals = {'time': datetime.datetime.now(), 'temp': -1.0, 'lux': -1}
 
         # Record data
         data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
