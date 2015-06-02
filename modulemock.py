@@ -1,4 +1,5 @@
 class Mockclass(object):
+    '''A class that allows you to call any method in it, resulting in printing the exact call to stdout.'''
     @staticmethod
     def __getattribute__(attr):
         def _mockmethod(*args, **kwargs):
