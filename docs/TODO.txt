@@ -12,17 +12,27 @@ Enclosure
 FishWeb / Analyze
 -----------------
 
+Automatically calculate / report the following outcomes:
+
+  A. latency to enter upper half (time of first entry into top half)
+  B. time spent in upper half by minute
+  C. # of transitions to upper half by minute
+  D. # of freezing bouts (no movement for more than 2 seconds) by minute
+  E. total time spent freezing by minute
+  F. total distance traveled by minute
+  G. average velocity by minute
+
 Compute general statistics to be used for identifying startle response
 and/or behavior change in "absolute" darkness:
- - Mean, median, max of:
-   - x position
-   - y position
-   - speed
-   - x speed
-   - y speed
-   - acceleration magnitude
-   - x acceleration magnitude
-   - y acceleration magnitude
+  - Mean, median, max of:
+    - x position
+    - y position
+    - speed
+    - x speed
+    - y speed
+    - acceleration magnitude
+    - x acceleration magnitude
+    - y acceleration magnitude
 
 
 FishBox [.py]
