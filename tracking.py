@@ -279,7 +279,10 @@ class Stream(object):
 
     @staticmethod
     def _v4l2_call(params):
-        subprocess.call(["v4l2-ctl"] + params.split())
+        try:
+            subprocess.call(["v4l2-ctl"] + params.split())
+        except OSError:
+            logging.warning("Unable to call v4l2-ctl; video stream may not be configured correctly.")
 
     def _cam_setup(self, source, w, h, fps, exposure):
         try:

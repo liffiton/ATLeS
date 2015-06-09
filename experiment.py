@@ -15,7 +15,7 @@ import stimulus
 
 try:
     import sensors
-except:
+except ImportError:
     sensors = None
 
 
