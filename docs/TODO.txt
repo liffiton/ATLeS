@@ -4,7 +4,10 @@ TODOs and Plans
 
 Enclosure
 ---------
+ - Holes for tank feet for set, consistent tank location
  - Secure, wiggleless mount for camera
+
+Wait on these until we start looking at monitor stimulus again:
  - Integrate frameless LCD display
  ? Add cable routing for HDMI, etc.
 
@@ -12,7 +15,7 @@ Enclosure
 FishWeb / Analyze
 -----------------
 
-Automatically calculate / report the following outcomes:
+Automatically calculate / report the following outcomes (all per-minute, also get overall):
 
   A. latency to enter upper half (time of first entry into top half)
   B. time spent in upper half by minute
