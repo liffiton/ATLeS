@@ -4,6 +4,7 @@ import logging
 import os
 import signal
 import sys
+import time
 
 import experiment
 import tracking
@@ -19,7 +20,7 @@ def num(s):
 def get_conf(config_filename):
     '''Read a configuration file.'''
     if not os.path.isfile(config_filename):
-        logging.error("Configuration file not found: %s" % config_filename)
+        logging.error("Configuration file not found: %s", config_filename)
         sys.exit(1)
 
     parser = ConfigParser.RawConfigParser()
@@ -75,6 +76,47 @@ def get_args():
     return parser.parse_args()
 
 
+def init_logging(args, conf):
+    '''Initialize the logging system.  Uses argdir and id from args, adds 'trackfile' to conf
+       as a file object to which track data should be written.'''
+
+    # ensure log directory exists
+    if not os.path.exists(args.logdir):
+        os.makedirs(args.logdir)
+
+    # setup log files
+    filetimestamp = time.strftime("%Y%m%d-%H%M")
+    if args.id:
+        name = "%s-%s" % (filetimestamp, args.id)
+    else:
+        name = filetimestamp
+    trackfilename = "%s/%s-track.csv" % (args.logdir, name)
+    logfilename = "%s/%s.log" % (args.logdir, name)
+
+    # Setup the ROOT level logger to send to a log file and console both
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    fh = logging.FileHandler(filename=logfilename)
+    fh.setFormatter(
+        logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(message)s"))
+    sh = logging.StreamHandler()
+    sh.setFormatter(
+        logging.Formatter(fmt="[%(levelname)s] %(message)s"))
+    logger.addHandler(fh)
+    logger.addHandler(sh)
+
+    logging.info("Logging started.")
+
+    conf['trackfile'] = open(trackfilename, 'w')
+
+    # Record the setup in a -setup.txt file.
+    setupfilename = "%s/%s-setup.txt" % (args.logdir, name)
+    with open(setupfilename, 'w') as setupfile:
+        setupfile.write("Command line:\n    %s\n\n" % (' '.join(sys.argv)))
+        setupfile.write("Configuration file:\n")
+        conf['_parserobj'].write(setupfile)
+
+
 def sig_handler(signum, frame):
     if signum == signal.SIGALRM:
         logging.info("Terminating experiment after timeout.")
@@ -87,6 +129,7 @@ def sig_handler(signum, frame):
 def main():
     args = get_args()
     conf = get_conf(args.inifile)
+    init_logging(args, conf)
 
     if args.vidfile:
         stream = tracking.Stream(args.vidfile)

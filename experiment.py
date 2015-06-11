@@ -3,8 +3,6 @@ import collections
 import datetime
 import logging
 import numpy
-import os
-import sys
 import time
 
 import cv2
@@ -43,67 +41,6 @@ def get_experiment():
     return control, stim, behavior_test
 #
 ####################################################################
-
-
-class Logger(object):
-    def __init__(self, logdir, expid=None):
-        self._dir = logdir
-        self._id = expid
-
-        # ensure log directory exists
-        if not os.path.exists(self._dir):
-            os.makedirs(self._dir)
-
-        # setup log files
-        filetimestamp = time.strftime("%Y%m%d-%H%M")
-        if self._id:
-            self._name = "%s-%s" % (filetimestamp, self._id)
-        else:
-            self._name = filetimestamp
-        self._trackfilename = "%s/%s-track.csv" % (self._dir, self._name)
-        self._logfilename = "%s/%s.log" % (self._dir, self._name)
-
-        # Setup the ROOT level logger to send to a log file and console both
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        fh = logging.FileHandler(filename=self._logfilename)
-        fh.setFormatter(
-            logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(message)s"))
-        sh = logging.StreamHandler()
-        sh.setFormatter(
-            logging.Formatter(fmt="[%(levelname)s] %(message)s"))
-        logger.addHandler(fh)
-        logger.addHandler(sh)
-
-        logging.info("Logging started.")
-
-        self._trackfile = open(self._trackfilename, 'w')
-
-    def record_setup(self, args, conf):
-        setupfilename = "%s/%s-setup.txt" % (self._dir, self._name)
-        with open(setupfilename, 'w') as setupfile:
-            setupfile.write("Command line:\n    %s\n\n" % (' '.join(sys.argv)))
-            setupfile.write("Configuration file:\n")
-            conf['_parserobj'].write(setupfile)
-
-    def start_time(self):
-        self._start = time.time()
-
-    def write_data(self, data, frametime=None):
-        '''Write a piece of data to the log file.
-
-        Arguments:
-            data: String
-                The data to write (preferably a pre-formatted string, but it
-                will be converted to a string regardless).
-            frametime: Float
-                If the input stream is from a file, this can be used to specify
-                the time (from the start of the video) of the current frame.
-        '''
-        if frametime is None:
-            # use real time
-            frametime = time.time() - self._start
-        self._trackfile.write("%0.4f,%s" % (frametime, str(data)))
 
 
 class Watcher(object):
@@ -204,8 +141,6 @@ class Experiment(object):
         self._conf = conf
         self._args = args
         self._stream = stream
-        self._logger = Logger(args.logdir, args.id)
-        self._logger.record_setup(args, conf)
 
         # Tank bounds in pixel coordinates
         # NOTE: tank Y coordinate is inverted w.r.t. pixel coordinates, hence (1.0 - ...).
@@ -218,7 +153,7 @@ class Experiment(object):
         if self._stream.sourcetype == 'file':
             # Get frame count, fps for calculating frame times
             self._framecount, self._fps = self._stream.get_video_stats()
-            logging.info("Video file: %d frames, %d fps" % (self._framecount, self._fps))
+            logging.info("Video file: %d frames, %d fps". self._framecount, self._fps)
 
         # Create Watcher
         if self._args.watch:
@@ -230,7 +165,7 @@ class Experiment(object):
             self._sensors.begin()
         else:
             self._sensors = None
-            logging.warn("sensors module not loaded")
+            logging.warn("sensors module not loaded.")
 
         # Experiment setup
         self._control, self._stim, self._behavior_test = get_experiment()
@@ -253,6 +188,22 @@ class Experiment(object):
             self._proc = None
             self._track = None
 
+    def _write_data(self, data, frametime=None):
+        '''Write a piece of data to the log file.
+
+        Arguments:
+            data: String
+                The data to write (preferably a pre-formatted string, but it
+                will be converted to a string regardless).
+            frametime: Float
+                If the input stream is from a file, this can be used to specify
+                the time (from the start of the video) of the current frame.
+        '''
+        if frametime is None:
+            # use real time
+            frametime = time.time() - self._starttime
+        self._conf['trackfile'].write("%0.4f,%s" % (frametime, str(data)))
+
     def _do_tracking(self, frame, frame_num):
         # Process the frame (finds contours, centroids, and updates background subtractor)
         tank_crop = frame[self._ty1:self._ty2,self._tx1:self._tx2,:]
@@ -263,7 +214,7 @@ class Experiment(object):
         if frame_num < self._args.start_frame:
             return
         elif frame_num == self._args.start_frame:
-            logging.info("Tracking started at frame %d." % frame_num)
+            logging.info("Tracking started at frame %d.", frame_num)
 
         # Update tracker w/ latest set of centroids
         self._track.update(self._proc.centroids)
@@ -284,9 +235,9 @@ class Experiment(object):
         # Record data
         data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
         if self._stream.sourcetype == 'file':
-            self._logger.write_data(data, frametime=frame_num*1.0/self._fps)
+            self._write_data(data, frametime=frame_num*1.0/self._fps)
         else:
-            self._logger.write_data(data)
+            self._write_data(data)
 
         if status != 'lost' and self._behavior_test(pos_tank) and not self._args.nostim:
             # Only provide a stimulus if we know where the fish is
@@ -305,7 +256,7 @@ class Experiment(object):
         prevtime = time.time()
         frame_num = 0
 
-        self._logger.start_time()
+        self._starttime = time.time()
 
         while True:
             stim_msg = self._stim.msg_poll()
@@ -334,7 +285,7 @@ class Experiment(object):
             if frame_num % 100 == 0:
                 curtime = time.time()
                 frame_time = (curtime - prevtime) / 100
-                logging.info("%dms / frame : %dfps" % (1000*frame_time, 1/frame_time))
+                logging.info("%dms / frame : %dfps", 1000*frame_time, 1/frame_time)
                 prevtime = curtime
 
             if self._args.delay:

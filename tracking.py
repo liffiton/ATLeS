@@ -248,25 +248,25 @@ class Stream(object):
             # webcam
             self._video = self._cam_setup(source, w, h, fps, exposure)
             if self._video is None:
-                logging.error("Could not open video stream...\n")
+                logging.error("Could not open video stream.")
                 sys.exit(1)
             # try to set given parameters
             for key, value in params.items():
                 self._video.set(key, value)
                 newval = self._video.get(key)
                 if newval != value:
-                    logging.warning("Unable to set %s to %s, got %s." % (key, value, newval))
+                    logging.warning("Unable to set %s to %s, got %s.", key, value, newval)
             self.sourcetype = 'camera'
         elif os.path.isfile(source):
             # video file
             self._video = cv2.VideoCapture(source)
             self.sourcetype = 'file'
         else:
-            logging.error("Input file not found: %s\n" % source)
+            logging.error("Input file not found: %s", source)
             sys.exit(1)
 
         if not self._video.isOpened():
-            logging.error("Could not open video stream...\n")
+            logging.error("Could not open video stream.")
             sys.exit(1)
 
     def get_video_stats(self):
