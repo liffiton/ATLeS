@@ -202,12 +202,14 @@ class StimulusLightBar(object):
 
     def _update(self, newstate=None):
         if newstate is not None:
-            self._on = newstate
-        else:
+            # change state of light if newstate is different
+            if newstate != self._on:
+                self._on = newstate
+                wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 255 if self._on else 0)
+        elif self._active:
             # toggle
             self._on = not self._on
-
-        wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 255 if self._on else 0)
+            wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 255 if self._on else 0)
 
     def begin(self, conf):
         pass
