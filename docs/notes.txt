@@ -5,7 +5,8 @@ Fishypi raspi IP:
 New rpi B+:
  - 10.2.7.146  [in Mark's office]
  - 10.2.52.154 [in fishy room]
-
+New new rpi B+: (pi3)
+ - 10.2.7.148  [in Mark's office]
 
 Fish tank measurements:
  - Height w/ feet:   16.0cm

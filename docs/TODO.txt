@@ -48,6 +48,11 @@ and/or behavior change in "absolute" darkness:
 FishBox [.py]
 -------------
 
+Flashing Light Stimulus:
+ - At start, when not flashing, and at exit: set brightness to match lab ambient.
+   - Measure lab ambient w/ light sensor is set location
+   - Adjust lightbar w/ box closed until matched -- record value
+
 Big / Important:
  - Separate out experiment configuration from experiment.py
    - Somehow include in a .ini file or something else that can be saved alongside each experiment's data.
