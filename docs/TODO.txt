@@ -12,6 +12,13 @@ Wait on these until we start looking at monitor stimulus again:
  ? Add cable routing for HDMI, etc.
 
 
+Circuits
+--------
+ - Any way to assemble the circuits w/o soldering?  Currently, the headers have to be soldered on the sensors.
+   * Sensors sold w/ headers pre-soldered?
+   * Other ways of making connections to the 0.1" spaced holes?
+
+
 FishWeb / Analyze
 -----------------
 
