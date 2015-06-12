@@ -233,7 +233,10 @@ class Experiment(object):
             sensor_vals = {'time': datetime.datetime.now(), 'temp': -1.0, 'lux': -1}
 
         # Record data
-        data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
+	if pos_tank[0] is None:
+	    data = "%s,.,.,%d,%0.2f,%d\n" % (status, len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
+	else:
+	    data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
         if self._stream.sourcetype == 'file':
             self._write_data(data, frametime=frame_num*1.0/self._fps)
         else:

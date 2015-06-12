@@ -189,6 +189,8 @@ class StimulusLightBar(object):
         self._active = False  # is flashing activated?
         self._on = False      # is light bar on?
         self._interval = 1.0 / freq_Hz / 2  # half of the period
+        wiringpi2.wiringPiSetupGpio()
+        wiringpi2.pinMode(18,2)  # enable PWM mode on pin 18
 
     def _handle_command(self, cmd):
         if cmd is None:
@@ -205,11 +207,13 @@ class StimulusLightBar(object):
             # change state of light if newstate is different
             if newstate != self._on:
                 self._on = newstate
-                wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 255 if self._on else 0)
+                print self._on
+                wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 1024 if self._on else 0)
         elif self._active:
             # toggle
             self._on = not self._on
-            wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 255 if self._on else 0)
+            print self._on
+            wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 1024 if self._on else 0)
 
     def begin(self, conf):
         pass
