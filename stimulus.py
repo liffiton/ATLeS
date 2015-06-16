@@ -194,13 +194,15 @@ class StimulusLightBar(object):
 
     def _handle_command(self, cmd):
         if cmd is None:
+            if self._active and self._on:
+                # immediately deactivate
+                self._update(False)
             self._active = False
-            # immediately deactivate
-            self._update(False)
         else:
+            if not self._active and not self._on:
+                # immediately activate
+                self._update(True)
             self._active = True
-            # immediately activate
-            self._update(True)
 
     def _update(self, newstate=None):
         if newstate is not None:
