@@ -1,10 +1,11 @@
 import argparse
+import math
 import matplotlib.pyplot as plt
 from matplotlib import collections, gridspec, lines, patches
 import numpy as np
 
-_entry_wait = 1  # min seconds between counted entries to top
-_freeze_min_time = 1  # min seconds to count lack of motion as a "freeze"
+_entry_wait = 2  # min seconds between counted entries to top
+_freeze_min_time = 2  # min seconds to count lack of motion as a "freeze"
 _freeze_max_speed = 0.1  # maximum speed to still consider a "freeze"
 
 
@@ -77,66 +78,64 @@ class Grapher(object):
 
         movement = np.matrix([dx,dy])
         try:
-            dist = np.linalg.norm(movement, axis=0)
+            self._dist = np.linalg.norm(movement, axis=0)
         except TypeError:
             # older version of numpy w/o axis argument
-            dist = map(np.linalg.norm, np.transpose(movement))
-        speed = np.concatenate( ([0], dist[1:] / dt[1:]) )  # ignore invalid 0 entry in dt
-        theta = np.arctan2(dy, dx)  # reversed params are correct for numpy.arctan2
-        #dtheta = np.gradient(theta)
-        #angular_velocity = dtheta / dt
+            self._dist = map(np.linalg.norm, np.transpose(movement))
+        self._speed = np.concatenate( ([0], self._dist[1:] / dt[1:]) )  # ignore invalid 0 entry in dt
+        self._theta = np.arctan2(dy, dx)  # reversed params are correct for numpy.arctan2
+        #self._dtheta = np.gradient(theta)
+        #self._angular_velocity = dtheta / dt
 
         # produce boolean arrays
-        valid = (status != 'lost') & (np.roll(status, 1) != 'lost')  # valid if this index *and* previous are both not 'lost'
-        lost = status == 'lost'
-        missing = status == 'missing'
-        in_top = valid & (y > 0.5)
-        in_left25 = valid & (x < 0.25)
-        in_right25 = valid & (x > 0.75)
-        frozen = valid & (speed < _freeze_max_speed)
+        self._valid = (status != 'lost') & (np.roll(status, 1) != 'lost')  # valid if this index *and* previous are both not 'lost'
+        self._lost = status == 'lost'
+        self._missing = status == 'missing'
+        self._in_top = (y > 0.5)
+        self._in_bottom = (y <= 0.5)
+        self._in_left25 = (x < 0.25)
+        self._in_right25 = (x > 0.75)
+        self._frozen = (self._speed < _freeze_max_speed)
 
         # setup internal data
         self._len = len(time)
         self._time = time
         self._dt = dt
-        self._theta = theta
-        self._dist = dist
-        self._speed = speed
-        self._valid = valid
-        self._lost = lost
-        self._missing = missing
-        self._frozen = frozen
-        self._in_top = in_top
-        self._in_left25 = in_left25
-        self._in_right25 = in_right25
         self._x = x
         self._dx = dx
         self._y = y
         self._dy = dy
         self._numpts = numpts
 
-    def get_stats(self):
-        valid_count = np.sum(self._valid)
+    @property
+    def len_minutes(self):
+        return int(math.ceil(self._time[-1] / 60.0))
 
-        dist_total = np.sum(self._dist[self._valid])
-        time_total = np.sum(self._dt[self._valid])
+    def get_stats(self, minute=None):
+        if minute is not None:
+            selected = self._valid & (self._time > minute*60) & (self._time < (minute+1)*60)
+        else:
+            selected = self._valid
 
-        frozen_starts, frozen_lens = self._groups_where(self._frozen)
+        valid_count = np.sum(selected)
+
+        dist_total = np.sum(self._dist[selected])
+        time_total = np.sum(self._dt[selected])
+
+        frozen_starts, frozen_lens = self._groups_where(self._frozen & selected)
         freeze_count, freeze_time, _ = self._sum_runs(frozen_starts, frozen_lens, min_runlength=_freeze_min_time)
 
-        left25_starts, left25_lens = self._groups_where(self._in_left25)
+        left25_starts, left25_lens = self._groups_where(self._in_left25 & selected)
         left25_count, left25_time, left25_dist = self._sum_runs(left25_starts, left25_lens)
 
-        right25_starts, right25_lens = self._groups_where(self._in_right25)
+        right25_starts, right25_lens = self._groups_where(self._in_right25 & selected)
         right25_count, right25_time, right25_dist = self._sum_runs(right25_starts, right25_lens)
 
-        top_starts, top_lens = self._groups_where(self._in_top)
+        top_starts, top_lens = self._groups_where(self._in_top & selected)
         top_count, top_time, top_dist = self._sum_runs(top_starts, top_lens)
 
-        #bottom_starts, bottom_lens = self._groups_where(y < 0.5)
-        #bottom_count, bottom_time, bottom_dist = self._sum_runs(bottom_starts, bottom_lens)
-        bottom_time = time_total - top_time
-        bottom_dist = dist_total - top_dist
+        bottom_starts, bottom_lens = self._groups_where(self._in_bottom & selected)
+        bottom_count, bottom_time, bottom_dist = self._sum_runs(bottom_starts, bottom_lens)
 
         # TODO:  cur_turn_time = 0
         # count erratic movements
@@ -146,20 +145,22 @@ class Grapher(object):
 
         stats = {}
 
-        stats["#Datapoints"] = len(self._valid)
-        stats["#Valid"] = valid_count
-        stats["%Valid datapoints"] = valid_count / float(len(self._valid))
-        stats["Total time (sec)"] = self._time[-1]
-        stats["Valid time (sec)"] = time_total
+        if minute is None:
+            stats["#Datapoints"] = len(self._valid)
+            stats["#Valid"] = valid_count
+            stats["%Valid datapoints"] = valid_count / float(len(self._valid))
+            stats["Total time (sec)"] = self._time[-1]
+            stats["Valid time (sec)"] = time_total
+
         stats["Total distance traveled (?)"] = dist_total
-        stats["Avg. x coordinate"] = np.mean(self._x[self._valid])
-        stats["Avg. y coordinate"] = np.mean(self._y[self._valid])
+        stats["Avg. x coordinate"] = np.mean(self._x[selected])
+        stats["Avg. y coordinate"] = np.mean(self._y[selected])
         stats["Avg. speed (?/sec)"] = dist_total / time_total
-        stats["Avg. x speed (?/sec)"] = np.sum(np.abs(self._dx[self._valid])) / time_total
-        stats["Avg. y speed (?/sec)"] = np.sum(np.abs(self._dy[self._valid])) / time_total
+        stats["Avg. x speed (?/sec)"] = np.sum(np.abs(self._dx[selected])) / time_total
+        stats["Avg. y speed (?/sec)"] = np.sum(np.abs(self._dy[selected])) / time_total
         stats["#Entries to top"] = top_count
         if top_count:
-            stats["Time of first entry (sec)"] = self._time[top_starts[0]]
+            stats["Time of first top entry (sec)"] = self._time[top_starts[0]]
         stats["Time in top (sec)"] = top_time
         stats["Time in bottom (sec)"] = bottom_time
         if bottom_time:
@@ -177,6 +178,9 @@ class Grapher(object):
             stats["Total time frozen (sec)"] = freeze_time
             stats["Avg. time per freeze (sec)"] = freeze_time / freeze_count
             stats["Freeze frequency (per min)"] = 60.0*(freeze_count / time_total)
+
+        if minute is not None:
+            stats = {"Minute %02d - %s" % (minute, key): value for key, value in stats.items()}
 
         return stats
 

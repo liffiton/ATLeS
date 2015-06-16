@@ -73,11 +73,14 @@ def post_stats():
     stats = []
     all_keys = set()
     for log in logs:
+        curstats = {}
+        curstats['Log file'] = log
         g = analyze.Grapher()
         g.load(log)
-        curstats = g.get_stats()
-        all_keys.update(curstats.keys())
-        curstats['Log file'] = log
+        curstats.update(g.get_stats())
+        for i in range(g.len_minutes):
+            curstats.update(g.get_stats(minute=i))
+            all_keys.update(curstats.keys())
         stats.append(curstats)
     for i in range(len(stats)):
         stat = stats[i]
