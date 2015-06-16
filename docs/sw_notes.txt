@@ -26,8 +26,6 @@ For the i2c interface (for sensors), two modules are required: i2c-bcm2708 and i
 
 To have the modules loaded automatically on boot, add each to /etc/modules, one per line:
 
-In order to use the camera via v4l, one must first load a module:
-
   bcm2835-v4l2
   i2c-bcm2708
   i2c-dev
