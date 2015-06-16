@@ -6,34 +6,37 @@ Python Package dependencies
 
 fishbox.py:
   cv2         (for OpenCV; see opencv_notes.txt)
-  smbus       (for reading sensor values)
-  wiringpi2   (for controlling light bar via PWM)
+  smbus       (for reading sensor values; 'sudo apt-get install python-smbus')
+  wiringpi2   (for controlling light bar via PWM; 'sudo pip install wiringpi2')
 
 fishweb.py:
-  bottle
-  matplotlib
-  python-daemon
+  bottle         ('sudo pip install bottle')
+  matplotlib     ('sudo pip install matplotlib')
+  python-daemon  ('sudo pip install python-daemon')
+
+Note: 'pip install matplotlib' fails on a stock RPi B+ with an out-of-memory error.  It can be corrected by adding swap (http://stackoverflow.com/a/29467260), but it should not be an issue on RPi 2 w/ 1GB RAM.
 
 
 Runtime dependencies
 --------------------
 
+To use the camera via v4l, the bcm2835-v4l2 module must be loaded.
+
+For the i2c interface (for sensors), two modules are required: i2c-bcm2708 and i2c-dev
+
+To have the modules loaded automatically on boot, add each to /etc/modules, one per line:
+
 In order to use the camera via v4l, one must first load a module:
 
+  bcm2835-v4l2
+  i2c-bcm2708
+  i2c-dev
+
+Alternatively, modprobe can be used to load them manually at any time:
+
   sudo modprobe bcm2835-v4l2
-
-Then, OpenCV's v4l2 support works reasonably well (though see Framerate below).
-
-Using the i2c interface also requires a module:
-
   sudo modprobe i2c-bcm2708
   sudo modprobe i2c-dev
-
-Alternatively, you can add the modules to /etc/modules, one per line:
-
-   bcm2835-v4l2
-   i2c-bcm2708
-   i2c-dev
 
 
 Framerate
