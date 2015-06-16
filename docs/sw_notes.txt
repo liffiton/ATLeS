@@ -20,20 +20,22 @@ Note: 'pip install matplotlib' fails on a stock RPi B+ with an out-of-memory err
 Runtime dependencies
 --------------------
 
+First, both the camera and i2c need to be enabled using raspi-config.  Run
+'sudo raspi-config' and enable both (i2c is under "advanced options").
+
 To use the camera via v4l, the bcm2835-v4l2 module must be loaded.
 
-For the i2c interface (for sensors), two modules are required: i2c-bcm2708 and i2c-dev
+For the i2c interface (for sensors), the i2c-dev module must be loaded.
 
-To have the modules loaded automatically on boot, add each to /etc/modules, one per line:
+To have the modules loaded automatically on boot, add each to /etc/modules, one
+per line:
 
   bcm2835-v4l2
-  i2c-bcm2708
   i2c-dev
 
 Alternatively, modprobe can be used to load them manually at any time:
 
   sudo modprobe bcm2835-v4l2
-  sudo modprobe i2c-bcm2708
   sudo modprobe i2c-dev
 
 
