@@ -7,12 +7,14 @@ import datetime
 import time
 
 
-class SensorsHelper(object):
-    def __init__(self, pipe, intervalsec=1):
-        self._pipe = pipe
-        self._interval = intervalsec
+class Sensors(object):
+    ''' Class for reading and reporting sensor values '''
+    def __init__(self, read_interval=1):
+        self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=True)
+        self._read_interval = read_interval
+        self._readings = None
 
-    def sensors_thread(self):
+    def _sensors_thread(self):
         tsl = TSL2561(debug=0)
         mcp = MCP9808(debug=0)
         #tsl.set_gain(16)
@@ -26,26 +28,18 @@ class SensorsHelper(object):
             lux = tsl.read_lux()
             #print("%d,%d = %d lux" % (full, ir, lux))
 
-            self._pipe.send({'time': datetime.datetime.now(), 'temp': temp, 'lux': lux})
+            self._child_pipe.send({'time': datetime.datetime.now(), 'temp': temp, 'lux': lux})
 
             # check for end signal
-            while self._pipe.poll():
-                val = self._pipe.recv()
+            while self._child_pipe.poll():
+                val = self._child_pipe.recv()
                 if val == 'end':
                     return
 
-            time.sleep(self._interval)
-
-
-class Sensors(object):
-    ''' Class for reading and reporting sensor values '''
-    def __init__(self):
-        self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=True)
-        self._helper = SensorsHelper(self._child_pipe, intervalsec=1)
-        self._readings = None
+            time.sleep(self._read_interval)
 
     def begin(self):
-        self._p = multiprocessing.Process(target=self._helper.sensors_thread)
+        self._p = multiprocessing.Process(target=self._sensors_thread)
         self._p.start()
         atexit.register(self.end)
         # Get an initial reading (so get_latest() is guaranteed to return something)
