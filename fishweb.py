@@ -93,6 +93,7 @@ def post_stats():
             else:
                 stat[k] = ""
 
+    all_keys.remove('Log file')  # will be added as first column
     all_keys = sorted(list(all_keys))
     all_keys[:0] = ['Log file']  # prepend 'Log file' header
 
