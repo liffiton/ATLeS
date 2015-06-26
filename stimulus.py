@@ -19,6 +19,7 @@ except ImportError:
 
 
 _LIGHT_PWM_PIN = 18  # pin for PWM control of visible light bar
+_AMBIENT_LIGHT_PWM = 335  # value that produces ~70lux in a quick test (with enclosure fully opaque)
 
 
 class StimulusBase(object):
@@ -201,7 +202,7 @@ class StimulusLightBar(object):
         wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 1023)
 
     def _light_ambient(self):
-        wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 50)
+        wiringpi2.pwmWrite(_LIGHT_PWM_PIN, _AMBIENT_LIGHT_PWM)
 
     def _handle_command(self, cmd):
         if cmd is None:
