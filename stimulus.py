@@ -19,7 +19,7 @@ except ImportError:
 
 
 _LIGHT_PWM_PIN = 18  # pin for PWM control of visible light bar
-_AMBIENT_LIGHT_PWM = 335  # value that produces ~70lux in a quick test (with enclosure fully opaque)
+_AMBIENT_LIGHT_PWM = 550  # value that produces ~70lux in a quick test (with enclosure fully opaque and board pushed into corner)
 
 
 class StimulusBase(object):
