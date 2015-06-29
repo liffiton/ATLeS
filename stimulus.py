@@ -3,6 +3,7 @@ import atexit
 import multiprocessing
 import os
 import signal
+import sys
 import time
 
 try:
@@ -20,6 +21,10 @@ except ImportError:
 
 _LIGHT_PWM_PIN = 18  # pin for PWM control of visible light bar
 _AMBIENT_LIGHT_PWM = 550  # value that produces ~70lux in a quick test (with enclosure fully opaque and board pushed into corner)
+
+
+class NotRootError(RuntimeError):
+    pass
 
 
 class StimulusBase(object):
@@ -190,6 +195,12 @@ class StimulusLightBar(object):
         self._active = False  # is flashing activated?
         self._on = False      # is light bar on?
         self._interval = 1.0 / freq_Hz / 2  # half of the period
+
+        # must be root to access GPIO, and wiringpi itself crashes in a way that
+        # leaves the camera (setup in tracking.py) inaccessible until reboot.
+        if os.geteuid() != 0:
+            raise NotRootError("%s must be run with sudo." % sys.argv[0])
+
         wiringpi2.wiringPiSetupGpio()
         wiringpi2.pinMode(18,2)  # enable PWM mode on pin 18
         self._light_ambient()
