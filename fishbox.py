@@ -57,9 +57,9 @@ def get_args():
     parser.add_argument('-w', '--watch', action='store_true',
                         help='create a window to see the camera view and tracking information')
     parser.add_argument('-W', '--width', type=int, default=192,
-                        help='video capture resolution width (default: 160)')
+                        help='video capture resolution width (default: 192)')
     parser.add_argument('-H', '--height', type=int, default=144,
-                        help='video capture resolution height (default: 120)')
+                        help='video capture resolution height (default: 144)')
     parser.add_argument('--logdir', type=str, default='./logs',
                         help='directory for storing log/data files (default: ./logs)')
     parser.add_argument('--fps', type=int, default=10,
