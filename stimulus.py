@@ -3,6 +3,7 @@ import atexit
 import multiprocessing
 import os
 import signal
+import sys
 import time
 
 try:
@@ -19,6 +20,11 @@ except ImportError:
 
 
 _LIGHT_PWM_PIN = 18  # pin for PWM control of visible light bar
+_AMBIENT_LIGHT_PWM = 550  # value that produces ~70lux in a quick test (with enclosure fully opaque and board pushed into corner)
+
+
+class NotRootError(RuntimeError):
+    pass
 
 
 class StimulusBase(object):
@@ -189,36 +195,52 @@ class StimulusLightBar(object):
         self._active = False  # is flashing activated?
         self._on = False      # is light bar on?
         self._interval = 1.0 / freq_Hz / 2  # half of the period
+
+        # must be root to access GPIO, and wiringpi itself crashes in a way that
+        # leaves the camera (setup in tracking.py) inaccessible until reboot.
+        if os.geteuid() != 0:
+            raise NotRootError("%s must be run with sudo." % sys.argv[0])
+
         wiringpi2.wiringPiSetupGpio()
         wiringpi2.pinMode(18,2)  # enable PWM mode on pin 18
+        self._light_ambient()
+        atexit.register(self._light_off)
+
+    def _light_off(self):
+        wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 0)
+
+    def _light_on(self):
+        wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 1023)
+
+    def _light_ambient(self):
+        wiringpi2.pwmWrite(_LIGHT_PWM_PIN, _AMBIENT_LIGHT_PWM)
 
     def _handle_command(self, cmd):
         if cmd is None:
-            if self._active and self._on:
-                # immediately deactivate
-                self._update(False)
             self._active = False
+            self._on = False
         else:
-            if not self._active and not self._on:
-                # immediately activate
-                self._update(True)
             self._active = True
 
-    def _update(self, newstate=None):
-        if newstate is not None:
-            # change state of light if newstate is different
-            if newstate != self._on:
-                self._on = newstate
-                wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 1023 if self._on else 0)
-        elif self._active:
+    def _update(self):
+        if self._active:
             # toggle
             self._on = not self._on
-            wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 1023 if self._on else 0)
+            if self._on:
+                self._light_on()
+            else:
+                self._light_off()
+        else:
+            self._light_ambient()
 
     def begin(self, conf):
         pass
 
     def stimulus_thread(self):
+        # ignore signals that will be handled by parent
+        signal.signal(signal.SIGALRM, signal.SIG_IGN)
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+
         while True:
             # check pipe for commands and implement delay between flashes
             msg_ready = self._pipe.poll(self._interval)
