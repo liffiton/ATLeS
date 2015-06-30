@@ -1,6 +1,6 @@
 
 "Production" RPi 2 B+:
- - ???.???.???.???
+ - 10.2.52.203 [in lab]
 "Dev" RPi 2 B+ (pi3):
  - 10.2.6.248  [in Mark's office]
 
