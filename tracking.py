@@ -15,7 +15,7 @@ class FrameProcessor(object):
         #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
 
         # varThreshold: higher values detect fewer/smaller changed regions
-        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=3, bShadowDetection=False)
+        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=4, bShadowDetection=False)
 
         # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
 
