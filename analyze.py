@@ -59,7 +59,8 @@ class Grapher(object):
             infile,
             delimiter=',',
             unpack=True,
-            dtype={'names': ('time','status','x','y','numpts'), 'formats': ('f','S16','f','f','d')}
+            dtype={'names': ('time','status','x','y','numpts'), 'formats': ('f','S16','f','f','d')},
+            converters={2: lambda s: float(s) if s != '.' else -1, 3: lambda s: float(s) if s != '.' else -1}
         )
 
         # calculate derivatives and other derived values
