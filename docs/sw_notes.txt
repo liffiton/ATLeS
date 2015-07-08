@@ -11,8 +11,9 @@ fishbox.py:
 
 fishweb.py:
   bottle         ('sudo pip install bottle')
-  matplotlib     ('sudo pip install matplotlib')
   python-daemon  ('sudo pip install python-daemon')
+  matplotlib     ('sudo pip install matplotlib' -- the package available via apt-get is too old)
+  numpy          ('sudo pip install numpy' -- the package available via apt-get is too old)
 
 Note: 'pip install matplotlib' fails on a stock RPi B+ with an out-of-memory error.  It can be corrected by adding swap (http://stackoverflow.com/a/29467260), but it should not be an issue on RPi 2 w/ 1GB RAM.
 
