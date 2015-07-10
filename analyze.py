@@ -82,7 +82,7 @@ class Grapher(object):
             self._dist = np.linalg.norm(movement, axis=0)
         except TypeError:
             # older version of numpy w/o axis argument
-            self._dist = map(np.linalg.norm, np.transpose(movement))
+            self._dist = np.array(map(np.linalg.norm, np.transpose(movement)))
         self._speed = np.concatenate( ([0], self._dist[1:] / dt[1:]) )  # ignore invalid 0 entry in dt
         self._theta = np.arctan2(dy, dx)  # reversed params are correct for numpy.arctan2
         #self._dtheta = np.gradient(theta)
