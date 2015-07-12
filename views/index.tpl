@@ -4,20 +4,28 @@
     <title>Fishybox Log Analyzer/Viewer</title>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css"> -->
-    <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script> -->
+    <style>
+        tr.undo_row {
+            display: none;  /* default, will be overridden to display */
+            color: #999999;
+            background: #eeeeee;
+        }
+    </style>
     <script type="text/javascript">
-        function do_post(path, query, check) {
+        function do_post(url, query, check) {
             if (check) {
                 var go = confirm("Are you sure?  (" + check + ")");
                 if (! go) return;
             }
             var form = document.createElement('form');
             form.setAttribute('method', 'post');
-            form.setAttribute('action', path + "?" + query);
+            form.setAttribute('action', url + "?" + query);
             form.style.display = 'hidden';
             document.body.appendChild(form)
             form.submit();
+        }
+        function async_post(url, query) {
+            $.post(url + "?" + query);
         }
 
         // keep track of selected tracks
@@ -67,6 +75,18 @@
             var sels = Object.keys(selection).sort();
             do_post('/stats/', 'csv=true&logs=' + sels.join('|'));
         }
+
+        function do_archive(path, index) {
+            async_post('/archive/', 'path=' + path);
+            $("#row_" + index + "_undo").show();
+            $("#row_" + index).hide();
+        }
+
+        function do_unarchive(path, index) {
+            async_post('/unarchive/', 'path=' + path);
+            $("#row_" + index).show();
+            $("#row_" + index + "_undo").hide();
+        }
     </script>
 </head>
 <body>
@@ -88,8 +108,20 @@
                 <th>Actions</th>
             </tr>
             </thead>
-        %for path, points, img_count in tracks:
-            <tr>
+        %for index, path, points, img_count in tracks:
+            <tr class="undo_row" id="row_{{index}}_undo">
+                <td></td>
+                <td>{{path}}</td>
+                <td><i>Archived</i></td>
+                <td></td>
+                <td>
+                    <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{path}}', {{index}});" title="Unarchive">
+                        <span class="glyphicon glyphicon-log-in"></span>
+                        Undo archive
+                    </button>
+                </td>
+            </tr>
+            <tr id="row_{{index}}">
                 <td>
                 %if img_count:
                     <button type="button" class="btn btn-default btn-xs text-muted selectbutton" data-path='{{path}}' onclick="toggle_select(this);" title='Select'>
@@ -105,6 +137,7 @@
                 %end
                 </td>
                 <td>
+                    %if points > 0:
                     <button type="button" class="btn btn-default btn-xs" onclick="do_post('/analyze/', 'path={{path}}');">
                         %if img_count:
                         <span class="glyphicon glyphicon-refresh"></span>
@@ -114,7 +147,8 @@
                         Analyze
                         %end
                     </button>
-                    <button type="button" class="btn btn-xs btn-danger" onclick="do_post('/archive/', 'path={{path}}', 'This is difficult to undo.');" title='Archive'>
+                    %end
+                    <button type="button" class="btn btn-xs btn-danger" onclick="do_archive('{{path}}', {{index}});" title='Archive'>
                         <span class="glyphicon glyphicon-log-out"></span>
                     </button>
                 </td>

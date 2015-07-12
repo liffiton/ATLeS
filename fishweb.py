@@ -48,14 +48,14 @@ def _mkdir(path):
 @view('index')
 def index():
     tracks = []
-    for track in _tracks():
+    for index, track in enumerate(_tracks()):
         with open(track) as f:
             i = -1  # so lines = 0 if file is empty
             for i, _ in enumerate(f):
                 pass
             lines = i+1
         name = track.split('/')[-1]
-        tracks.append( (track, lines, _imgs(name)) )
+        tracks.append( (index, track, lines, _imgs(name)) )
     return dict(tracks=tracks)
 
 
@@ -167,11 +167,19 @@ def post_compare():
 def post_archive():
     logname = request.query.path
     name = logname.split('/')[-1].split('-track')[0]
+    assert(name != '')
     allfiles = glob.glob(_LOGDIR + "%s*" % name)
     for f in allfiles:
         shutil.move(f, _ARCHIVEDIR)
 
-    redirect("/")
+
+@post('/unarchive/')
+def post_unarchive():
+    logname = request.query.path
+    name = logname.split('/')[-1].split('-track')[0]
+    allfiles = glob.glob(_ARCHIVEDIR + "%s*" % name)
+    for f in allfiles:
+        shutil.move(f, _LOGDIR)
 
 
 @route('/logs/<filename:path>')
