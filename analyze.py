@@ -89,9 +89,9 @@ class Grapher(object):
         #self._angular_velocity = dtheta / dt
 
         # produce boolean arrays
-        self._valid = (status != 'lost') & (np.roll(status, 1) != 'lost')  # valid if this index *and* previous are both not 'lost'
-        self._lost = status == 'lost'
-        self._missing = status == 'missing'
+        self._valid = (status != 'lost') & (status != 'init') & (np.roll(status, 1) != 'lost') & (np.roll(status, 1) != 'init')  # valid if this index *and* previous are both not 'lost' or 'init'
+        self._lost = (status == 'lost') | (status == 'init')
+        self._missing = (status == 'missing')
         self._in_top = (y > 0.5)
         self._in_bottom = (y <= 0.5)
         self._in_left25 = (x < 0.25)
