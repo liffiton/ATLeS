@@ -10,6 +10,9 @@
             color: #999999;
             background: #eeeeee;
         }
+        td.actionbuttons {
+            white-space: nowrap;  /* keep all buttons on one line */
+        }
     </style>
     <script type="text/javascript">
         function do_post(url, query, check) {
@@ -93,8 +96,8 @@
 <div class="container">
 <h1>Fishybox Log Analyzer/Viewer</h1>
 <div class="row">
-    <div class="col-md-8">
-        <table class="table table-hover" style="max-width: 700px;">
+    <div class="col-lg-10 col-md-12 col-sm-12">
+        <table class="table table-hover">
             <thead>
             <tr>
                 <th>
@@ -103,7 +106,7 @@
                     </button>
                 </th>
                 <th>Log file</th>
-                <th># Points</th>
+                <th>Points</th>
                 <th>Plots</th>
                 <th>Actions</th>
             </tr>
@@ -112,8 +115,7 @@
             <tr class="undo_row" id="row_{{index}}_undo">
                 <td></td>
                 <td>{{path}}</td>
-                <td><i>Archived</i></td>
-                <td></td>
+                <td colspan=2><i>Archived</i></td>
                 <td>
                     <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{path}}', {{index}});" title="Unarchive">
                         <span class="glyphicon glyphicon-log-in"></span>
@@ -136,7 +138,7 @@
                     <a href="/view/{{path}}">View</a>
                 %end
                 </td>
-                <td>
+                <td class="actionbuttons">
                     %if points > 0:
                     <button type="button" class="btn btn-default btn-xs" onclick="do_post('/analyze/', 'path={{path}}');">
                         %if img_count:
