@@ -3,6 +3,7 @@ import collections
 import datetime
 import logging
 import numpy
+import random
 import time
 
 import cv2
@@ -175,6 +176,14 @@ class Experiment(object):
         tank_height = self._ty2 - self._ty1
         self._track = tracking.SimpleTracker(w=tank_width, h=tank_height)
 
+        # Determine whether stimulus is enabled for this run
+        self._dostim = True
+        if self._args.nostim:
+            self._dostim = False
+        elif self._args.randstim:
+            self._dostim = random.choice([True, False])
+            logging.info("--randstim selected; chose stimulus %s." % ("ENABLED" if self._dostim else "DISABLED"))
+
         # For measuring status percentages
         self._statuses = collections.defaultdict(int)
 
@@ -236,15 +245,12 @@ class Experiment(object):
         else:
             self._write_data(data)
 
-        if status != 'lost' and self._behavior_test(pos_tank) and not self._args.nostim:
+        if status != 'lost' and self._behavior_test(pos_tank) and self._dostim:
             # Only provide a stimulus if we know where the fish is
             # and the behavior test for that position says we should.
             self._control.add_hit(str(pos_tank))
             response = self._control.get_response()
-            if not self._args.nostim:
-                self._stim.show(response)
-            else:
-                self._stim.show(None)
+            self._stim.show(response)
         else:
             self._stim.show(None)
 
