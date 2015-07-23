@@ -52,7 +52,7 @@ class Watcher(object):
     YELLOW = (0, 255, 255, 255)
     STATUS_COLORS = {'acquired': GREEN, 'missing': BLUE, 'lost': RED, 'init': RED}
 
-    def __init__(self, tx1, tx2, ty1, ty2, tracking):
+    def __init__(self, tx1, tx2, ty1, ty2):
         # For mouse interaction
         self._mouse_on = False
         cv2.namedWindow("preview")
@@ -63,8 +63,6 @@ class Watcher(object):
         self._tx2 = tx2
         self._ty1 = ty1
         self._ty2 = ty2
-        # Record whether we have any tracking to display
-        self._tracking = tracking
 
     def mouse_callback(self, event, x, y, flags, *args):
         if event == 1:  # mouse down
@@ -83,45 +81,44 @@ class Watcher(object):
         BR = (tx2, ty2)
         cv2.rectangle(frame, TL, BR, self.RED)
 
-        if self._tracking:
-            # make an image for drawing tank-coord overlays
-            tank_overlay = numpy.zeros((ty2-ty1, tx2-tx1, 4), frame.dtype)
+        # make an image for drawing tank-coord overlays
+        tank_overlay = numpy.zeros((ty2-ty1, tx2-tx1, 4), frame.dtype)
 
-            # draw contours
-            for c_i in range(len(proc.contours)):
-                cv2.drawContours(tank_overlay, proc.contours, c_i, self.GREEN, 1)
+        # draw contours
+        for c_i in range(len(proc.contours)):
+            cv2.drawContours(tank_overlay, proc.contours, c_i, self.GREEN, 1)
 
-            # draw centroids
-            for pt in proc.centroids:
-                if pt == track.position_pixel:
-                    continue  # will draw this one separately
-                x = int(pt[0])
-                y = int(pt[1])
-                cv2.line(tank_overlay, (x-5,y), (x+5,y), self.YELLOW)
-                cv2.line(tank_overlay, (x,y-5), (x,y+5), self.YELLOW)
+        # draw centroids
+        for pt in proc.centroids:
+            if pt == track.position_pixel:
+                continue  # will draw this one separately
+            x = int(pt[0])
+            y = int(pt[1])
+            cv2.line(tank_overlay, (x-5,y), (x+5,y), self.YELLOW)
+            cv2.line(tank_overlay, (x,y-5), (x,y+5), self.YELLOW)
 
-            if track.status != 'init':
-                # draw a larger cross at the known/estimated position
-                color = self.STATUS_COLORS[track.status]
-                x,y = tuple(int(x) for x in track.position_pixel)
-                cv2.line(tank_overlay, (x-10,y), (x+10,y), color)
-                cv2.line(tank_overlay, (x,y-10), (x,y+10), color)
+        if track.status != 'init':
+            # draw a larger cross at the known/estimated position
+            color = self.STATUS_COLORS[track.status]
+            x,y = tuple(int(x) for x in track.position_pixel)
+            cv2.line(tank_overlay, (x-10,y), (x+10,y), color)
+            cv2.line(tank_overlay, (x,y-10), (x,y+10), color)
 
-                # draw a circle around the estimated position
-                #position = tuple(int(x) for x in track.position_pixel)
-                #cv2.circle(tank_overlay, position, 5, self.STATUS_COLORS[track.status])
+            # draw a circle around the estimated position
+            #position = tuple(int(x) for x in track.position_pixel)
+            #cv2.circle(tank_overlay, position, 5, self.STATUS_COLORS[track.status])
 
-                # draw a trace of the past k positions recorded
-                start = max(0, len(track.positions) - 200)
-                prevpt = track.positions[start]
-                for pt in track.positions[start:]:
-                    cv2.line(tank_overlay, prevpt, pt, self.YELLOW)
-                    prevpt = pt
+            # draw a trace of the past k positions recorded
+            start = max(0, len(track.positions) - 200)
+            prevpt = track.positions[start]
+            for pt in track.positions[start:]:
+                cv2.line(tank_overlay, prevpt, pt, self.YELLOW)
+                prevpt = pt
 
-            # draw the overlay into the frame at the tank's location
-            alpha = tank_overlay[:,:,3]
-            for c in 0,1,2:
-                frame[ty1:ty2,tx1:tx2,c] = frame[ty1:ty2,tx1:tx2,c]*(1-alpha/255.0) + tank_overlay[:,:,c]*(alpha/255.0)
+        # draw the overlay into the frame at the tank's location
+        alpha = tank_overlay[:,:,3]
+        for c in 0,1,2:
+            frame[ty1:ty2,tx1:tx2,c] = frame[ty1:ty2,tx1:tx2,c]*(1-alpha/255.0) + tank_overlay[:,:,c]*(alpha/255.0)
 
         # draw crosshair and frame coordinates at mouse
         if self._mouse_on:
@@ -157,7 +154,7 @@ class Experiment(object):
 
         # Create Watcher
         if self._args.watch:
-            self._watcher = Watcher(self._tx1, self._tx2, self._ty1, self._ty2, not self._args.notrack)
+            self._watcher = Watcher(self._tx1, self._tx2, self._ty1, self._ty2)
 
         # Create Sensors
         if sensors is not None:
@@ -170,23 +167,19 @@ class Experiment(object):
         # Experiment setup
         self._control, self._stim, self._behavior_test = get_experiment()
 
-        if not self._args.notrack:
-            # Frame processor
-            self._proc = tracking.FrameProcessor()
+        # Frame processor
+        self._proc = tracking.FrameProcessor()
 
-            # Tracking: Simple
-            tank_width = self._tx2 - self._tx1
-            tank_height = self._ty2 - self._ty1
-            self._track = tracking.SimpleTracker(w=tank_width, h=tank_height)
+        # Tracking: Simple
+        tank_width = self._tx2 - self._tx1
+        tank_height = self._ty2 - self._ty1
+        self._track = tracking.SimpleTracker(w=tank_width, h=tank_height)
 
-            # For measuring status percentages
-            self._statuses = collections.defaultdict(int)
+        # For measuring status percentages
+        self._statuses = collections.defaultdict(int)
 
-            # Setup printing stats on exit
-            atexit.register(self._print_stats)
-        else:
-            self._proc = None
-            self._track = None
+        # Setup printing stats on exit
+        atexit.register(self._print_stats)
 
     def _write_data(self, data, frametime=None):
         '''Write a piece of data to the log file.
@@ -233,10 +226,11 @@ class Experiment(object):
             sensor_vals = {'time': datetime.datetime.now(), 'temp': -1.0, 'lux': -1}
 
         # Record data
-	if pos_tank[0] is None:
-	    data = "%s,.,.,%d,%0.2f,%d\n" % (status, len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
-	else:
-	    data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
+        if pos_tank[0] is None:
+            data = "%s,.,.,%d,%0.2f,%d\n" % (status, len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
+        else:
+            data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
+
         if self._stream.sourcetype == 'file':
             self._write_data(data, frametime=frame_num*1.0/self._fps)
         else:
@@ -275,8 +269,7 @@ class Experiment(object):
 
             frame_num += 1
 
-            if not self._args.notrack:
-                self._do_tracking(frame, frame_num)
+            self._do_tracking(frame, frame_num)
 
             if self._args.watch:
                 self._watcher.draw_watch(frame, self._track, self._proc)

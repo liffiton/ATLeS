@@ -49,8 +49,6 @@ def get_args():
                         help='limit the experiment to TIME minutes (default: run forever / until stopped with CTRL-C)')
     parser.add_argument('--nostim', action='store_true',
                         help='disable all stimulus for this run')
-    parser.add_argument('--notrack', action='store_true',
-                        help='disable all tracking for this run (implies --nostim; useful for checking/aligning camera)')
     # TODO: separate frequent/useful arguments from infrequest/testing arguments (below
     parser.add_argument('--inifile', type=str, default='default.ini',
                         help="configuration file specifying physical setup (default: default.ini)")
