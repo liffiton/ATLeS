@@ -47,6 +47,8 @@ def get_args():
                         help='experiment ID (optional), added to output filenames')
     parser.add_argument('-t', '--time', type=int, default=None,
                         help='limit the experiment to TIME minutes (default: run forever / until stopped with CTRL-C)')
+    parser.add_argument('--time-from-trigger', action='store_true',
+                        help='when using -t/--time, only start counting the time from the moment the tracking first hits its trigger condition'),
     parser.add_argument('-w', '--watch', action='store_true',
                         help='create a window to see the camera view and tracking information')
     stimgroup = parser.add_mutually_exclusive_group(required=False)
@@ -119,7 +121,7 @@ def init_logging(args, conf):
         conf['_parserobj'].write(setupfile)
 
 
-def sig_handler(signum, frame):
+def sighandler(signum, frame):
     if signum == signal.SIGALRM:
         logging.info("Terminating experiment after timeout.")
     elif signum == signal.SIGINT:
@@ -143,14 +145,16 @@ def main():
 
     # setup timeout alarm if needed
     # NOTE: not cross-platform (SIGALRM not available on Windows)
-    if args.time:
-        signal.signal(signal.SIGALRM, sig_handler)
+    if args.time and sys.platform in ['cygwin', 'nt']:
+        logging.error("Timeout not available under Windows.  Timeout option ignored.")
+    elif args.time and not args.time_from_trigger:
+        signal.signal(signal.SIGALRM, sighandler)
         signal.alarm(args.time*60)
 
     # catch SIGINT (ctrl-C)
-    signal.signal(signal.SIGINT, sig_handler)
+    signal.signal(signal.SIGINT, sighandler)
 
-    exp = experiment.Experiment(conf, args, stream)
+    exp = experiment.Experiment(conf, args, stream, sighandler)
 
     exp.run()
 

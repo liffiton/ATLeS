@@ -4,6 +4,7 @@ import datetime
 import logging
 import numpy
 import random
+import signal
 import time
 
 import cv2
@@ -135,7 +136,7 @@ class Watcher(object):
 
 class Experiment(object):
 
-    def __init__(self, conf, args, stream):
+    def __init__(self, conf, args, stream, sighandler):
         self._conf = conf
         self._args = args
         self._stream = stream
@@ -189,6 +190,9 @@ class Experiment(object):
 
         # Setup printing stats on exit
         atexit.register(self._print_stats)
+
+        # Store signal handler for later time-setting
+        self._sighandler = sighandler
 
     def _write_data(self, data, frametime=None):
         '''Write a piece of data to the log file.
@@ -245,12 +249,17 @@ class Experiment(object):
         else:
             self._write_data(data)
 
-        if status != 'lost' and self._behavior_test(pos_tank) and self._dostim:
+        if status != 'lost' and self._behavior_test(pos_tank):
             # Only provide a stimulus if we know where the fish is
             # and the behavior test for that position says we should.
-            self._control.add_hit(str(pos_tank))
-            response = self._control.get_response()
-            self._stim.show(response)
+            if self._args.time and self._args.time_from_trigger:
+                signal.signal(signal.SIGALRM, self._sighandler)
+                signal.alarm(self._args.time*60)
+
+            if self._dostim:
+                self._control.add_hit(str(pos_tank))
+                response = self._control.get_response()
+                self._stim.show(response)
         else:
             self._stim.show(None)
 
