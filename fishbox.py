@@ -85,7 +85,7 @@ def init_logging(args, conf):
         os.makedirs(args.logdir)
 
     # setup log files
-    filetimestamp = time.strftime("%Y%m%d-%H%M")
+    filetimestamp = time.strftime("%Y%m%d-%H%M%S")
     if args.id:
         name = "%s-%s" % (filetimestamp, args.id)
     else:
