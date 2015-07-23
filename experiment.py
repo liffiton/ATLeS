@@ -153,7 +153,7 @@ class Experiment(object):
         if self._stream.sourcetype == 'file':
             # Get frame count, fps for calculating frame times
             self._framecount, self._fps = self._stream.get_video_stats()
-            logging.info("Video file: %d frames, %d fps". self._framecount, self._fps)
+            logging.info("Video file: %d frames, %d fps", self._framecount, self._fps)
 
         # Create Watcher
         if self._args.watch:
