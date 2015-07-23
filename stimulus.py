@@ -8,9 +8,11 @@ import time
 
 try:
     import wiringpi2
+    _wiringpi2_mocked = False
 except ImportError:
     from modulemock import Mockclass
     wiringpi2 = Mockclass()
+    _wiringpi2_mocked = True
 
 try:
     import pygame
@@ -192,28 +194,35 @@ class StimulusLightBar(object):
     '''Stimulus in the form of flashing the visible light LED bar at a given frequency.'''
     def __init__(self, pipe, freq_Hz):
         self._pipe = pipe
-        self._active = False  # is flashing activated?
-        self._on = False      # is light bar on?
+        self._active = False   # is flashing activated?
+        self._on = False       # is light bar on?
         self._interval = 1.0 / freq_Hz / 2  # half of the period
+        self._lightval = None  # stores current PWM value to avoid extraneous pwmWrites
 
         # must be root to access GPIO, and wiringpi itself crashes in a way that
         # leaves the camera (setup in tracking.py) inaccessible until reboot.
-        if os.geteuid() != 0:
+        if (not _wiringpi2_mocked) and (os.geteuid() != 0):
             raise NotRootError("%s must be run with sudo." % sys.argv[0])
 
         wiringpi2.wiringPiSetupGpio()
         wiringpi2.pinMode(18,2)  # enable PWM mode on pin 18
+
         self._light_ambient()
         atexit.register(self._light_off)
 
+    def _set_light(self, val):
+        if self._lightval != val:
+            wiringpi2.pwmWrite(_LIGHT_PWM_PIN, val)
+            self._lightval = val
+
     def _light_off(self):
-        wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 0)
+        self._set_light(0)
 
     def _light_on(self):
-        wiringpi2.pwmWrite(_LIGHT_PWM_PIN, 1023)
+        self._set_light(1023)
 
     def _light_ambient(self):
-        wiringpi2.pwmWrite(_LIGHT_PWM_PIN, _AMBIENT_LIGHT_PWM)
+        self._set_light(_AMBIENT_LIGHT_PWM)
 
     def _handle_command(self, cmd):
         if cmd is None:
