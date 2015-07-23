@@ -193,6 +193,7 @@ class Experiment(object):
 
         # Store signal handler for later time-setting
         self._sighandler = sighandler
+        self._alarm_set = False
 
     def _write_data(self, data, frametime=None):
         '''Write a piece of data to the log file.
@@ -252,14 +253,17 @@ class Experiment(object):
         if status != 'lost' and self._behavior_test(pos_tank):
             # Only provide a stimulus if we know where the fish is
             # and the behavior test for that position says we should.
-            if self._args.time and self._args.time_from_trigger:
-                signal.signal(signal.SIGALRM, self._sighandler)
-                signal.alarm(self._args.time*60)
-
             if self._dostim:
                 self._control.add_hit(str(pos_tank))
                 response = self._control.get_response()
                 self._stim.show(response)
+
+            # set an alarm if we're supposed to start timing based on the trigger
+            if self._args.time and self._args.time_from_trigger and not self._alarm_set:
+                signal.signal(signal.SIGALRM, self._sighandler)
+                signal.alarm(self._args.time*60)
+                self._alarm_set = True
+
         else:
             self._stim.show(None)
 
