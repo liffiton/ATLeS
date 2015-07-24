@@ -153,32 +153,31 @@ class Grapher(object):
             stats["Total time (sec)"] = self._time[-1]
             stats["Valid time (sec)"] = time_total
 
-        stats["Total distance traveled (?)"] = dist_total
-        stats["Avg. x coordinate"] = np.mean(self._x[selected])
-        stats["Avg. y coordinate"] = np.mean(self._y[selected])
-        stats["Avg. speed (?/sec)"] = dist_total / time_total
-        stats["Avg. x speed (?/sec)"] = np.sum(np.abs(self._dx[selected])) / time_total
-        stats["Avg. y speed (?/sec)"] = np.sum(np.abs(self._dy[selected])) / time_total
-        stats["#Entries to top"] = top_count
-        if top_count:
-            stats["Time of first top entry (sec)"] = self._time[top_starts[0]]
-        stats["Time in top (sec)"] = top_time
-        stats["Time in bottom (sec)"] = bottom_time
-        if bottom_time:
-            stats["Top/bottom time ratio"] = top_time/bottom_time
-        if top_count:
-            stats["Avg. time per entry (sec)"] = top_time / top_count
-        stats["Distance in top (?)"] = top_dist
-        stats["Distance in bottom (?)"] = bottom_dist
-        if bottom_dist:
-            stats["Top/bottom distance ratio"] = top_dist/bottom_dist
-        if top_count:
-            stats["Avg. distance per entry (?)"] = top_dist / top_count
-        stats["#Freezes"] = freeze_count
-        if freeze_count:
-            stats["Total time frozen (sec)"] = freeze_time
-            stats["Avg. time per freeze (sec)"] = freeze_time / freeze_count
-            stats["Freeze frequency (per min)"] = 60.0*(freeze_count / time_total)
+        if selected.any():  # no stats if no data, and avoids "nan" results, as well
+            stats["Total distance traveled (?)"] = dist_total
+            stats["Avg. x coordinate"] = np.mean(self._x[selected])
+            stats["Avg. y coordinate"] = np.mean(self._y[selected])
+            stats["Avg. speed (?/sec)"] = dist_total / time_total
+            stats["Avg. x speed (?/sec)"] = np.sum(np.abs(self._dx[selected])) / time_total
+            stats["Avg. y speed (?/sec)"] = np.sum(np.abs(self._dy[selected])) / time_total
+            stats["#Entries to top"] = top_count
+            stats["Time in top (sec)"] = top_time
+            stats["Time in bottom (sec)"] = bottom_time
+            stats["Distance in top (?)"] = top_dist
+            stats["Distance in bottom (?)"] = bottom_dist
+            if top_count:
+                stats["Time of first top entry (sec)"] = self._time[top_starts[0]]
+                stats["Avg. time per entry (sec)"] = top_time / top_count
+                stats["Avg. distance per entry (?)"] = top_dist / top_count
+            if bottom_time:
+                stats["Top/bottom time ratio"] = top_time/bottom_time
+            if bottom_dist:
+                stats["Top/bottom distance ratio"] = top_dist/bottom_dist
+            stats["#Freezes"] = freeze_count
+            if freeze_count:
+                stats["Total time frozen (sec)"] = freeze_time
+                stats["Avg. time per freeze (sec)"] = freeze_time / freeze_count
+                stats["Freeze frequency (per min)"] = 60.0*(freeze_count / time_total)
 
         if minute is not None:
             stats = {"Minute %02d - %s" % (minute, key): value for key, value in stats.items()}
