@@ -3,7 +3,9 @@ import errno
 import glob
 import multiprocessing
 import os
+import shlex
 import shutil
+import subprocess
 import sys
 import StringIO
 
@@ -25,6 +27,7 @@ _LOCKFILE = _LOGDIR + "explockfile"
 _INIDIR = "ini/"
 _IMGDIR = _LOGDIR + "img/"
 _ARCHIVEDIR = _LOGDIR + "archive/"
+_EXPSCRIPT = "python fishbox.py"
 
 
 def _tracks():
@@ -75,6 +78,37 @@ def new_experiment():
         return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
     else:
         return template('new', inifiles=_inis())
+
+
+@post('/create/')
+def post_create():
+    if _lock_exists():
+        return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
+
+    # TODO: validation...
+    expname = request.forms.experimentName
+    timelimit = int(request.forms.timeLimit)
+    startfromtrig = bool(request.forms.startFromTrigger)
+    stimulus = request.forms.stimulus
+    inifile = request.forms.iniFile
+
+    cmdparts = []
+    cmdparts.append(_EXPSCRIPT)
+    cmdparts.append("-t %d" % timelimit)
+    if startfromtrig:
+        cmdparts.append("--time-from-trigger")
+    if stimulus == "nostim":
+        cmdparts.append("--nostim")
+    elif stimulus == "randstim":
+        cmdparts.append("--randstim")
+    cmdparts.append("--inifile %s" % inifile)
+    cmdparts.append(expname)
+    cmdline = ' '.join(cmdparts)
+    cmdargs = shlex.split(cmdline)
+
+    subprocess.Popen(cmdargs)
+
+    redirect("/")
 
 
 @route('/view/<logname:path>')
