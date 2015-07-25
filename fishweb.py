@@ -278,5 +278,5 @@ if __name__ == '__main__':
 
     else:
         # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
-        #run(host=host, port=8080, server='gevent', debug=testing, reloader=testing)
-        run(host=host, port=8080, debug=testing, reloader=testing)
+        #run(host=host, port=8080, server='gevent', debug=testing, reloader=True)
+        run(host=host, port=8080, debug=testing, reloader=True)
