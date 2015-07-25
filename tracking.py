@@ -240,13 +240,19 @@ class VelocityTracker(SimpleTracker):
 
 
 class Stream(object):
-    def __init__(self, source, w=None, h=None, params=None, fps=None, exposure=None):
+    def __init__(self, source, conf=None, params=None):
         if params is None:
             params = {}
 
         if type(source) == int:
             # webcam
-            self._video = self._cam_setup(source, w, h, fps, exposure)
+            assert(conf is not None)
+            self._video = self._cam_setup(
+                    source,
+                    conf['frame_w'],
+                    conf['frame_h'],
+                    conf['fps'],
+                    conf['exposure'])
             if self._video is None:
                 logging.error("Could not open video stream.")
                 sys.exit(1)

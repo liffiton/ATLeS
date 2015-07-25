@@ -45,37 +45,28 @@ def get_args():
     parser = argparse.ArgumentParser(description='Zebrafish Skinner box experiment.')
     parser.add_argument('id', type=str, nargs='?', default='',
                         help='experiment ID (optional), added to output filenames')
-    parser.add_argument('-t', '--time', type=int, default=None,
-                        help='limit the experiment to TIME minutes (default: run forever / until stopped with CTRL-C)')
-    parser.add_argument('--time-from-trigger', action='store_true',
-                        help='when using -t/--time, only start counting the time from the moment the tracking first hits its trigger condition'),
     parser.add_argument('-w', '--watch', action='store_true',
                         help='create a window to see the camera view and tracking information')
-    stimgroup = parser.add_mutually_exclusive_group(required=False)
+    exp_group = parser.add_argument_group('experiment settings')
+    exp_group.add_argument('-t', '--time', type=int, default=None,
+                        help='limit the experiment to TIME minutes (default: run forever / until stopped with CTRL-C)')
+    exp_group.add_argument('--time-from-trigger', action='store_true',
+                        help='when using -t/--time, only start counting the time from the moment the tracking first hits its trigger condition'),
+    stimgroup = exp_group.add_mutually_exclusive_group(required=False)
     stimgroup.add_argument('--nostim', action='store_true',
                         help='disable all stimulus for this run')
     stimgroup.add_argument('--randstim', action='store_true',
                         help='choose whether to enable or disable stimulus for this run with 50/50 probabilities')
 
-    rare = parser.add_argument_group('rarely-used arguments')
-    rare.add_argument('--inifile', type=str, default='default.ini',
+    rare_group = parser.add_argument_group('rarely-used arguments')
+    rare_group.add_argument('--inifile', type=str, default='default.ini',
                         help="configuration file specifying physical setup (default: default.ini)")
-    rare.add_argument('--logdir', type=str, default='./logs',
+    rare_group.add_argument('--logdir', type=str, default='./logs',
                         help='directory for storing log/data files (default: ./logs)')
-    rare.add_argument('--vidfile', type=str,
+    rare_group.add_argument('--vidfile', type=str,
                         help='read video input from the given file (for testing purposes)')
-    rare.add_argument('--delay', type=int, default=0,
+    rare_group.add_argument('--delay', type=int, default=0,
                         help='delay in ms to add between frames (default: 0) -- useful for slowing video processing/display.')
-    rare.add_argument('--start-frame', type=int, default=300,
-                        help='start tracking at a given frame number (default: 300) -- allow the background learner to stabilize and/or to view a particular position in a video for testing.')
-    rare.add_argument('-W', '--width', type=int, default=192,
-                        help='video capture resolution width (default: 192)')
-    rare.add_argument('-H', '--height', type=int, default=144,
-                        help='video capture resolution height (default: 144)')
-    rare.add_argument('--fps', type=int, default=10,
-                        help='video capture frames per second (default: 10) -- also affects rate of behavior/position tests.')
-    rare.add_argument('--exposure', type=int, default=200,
-                        help='video capture exposure time, given in multiples of 0.1ms (default: 200)')
 
     return parser.parse_args()
 
@@ -141,7 +132,7 @@ def main():
         args.height = stream.height
     else:
         params = {}
-        stream = tracking.Stream(0, w=args.width, h=args.height, params=params, fps=args.fps, exposure=args.exposure)
+        stream = tracking.Stream(0, conf=conf['camera'], params=params)
 
     # setup timeout alarm if needed
     # NOTE: not cross-platform (SIGALRM not available on Windows)

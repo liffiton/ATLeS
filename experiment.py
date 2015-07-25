@@ -218,9 +218,9 @@ class Experiment(object):
 
         # Wait for the background subtractor to learn/stabilize
         # before logging or using data.
-        if frame_num < self._args.start_frame:
+        if frame_num < self._conf['tracking']['start_frame']:
             return
-        elif frame_num == self._args.start_frame:
+        elif frame_num == self._conf['tracking']['start_frame']:
             logging.info("Tracking started at frame %d.", frame_num)
 
         # Update tracker w/ latest set of centroids
