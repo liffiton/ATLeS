@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fishybox Log Analyzer/Viewer</title>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
@@ -94,7 +95,17 @@
 </head>
 <body>
 <div class="container">
-<h1>Fishybox Log Analyzer/Viewer</h1>
+<div class="row">
+  <div class="col-lg-10 col-md-12 col-sm-12">
+    <h1>
+      <a class="btn btn-primary pull-right" href="/new/">
+        <span class="glyphicon glyphicon-plus-sign"></span>
+        Start New Experiment
+      </a>
+      <span>Fishybox Log Analyzer/Viewer</span>
+    </h1>
+  </div>
+</div>
 <div class="row">
     <div class="col-lg-10 col-md-12 col-sm-12">
         <table class="table table-hover">
