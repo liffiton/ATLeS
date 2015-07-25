@@ -59,8 +59,8 @@ def get_args():
                         help='choose whether to enable or disable stimulus for this run with 50/50 probabilities')
 
     rare_group = parser.add_argument_group('rarely-used arguments')
-    rare_group.add_argument('--inifile', type=str, default='default.ini',
-                        help="configuration file specifying physical setup (default: default.ini)")
+    rare_group.add_argument('--inifile', type=str, default='ini/default.ini',
+                        help="configuration file specifying physical setup (default: ini/default.ini)")
     rare_group.add_argument('--logdir', type=str, default='./logs',
                         help='directory for storing log/data files (default: ./logs)')
     rare_group.add_argument('--vidfile', type=str,
