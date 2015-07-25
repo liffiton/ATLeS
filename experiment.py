@@ -10,39 +10,13 @@ import time
 import cv2
 
 import tracking
-import controllers
-import stimulus
+import controllers  # noqa -- 'imported but unused' because used in eval()ed expression
+import stimulus     # noqa -- ditto
 
 try:
     import sensors
 except ImportError:
     sensors = None
-
-
-#############################################################
-# Experiment setup (controller, stimulus, and test)
-def get_experiment():
-    # Controller: Fixed interval or fixed ratio
-    #control = controllers.FixedIntervalController(response_interval=3)
-    control = controllers.FixedRatioController(1)
-    # Control response: static response: constant 1
-    control.set_response(1)
-
-    # Stimulus: Visual stimulus or Dummy stimulus (just prints to terminal)
-    # Check for whether pygame loaded in stimulus module or not
-#    if stimulus.pygame is not None:
-#        stim = stimulus.VisualStimulus()
-#    else:
-#        stim = stimulus.DummyStimulus()
-    stim = stimulus.LightBarStimulus(freq_Hz=4)
-
-    # Behavior test: ypos > 75%
-    def behavior_test(pos):
-        return pos[1] > 0.75
-
-    return control, stim, behavior_test
-#
-####################################################################
 
 
 class Watcher(object):
@@ -166,8 +140,17 @@ class Experiment(object):
             self._sensors = None
             logging.warn("sensors module not loaded.")
 
-        # Experiment setup
-        self._control, self._stim, self._behavior_test = get_experiment()
+        # Evaluate experiment setup expression
+        self._control = eval(conf['experiment']['controller'])
+        self._stim = eval(conf['experiment']['stimulus'])
+
+        trigger_exp = conf['experiment']['trigger']
+        trigger_code = compile(trigger_exp, '<string>', 'eval')
+
+        def _trigger_func(pos_tank):
+            xpos, ypos = pos_tank
+            return eval(trigger_code)
+        self._trigger = _trigger_func
 
         # Frame processor
         self._proc = tracking.FrameProcessor()
@@ -250,7 +233,7 @@ class Experiment(object):
         else:
             self._write_data(data)
 
-        if status != 'lost' and self._behavior_test(pos_tank):
+        if status != 'lost' and self._trigger(pos_tank):
             # Only provide a stimulus if we know where the fish is
             # and the behavior test for that position says we should.
             if self._dostim:

@@ -10,11 +10,13 @@ import experiment
 import tracking
 
 
-def num(s):
-    try:
-        return int(s)
-    except ValueError:
-        return float(s)
+def greedy_parse(s):
+    for _type in int, float:
+        try:
+            return _type(s)
+        except:
+            pass
+    return s
 
 
 def get_conf(config_filename):
@@ -34,8 +36,8 @@ def get_conf(config_filename):
         conf[section] = {}
         for key in parser.options(section):
             # Currently, all configuration options will be numeric.
-            # num() converts each to a float or an int, as appropriate.
-            conf[section][key] = num(parser.get(section, key))
+            # greedy_parse() converts each to a float or an int, if it can.
+            conf[section][key] = greedy_parse(parser.get(section, key))
 
     return conf
 

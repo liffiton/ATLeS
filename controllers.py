@@ -4,9 +4,7 @@ import time
 class Controller(object):
     def __init__(self):
         self._hits = []
-
-    def set_response(self, response):
-        self._response = response
+        self._response = 1  # static response for now
 
     def add_hit(self, hit):
         new_hit = {
