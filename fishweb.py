@@ -21,12 +21,17 @@ matplotlib.use('Agg')
 import analyze
 
 _LOGDIR = "logs/"
+_INIDIR = "ini/"
 _IMGDIR = _LOGDIR + "img/"
 _ARCHIVEDIR = _LOGDIR + "archive/"
 
 
 def _tracks():
     return sorted(glob.glob(_LOGDIR + "*-track.csv"))
+
+
+def _inis():
+    return sorted(glob.glob(_INIDIR + "*.ini"))
 
 
 def _imgs(name):
@@ -57,6 +62,12 @@ def index():
         name = track.split('/')[-1]
         tracks.append( (index, track, lines, _imgs(name)) )
     return dict(tracks=tracks)
+
+
+@route('/create/')
+@view('create')
+def create_experiment():
+    return dict(inifiles=_inis())
 
 
 @route('/view/<logname:path>')
