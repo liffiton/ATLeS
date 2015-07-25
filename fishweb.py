@@ -242,6 +242,11 @@ def static_logs(filename):
         return static_file(filename, root=_LOGDIR)
 
 
+@route('/ini/<filename:path>')
+def static_inis(filename):
+    return static_file(filename, root=_INIDIR)
+
+
 if __name__ == '__main__':
     daemonize = False
     testing = False
