@@ -69,12 +69,12 @@ def index():
     return dict(tracks=tracks)
 
 
-@route('/create/')
-def create_experiment():
+@route('/new/')
+def new_experiment():
     if _lock_exists():
         return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
     else:
-        return template('create', inifiles=_inis())
+        return template('new', inifiles=_inis())
 
 
 @route('/view/<logname:path>')
