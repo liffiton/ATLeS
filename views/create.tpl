@@ -11,12 +11,6 @@
 
   <div class="row">
     <div class="col-lg-6 col-md-8 col-sm-10">
-      <div id="experiment_running" class="alert alert-danger" role="alert">
-        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-        <span class="sr-only">Error:</span>
-        It appears that an experiment is currently running on this box.
-        Please wait for it to finish before starting another.
-      </div>
       <form class="form-horizontal">
         <div class="panel panel-default" id="experiment_form">
           <div class="panel-heading">

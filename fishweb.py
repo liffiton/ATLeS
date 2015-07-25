@@ -21,6 +21,7 @@ matplotlib.use('Agg')
 import analyze
 
 _LOGDIR = "logs/"
+_LOCKFILE = _LOGDIR + "explockfile"
 _INIDIR = "ini/"
 _IMGDIR = _LOGDIR + "img/"
 _ARCHIVEDIR = _LOGDIR + "archive/"
@@ -32,6 +33,10 @@ def _tracks():
 
 def _inis():
     return sorted(glob.glob(_INIDIR + "*.ini"))
+
+
+def _lock_exists():
+    return os.path.isfile(_LOCKFILE)
 
 
 def _imgs(name):
@@ -65,9 +70,11 @@ def index():
 
 
 @route('/create/')
-@view('create')
 def create_experiment():
-    return dict(inifiles=_inis())
+    if _lock_exists():
+        return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
+    else:
+        return template('create', inifiles=_inis())
 
 
 @route('/view/<logname:path>')

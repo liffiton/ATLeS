@@ -1,4 +1,5 @@
 import argparse
+import atexit
 import ConfigParser
 import logging
 import os
@@ -8,6 +9,10 @@ import time
 
 import experiment
 import tracking
+
+
+_LOGDIR = "logs/"
+_LOCKFILE = _LOGDIR + "explockfile"
 
 
 def greedy_parse(s):
@@ -63,8 +68,6 @@ def get_args():
     rare_group = parser.add_argument_group('rarely-used arguments')
     rare_group.add_argument('--inifile', type=str, default='ini/default.ini',
                         help="configuration file specifying physical setup (default: ini/default.ini)")
-    rare_group.add_argument('--logdir', type=str, default='./logs',
-                        help='directory for storing log/data files (default: ./logs)')
     rare_group.add_argument('--vidfile', type=str,
                         help='read video input from the given file (for testing purposes)')
     rare_group.add_argument('--delay', type=int, default=0,
@@ -78,8 +81,8 @@ def init_logging(args, conf):
        as a file object to which track data should be written.'''
 
     # ensure log directory exists
-    if not os.path.exists(args.logdir):
-        os.makedirs(args.logdir)
+    if not os.path.exists(_LOGDIR):
+        os.makedirs(_LOGDIR)
 
     # setup log files
     filetimestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -87,8 +90,8 @@ def init_logging(args, conf):
         name = "%s-%s" % (filetimestamp, args.id)
     else:
         name = filetimestamp
-    trackfilename = "%s/%s-track.csv" % (args.logdir, name)
-    logfilename = "%s/%s.log" % (args.logdir, name)
+    trackfilename = "%s/%s-track.csv" % (_LOGDIR, name)
+    logfilename = "%s/%s.log" % (_LOGDIR, name)
 
     # Setup the ROOT level logger to send to a log file and console both
     logger = logging.getLogger()
@@ -107,7 +110,7 @@ def init_logging(args, conf):
     conf['trackfile'] = open(trackfilename, 'w')
 
     # Record the setup in a -setup.txt file.
-    setupfilename = "%s/%s-setup.txt" % (args.logdir, name)
+    setupfilename = "%s/%s-setup.txt" % (_LOGDIR, name)
     with open(setupfilename, 'w') as setupfile:
         setupfile.write("Command line:\n    %s\n\n" % (' '.join(sys.argv)))
         setupfile.write("Configuration file:\n")
@@ -146,6 +149,14 @@ def main():
 
     # catch SIGINT (ctrl-C)
     signal.signal(signal.SIGINT, sighandler)
+
+    # setup lock file
+    try:
+        os.open(_LOCKFILE, os.O_CREAT | os.O_EXCL)
+        atexit.register(os.unlink, _LOCKFILE)
+    except:
+        logging.error("It appears an experiment is already running (%s exists).  Please wait or end that experiment before starting another." % _LOCKFILE)
+        sys.exit(1)
 
     exp = experiment.Experiment(conf, args, stream, sighandler)
 
