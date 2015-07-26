@@ -6,6 +6,8 @@ Enclosure
 ---------
  - Holes for tank feet for set, consistent tank location
  - Secure, wiggleless mount for camera
+ - Slide-in tank from side
+ - Stackable/rackable design
 
 Wait on these until we start looking at monitor stimulus again:
  - Integrate frameless LCD display
@@ -22,30 +24,11 @@ Circuits
 FishWeb / Analyze
 -----------------
 
-Compute general statistics to be used for identifying startle response
-and/or behavior change in "absolute" darkness:
-  - Mean, median, max of:
-    - x position
-    - y position
-    - speed
-    - x speed
-    - y speed
-    - acceleration magnitude
-    - x acceleration magnitude
-    - y acceleration magnitude
-
 
 FishBox [.py]
 -------------
 
-Flashing Light Stimulus:
- - At start, when not flashing, and at exit: set brightness to match lab ambient.
-   - Measure lab ambient w/ light sensor is set location
-   - Adjust lightbar w/ box closed until matched -- record value
-
 Big / Important:
- - Separate out experiment configuration from experiment.py
-   - Somehow include in a .ini file or something else that can be saved alongside each experiment's data.
  - Make background subtractor adaptive, modifying sensitivity to hit 1 detection exactly. (See babyfish code.)
 
 Medium:
