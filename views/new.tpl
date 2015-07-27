@@ -25,11 +25,11 @@ function update_ini(iniFile) {
       });
 }
 $(function() {
-    $("#sel_iniFile").change(function(e) {
+    $("#inifile").change(function(e) {
         var iniFile = this.value;
         update_ini(iniFile);
         });
-    update_ini($("#sel_iniFile option:selected").text());
+    update_ini($("#inifile option:selected").text());
     });
 </script>
 </head>
@@ -46,22 +46,23 @@ $(function() {
           </div>
           <div class="panel-body">
             <div class="form-group">
-              <label for="experimentName" class="col-sm-4 control-label">Experiment Name</label>
+              {{!form.expname.label(class_="col-sm-4 control-label")}}
               <div class="col-sm-8">
-                <input type="text" class="form-control" name="experimentName">
+                {{!form.expname(class_="form-control")}}
               </div>
             </div>
             <div class="form-group">
-              <label for="timeLimit" class="col-sm-4 control-label">Time Limit</label>
+              {{!form.timelimit.label(class_="col-sm-4 control-label")}}
               <div class="col-sm-8">
                 <div class="input-group col-sm-5">
-                  <input type="text" class="form-control" name="timeLimit">
+                  {{!form.timelimit(class_="form-control")}}
                   <span class="input-group-addon">
                     minutes
                   </span>
                 </div>
                 <div class="checkbox">
                   <label>
+                    {{!form.startfromtrig}}
                     <input type="checkbox" name="startFromTrigger">
                     Start timing from first trigger
                   </label>
@@ -69,38 +70,35 @@ $(function() {
               </div>
             </div>
             <div class="form-group">
-              <label class="col-sm-4 control-label">Stimulus</label>
+              {{!form.stimulus.label(class_="col-sm-4 control-label")}}
               <div class="col-sm-8">
+                %for value, label, _ in form.stimulus.iter_choices():
                 <div class="radio">
-                  <label>
-                    <input type="radio" name="stimulus" value="nostim">
-                    Off
+                  <label for="stimulus">
+                    <input type="radio" name="stimulus" id="stimulus" value="{{value}}">
+                    {{label}}
                   </label>
                 </div>
-                <div class="radio">
-                  <label>
-                    <input type="radio" name="stimulus" value="stim">
-                    On
-                  </label>
-                </div>
-                <div class="radio">
-                  <label>
-                    <input type="radio" name="stimulus" value="randstim">
-                    Randomized (equal chance off or on)
-                  </label>
-                </div>
+              %end
               </div>
             </div>
             <div class="form-group">
-              <label for="iniFile" class="col-sm-4 control-label">.ini File</label>
+              {{!form.inifile.label(class_="col-sm-4 control-label")}}
               <div class="col-sm-8">
-                <select class="form-control" name="iniFile" id="sel_iniFile">
-                  %for file in inifiles:
-                    <option>{{file}}</option>
-                  %end
-                </select>
+                {{!form.inifile(class_="form-control")}}
               </div>
             </div>
+            %if form.errors:
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="alert alert-danger">
+                  %for field, errors in form.errors.iteritems():
+                    <p><strong>{{!form[field].label}}:</strong> {{' - '.join(errors)}}</p>
+                  %end
+                </div>
+              </div>
+            </div>
+            %end
             <div class="form-group">
               <div class="col-sm-8 col-sm-offset-4">
                 <button type="submit" class="btn btn-primary">Start</button>

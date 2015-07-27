@@ -3,6 +3,7 @@ import errno
 import glob
 import multiprocessing
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -15,6 +16,8 @@ import StringIO
 #monkey.patch_all()
 
 from bottle import post, redirect, request, response, route, run, static_file, view, template
+
+from wtforms import Form, BooleanField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 # Import matplotlib ourselves and make it use agg (not any GUI anything)
 # before the analyze module pulls it in.
@@ -77,7 +80,28 @@ def new_experiment():
     if _lock_exists():
         return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
     else:
-        return template('new', inifiles=_inis())
+        form = CreateExperimentForm()
+        return template('new', inifiles=_inis(), form=form)
+
+
+def _is_inifile(form, field):
+    if field.data not in _inis():
+        print str(field)
+        raise ValidationError("Must specify an existing .ini file.")
+
+
+def _name_is_sane(form, field):
+    if re.search('\W', field.data):
+        raise ValidationError("Experiment name must be alphanumeric characters only.")
+
+
+class CreateExperimentForm(Form):
+    ''' Form for creating a new experiment. '''
+    expname = StringField("Experiment Name", [validators.Length(max=32), _name_is_sane])
+    timelimit = IntegerField("Time Limit", [validators.NumberRange(min=1, max=24*60)])
+    startfromtrig = BooleanField("startFromTrigger")
+    stimulus = RadioField("Stimulus", choices=[('nostim', 'Off'), ('stim', 'On'), ('randstim', 'Randomized (equal chance off or on)')])
+    inifile = SelectField(".ini File", choices=zip(_inis(), _inis()))
 
 
 @post('/create/')
@@ -85,7 +109,11 @@ def post_create():
     if _lock_exists():
         return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
 
-    # TODO: validation...
+    # validate form data
+    form = CreateExperimentForm(request.forms)
+    if not form.validate():
+        return template('new', inifiles=_inis(), form=form)
+
     expname = request.forms.experimentName
     timelimit = int(request.forms.timeLimit)
     startfromtrig = bool(request.forms.startFromTrigger)
