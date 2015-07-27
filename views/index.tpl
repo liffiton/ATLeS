@@ -14,6 +14,23 @@
         td.actionbuttons {
             white-space: nowrap;  /* keep all buttons on one line */
         }
+        input#rowfilter {
+            margin-left: 2em;
+            padding: 0 0.5em;
+            border-radius: 10em;
+            border: solid 1px #ccc;
+            box-shadow: 1px 1px 2px 1px #ccc;
+        }
+        span#filterclear {
+            position: relative;
+            left: -1.2em;
+            top: -0.1em;
+            color: #999;
+            cursor: pointer;
+        }
+        body {
+            overflow-y: scroll;
+        }
     </style>
     <script type="text/javascript">
         function do_post(url, query, check) {
@@ -32,37 +49,82 @@
             $.post(url + "?" + query);
         }
 
+        function filter_rows(value) {
+            var re = new RegExp(value);
+            $("tr.log_row").each(function() {
+                logfile = $(this).find(".logfile_cell").text();
+                if (re.test(logfile)) {
+                    $(this).show();
+                }
+                else {
+                    $(this).hide();
+                }
+            });
+            update_selection();
+        }
+
+        // setup handlers
+        $(function() {
+            $("#filterclear").click(function(e) {
+                $("#rowfilter").val('');
+                $("#rowfilter").trigger('input');
+            });
+            $("#rowfilter").on('input', function(e) {
+                filter_rows(this.value);
+            });
+            $("#selectallbutton").click(toggle_select_all);
+            $("tr.log_row .selectbutton").click(function(e) {
+                var row = $(this).closest("tr");
+                togglesel(row);
+            });
+        });
+
         // keep track of selected tracks
         var selection = Object.create(null);  // an empty object to be used as a set
-        function toggle_select(el, path) {
-            var e = $(el);
-            e.toggleClass('btn-primary');
-            if (e.hasClass('btn-primary')) {
-                // add to the set
-                selection[e.data('path')] = true;
-            } else {
-                // remove from the set
-                delete selection[e.data('path')];
-            }
-
-            var count = Object.keys(selection).length;
+        function sel_count() {
+            return Object.keys(selection).length;
+        }
+        function togglesel(row) {
+            var sel_button = $(row).find(".selectbutton");
+            sel_button.toggleClass('btn-primary');
+            update_selection();
+        }
+        function toggle_select_all() {
+            var log_rows = $("tr.log_row").filter(":visible");
+            var row_count = log_rows.length;
+            var notall = (sel_count() < row_count);
+            log_rows.each(function() {
+                var sel_button = $(this).find(".selectbutton");
+                if (notall != sel_button.hasClass('btn-primary')) {
+                    togglesel(this);
+                }
+            });
+        }
+        function update_selection() {
+            selection = Object.create(null);  // reset
+            var log_rows = $("tr.log_row").filter(":visible");
+            log_rows.each(function() {
+                var path = $(this).data('path');
+                var sel_button = $(this).find(".selectbutton");
+                if (sel_button.hasClass('btn-primary')) {
+                    // add to the set
+                    selection[path] = true;
+                }
+            });
+            update_buttons();
+        }
+        function update_buttons() {
+            var count = sel_count();
+            var log_rows = $("tr.log_row").filter(":visible");
+            var row_count = log_rows.length;
             $('#comparebutton').toggleClass('disabled', count != 2);
             $('#comparebutton').toggleClass('btn-primary', count == 2);
             $('#statsbutton').toggleClass('disabled', count == 0);
             $('#statsbutton').toggleClass('btn-primary', count > 0);
             $('#statscsvbutton').toggleClass('disabled', count == 0);
             $('#statscsvbutton').toggleClass('btn-primary', count > 0);
-        }
-        function toggle_select_all() {
-            var count = Object.keys(selection).length;
-            var els = $('.selectbutton');
-            els.each(function(i, el) {
-                if ((count < els.length) != ($(el).hasClass('btn-primary'))) {
-                    $(el).click();
-                }
-            });
-            count = Object.keys(selection).length;
-            $('#selectallbutton').toggleClass('btn-primary', count == els.length);
+            $('#selectallbutton').toggleClass('btn-default', count < row_count);
+            $('#selectallbutton').toggleClass('btn-primary', count == row_count);
         }
 
         function do_compare() {
@@ -112,12 +174,12 @@
             <thead>
             <tr>
                 <th>
-                    <button type="button" class="btn btn-default btn-xs text-muted" id="selectallbutton" onclick="toggle_select_all();" title='Select All'>
+                    <button type="button" class="btn btn-default btn-xs text-muted" id="selectallbutton" title='Select All'>
                         <span class="glyphicon glyphicon-ok"></span>
                     </button>
                 </th>
-                <th>Log file</th>
-                <th>Points</th>
+                <th width="100%">Log file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
+                <th class="searc-header">Points</th>
                 <th>Plots</th>
                 <th>Actions</th>
             </tr>
@@ -134,15 +196,13 @@
                     </button>
                 </td>
             </tr>
-            <tr id="row_{{index}}">
+            <tr class="log_row" id="row_{{index}}" data-path='{{path}}'>
                 <td>
-                %if img_count:
-                    <button type="button" class="btn btn-default btn-xs text-muted selectbutton" data-path='{{path}}' onclick="toggle_select(this);" title='Select'>
+                    <button type="button" class="btn btn-default btn-xs text-muted selectbutton" title='Select'>
                         <span class="glyphicon glyphicon-ok"></span>
                     </button>
-                %end
                 </td>
-                <td><a href="/{{path}}">{{path}}</a></td>
+                <td class="logfile_cell"><a href="/{{path}}">{{path}}</a></td>
                 <td>{{points}}</td>
                 <td>
                 %if img_count:
