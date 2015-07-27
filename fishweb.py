@@ -81,7 +81,7 @@ def new_experiment():
         return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
     else:
         form = CreateExperimentForm()
-        return template('new', inifiles=_inis(), form=form)
+        return template('new', form=form)
 
 
 def _is_inifile(form, field):
