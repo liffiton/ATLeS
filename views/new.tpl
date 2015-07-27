@@ -16,27 +16,46 @@ pre#inidisplay_contents {
 <script type="text/javascript">
 function update_ini(iniFile) {
   $.get("/" + iniFile, function(data) {
-      lines = data.split('\n');
-      real_lines = lines.filter(function(line) {return line[0] != '#';});
-      contents = real_lines.join('\n').replace("\n", "");
-      $("#inidisplay_name").text(iniFile);
-      $("#inidisplay_contents").text(contents);
-      $("#inidisplay").show();
-      });
+    lines = data.split('\n');
+    real_lines = lines.filter(function(line) {return line[0] != '#';});
+    contents = real_lines.join('\n').replace("\n", "");
+    $("#inidisplay_name").text(iniFile);
+    $("#inidisplay_contents").text(contents);
+    $("#inidisplay").show();
+  });
 }
 $(function() {
-    $("#inifile").change(function(e) {
-        var iniFile = this.value;
-        update_ini(iniFile);
-        });
-    update_ini($("#inifile option:selected").text());
-    });
+  $("#inifile").change(function(e) {
+    var iniFile = this.value;
+    update_ini(iniFile);
+  });
+  update_ini($("#inifile option:selected").text());
+  $("#lockfile_delbutton").click(function(e) {
+  $.post('/delete_lockfile/', function(data) {$("#lockfile_warning").hide();});
+  });
+});
 </script>
 </head>
 <body>
 <div class="container">
   <h1>Fishybox: Start New Experiment</h1>
 
+  %if lock_exists:
+  <div class="row" id="lockfile_warning">
+    <div class="col-sm-12">
+      <div class="alert alert-danger">
+        <p><strong>Warning:</strong> Due to an existing lockfile, it looks like an experiment is already running on this box.  Please wait for it to finish before starting another.</p>
+        <p>You may override this (deleting the lockfile) if you are sure this warning is mistaken:
+          <button type="button" class="btn btn-danger" id="lockfile_delbutton">
+            <span class="glyphicon glyphicon-fire"></span>
+            Delete Lockfile
+            <span class="glyphicon glyphicon-fire"></span>
+          </button>
+        </p>
+      </div>
+    </div>
+  </div>
+  %end
   <div class="row">
     <div class="col-lg-6 col-md-8 col-sm-10">
       <form class="form-horizontal" action="/create/" method="post">

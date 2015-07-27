@@ -77,11 +77,13 @@ def index():
 
 @route('/new/')
 def new_experiment():
-    if _lock_exists():
-        return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
-    else:
-        form = CreateExperimentForm()
-        return template('new', form=form)
+    form = CreateExperimentForm()
+    return template('new', form=form, lock_exists=_lock_exists())
+
+
+@post('/delete_lockfile/')
+def post_delete_lockfile():
+    os.unlink(_LOCKFILE)
 
 
 def _is_inifile(form, field):
