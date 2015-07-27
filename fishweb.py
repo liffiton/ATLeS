@@ -114,13 +114,16 @@ def post_create():
     if not form.validate():
         return template('new', inifiles=_inis(), form=form)
 
-    expname = request.forms.experimentName
-    timelimit = int(request.forms.timeLimit)
-    startfromtrig = bool(request.forms.startFromTrigger)
+    expname = request.forms.expname
+    timelimit = int(request.forms.timelimit)
+    startfromtrig = bool(request.forms.startfromtrig)
     stimulus = request.forms.stimulus
-    inifile = request.forms.iniFile
+    inifile = request.forms.inifile
 
-    cmdparts = []
+    if sys.platform in ['cygwin', 'nt']:
+        cmdparts = []
+    else:
+        cmdparts = ['sudo']  # fishbox.py must be run as root!
     cmdparts.append(_EXPSCRIPT)
     cmdparts.append("-t %d" % timelimit)
     if startfromtrig:
