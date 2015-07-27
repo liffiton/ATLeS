@@ -15,6 +15,7 @@
             white-space: nowrap;  /* keep all buttons on one line */
         }
         input#rowfilter {
+            font-weight: normal;
             margin-left: 2em;
             padding: 0 0.5em;
             border-radius: 10em;
