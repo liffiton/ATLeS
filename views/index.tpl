@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fishybox Log Analyzer/Viewer</title>
 <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 <style>
 tr.undo_row {
@@ -29,8 +30,15 @@ span#filterclear {
   color: #999;
   cursor: pointer;
 }
+th.points_cell, td.points_cell {
+  text-align: right;
+}
 body {
-  overflow-y: scroll;
+  overflow-y: scroll;  /* Scroll bar always present -- avoids bouncing on hide/show of rows */
+}
+svg.aml_chart {
+  height: 1em;
+  width: 4em;
 }
 </style>
 <script type="text/javascript">
@@ -64,7 +72,7 @@ function filter_rows(value) {
   update_selection();
 }
 
-// setup handlers
+// setup handlers / onload stuff
 $(function() {
   $("#filterclear").click(function(e) {
     $("#rowfilter").val('');
@@ -78,7 +86,24 @@ $(function() {
     var row = $(this).closest("tr");
     togglesel(row);
   });
+  makeCharts();
 });
+
+function makeCharts() {
+  $("svg.aml_chart").each(function() {
+    var s = Snap(this);
+    var data = $(this).data("values").split('|');
+    var acquired = parseFloat(data[0]);
+    var missing = parseFloat(data[1]);
+    var lost = parseFloat(data[2]);
+    var a = acquired*100;
+    var b = missing*100;
+    var c = lost*100;
+    s.rect(0,0,a,20).attr({fill: '#0d0'});
+    s.rect(a,0,b,20).attr({fill: '#fc0'});
+    s.rect(a+b,0,c,20).attr({fill: '#d00'});
+  });
+}
 
 // keep track of selected tracks
 var selection = Object.create(null);  // an empty object to be used as a set
@@ -180,16 +205,17 @@ function do_unarchive(path, index) {
               </button>
             </th>
             <th width="100%">Log file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
-            <th class="searc-header">Points</th>
+            <th class="points_cell">Points</th>
+            <th><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
             <th>Plots</th>
             <th>Actions</th>
           </tr>
         </thead>
-        %for index, path, points, img_count in tracks:
+        %for index, path, points, aml, img_count in tracks:
         <tr class="undo_row" id="row_{{index}}_undo">
           <td></td>
           <td>{{path}}</td>
-          <td colspan=2><i>Archived</i></td>
+          <td colspan=3><i>Archived</i></td>
           <td>
             <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{path}}', {{index}});" title="Unarchive">
               <span class="glyphicon glyphicon-log-in"></span>
@@ -204,7 +230,8 @@ function do_unarchive(path, index) {
             </button>
           </td>
           <td class="logfile_cell"><a href="/{{path}}">{{path}}</a></td>
-          <td>{{points}}</td>
+          <td class="points_cell">{{points}}</td>
+          <td><svg class="aml_chart" viewbox="0 0 100 20" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}"></svg></td>
           <td>
             %if img_count:
             <a href="/view/{{path}}">View</a>

@@ -65,13 +65,20 @@ def _mkdir(path):
 def index():
     tracks = []
     for index, track in enumerate(_tracks()):
+        acquired = missing = lost = 0
         with open(track) as f:
             i = -1  # so lines = 0 if file is empty
-            for i, _ in enumerate(f):
-                pass
+            for i, line in enumerate(f):
+                if ',acquired,' in line:
+                    acquired += 1
+                elif ',missing,' in line:
+                    missing += 1
+                elif ',lost,' in line or ',init,' in line:
+                    lost += 1
             lines = i+1
         name = track.split('/')[-1]
-        tracks.append( (index, track, lines, _imgs(name)) )
+        aml = ["%0.3f" % (x / float(lines)) for x in acquired, missing, lost]
+        tracks.append( (index, track, lines, aml, _imgs(name)) )
     return dict(tracks=tracks)
 
 
