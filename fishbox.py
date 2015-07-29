@@ -141,22 +141,6 @@ def main():
     conf = get_conf(args.inifile)
     init_logging(args, conf)
 
-    if args.vidfile:
-        stream = tracking.Stream(args.vidfile)
-        args.width = stream.width
-        args.height = stream.height
-    else:
-        params = {}
-        stream = tracking.Stream(0, conf=conf['camera'], params=params)
-
-    # setup timeout alarm if needed
-    # NOTE: not cross-platform (SIGALRM not available on Windows)
-    if args.time and sys.platform in ['cygwin', 'nt']:
-        logging.error("Timeout not available under Windows.  Timeout option ignored.")
-    elif args.time and not args.time_from_trigger:
-        signal.signal(signal.SIGALRM, sighandler)
-        signal.alarm(args.time*60)
-
     # catch SIGINT (ctrl-C) and SIGTERM
     signal.signal(signal.SIGINT, sighandler)
     signal.signal(signal.SIGTERM, sighandler)
@@ -176,7 +160,25 @@ def main():
         logging.error("It appears an experiment is already running (%s exists).  Please wait or end that experiment before starting another." % _LOCKFILE)
         sys.exit(1)
 
+    # setup Stream
+    if args.vidfile:
+        stream = tracking.Stream(args.vidfile)
+        args.width = stream.width
+        args.height = stream.height
+    else:
+        params = {}
+        stream = tracking.Stream(0, conf=conf['camera'], params=params)
+
+    # create Experiment object
     exp = experiment.Experiment(conf, args, stream, sighandler)
+
+    # setup timeout alarm if needed
+    # NOTE: not cross-platform (SIGALRM not available on Windows)
+    if args.time and sys.platform in ['cygwin', 'nt']:
+        logging.error("Timeout not available under Windows.  Timeout option ignored.")
+    elif args.time and not args.time_from_trigger:
+        signal.signal(signal.SIGALRM, sighandler)
+        signal.alarm(args.time*60)
 
     # run in separate thread so signal handler is more reliable
     runthread = threading.Thread(target=exp.run)
