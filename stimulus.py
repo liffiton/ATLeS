@@ -55,17 +55,20 @@ class ThreadedStimulus(StimulusBase):
     @abc.abstractmethod  # must be overridden, but should be called via super()
     def __init__(self, helperclass, *args, **kwargs):
         self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=True)
-        self._helper = helperclass(self._child_pipe, *args, **kwargs)
+        self._helper = helperclass(*args, **kwargs)
         self._p = None  # the separate process running the stimulus thread
 
     def begin(self, conf):
         self._helper.begin(conf)
-        self._p = multiprocessing.Process(target=self._helper.stimulus_thread)
+        self._p = multiprocessing.Process(target=self._helper.stimulus_thread, args=(self._child_pipe,))
         self._p.start()
         atexit.register(self.end)
 
     def end(self):
         self._pipe.send('end')
+        # clear queue before joining
+        while self._pipe.poll():
+            self._pipe.recv()
         self._p.join()
 
     def show(self, stimulus):
@@ -83,14 +86,14 @@ class DummyStimulus(StimulusBase):
         self._stimcount = 0
 
     def begin(self, conf):
-        print "Dummy: begin()"
+        print("Dummy: begin()")
 
     def end(self):
-        print "Dummy: end()"
+        print("Dummy: end()")
 
     def show(self, stimulus):
-        if stimulus is not None:
-            print "Dummy: stimulus %5d: %s" % (self._stimcount, str(stimulus))
+        if stimulus:
+            print("Dummy: stimulus %5d: %s" % (self._stimcount, str(stimulus)))
             self._stimcount += 1
 
 
@@ -109,8 +112,7 @@ class LightBarStimulus(ThreadedStimulus):
 class PygameHelper(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, pipe, fps):
-        self._pipe = pipe
+    def __init__(self, fps):
         self._fps = fps
         self._screen = None
 
@@ -130,7 +132,7 @@ class PygameHelper(object):
         #self._screen = pygame.display.set_mode((640, 480), pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.FULLSCREEN)
         pygame.mouse.set_visible(False)
 
-    def stimulus_thread(self):
+    def stimulus_thread(self, pipe):
         # ignore signals that will be handled by parent
         signal.signal(signal.SIGALRM, signal.SIG_IGN)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -140,11 +142,10 @@ class PygameHelper(object):
             pygame.display.flip()
 
             # check pipe for commands
-            while self._pipe.poll():
-                val = self._pipe.recv()
+            while pipe.poll():
+                val = pipe.recv()
 
-                #print("Got: %s" % str(val))
-                if val == 'end':
+                if val == 'end' or val is None:
                     return
 
                 self._handle_command(val)
@@ -152,7 +153,7 @@ class PygameHelper(object):
             # check pygame events for quit
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or event.type == pygame.KEYUP:
-                    self._pipe.send('quit')
+                    pipe.send('quit')
                     return
 
             time.sleep(1.0 / self._fps)
@@ -167,19 +168,19 @@ class PygameHelper(object):
 
 
 class StimulusFlashing(PygameHelper):
-    def __init__(self, pipe, fps=10):
-        super(StimulusFlashing, self).__init__(pipe, fps)
+    def __init__(self, fps=10):
+        super(StimulusFlashing, self).__init__(fps)
         self._on = False
         self._flash = True  # so it starts lit
         self._bgcolor = (0,0,0)  # black
         self._oncolor = (255,255,255)  # white
 
     def _handle_command(self, cmd):
-        if cmd is None:
+        if cmd:
+            self._on = True
+        else:
             self._on = False
             self._flash = True  # so it starts lit next time
-        else:
-            self._on = True
 
     def _draw(self):
         if self._on and self._flash:
@@ -192,8 +193,7 @@ class StimulusFlashing(PygameHelper):
 
 class StimulusLightBar(object):
     '''Stimulus in the form of flashing the visible light LED bar at a given frequency.'''
-    def __init__(self, pipe, freq_Hz):
-        self._pipe = pipe
+    def __init__(self, freq_Hz):
         self._active = False   # is flashing activated?
         self._on = False       # is light bar on?
         self._interval = 1.0 / freq_Hz / 2  # half of the period
@@ -225,11 +225,11 @@ class StimulusLightBar(object):
         self._set_light(_AMBIENT_LIGHT_PWM)
 
     def _handle_command(self, cmd):
-        if cmd is None:
+        if cmd:
+            self._active = True
+        else:
             self._active = False
             self._on = False
-        else:
-            self._active = True
 
     def _update(self):
         if self._active:
@@ -245,23 +245,22 @@ class StimulusLightBar(object):
     def begin(self, conf):
         pass
 
-    def stimulus_thread(self):
+    def stimulus_thread(self, pipe):
         # ignore signals that will be handled by parent
         signal.signal(signal.SIGALRM, signal.SIG_IGN)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
         while True:
             # check pipe for commands and implement delay between flashes
-            msg_ready = self._pipe.poll(self._interval)
+            msg_ready = pipe.poll(self._interval)
             while msg_ready:
-                val = self._pipe.recv()
+                val = pipe.recv()
 
-                #print("Got: %s" % str(val))
-                if val == 'end':
+                if val == 'end' or val is None:
                     return
 
                 self._handle_command(val)
 
-                msg_ready = self._pipe.poll()  # no timeout, return immediately inside loop
+                msg_ready = pipe.poll()  # no timeout, return immediately inside loop
 
             self._update()

@@ -248,7 +248,7 @@ class Experiment(object):
                 self._alarm_set = True
 
         else:
-            self._stim.show(None)
+            self._stim.show(0)  # 0 = no stimulus
 
     def run(self):
         self._stim.begin(self._conf['stimulus'])

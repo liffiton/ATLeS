@@ -24,7 +24,7 @@ class FixedRatioController(Controller):
         if len(self._hits) % self._step == 0:
             return self._response
         else:
-            return None
+            return 0  # 0 = no stimulus
 
 
 class FixedIntervalController(Controller):
