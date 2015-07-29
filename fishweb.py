@@ -1,6 +1,8 @@
+import collections
 import csv
 import errno
 import glob
+import math
 import multiprocessing
 import os
 import re
@@ -65,20 +67,32 @@ def _mkdir(path):
 def index():
     tracks = []
     for index, track in enumerate(_tracks()):
-        acquired = missing = lost = 0
+        states = collections.Counter()
+        heatmap = collections.Counter()
         with open(track) as f:
             i = -1  # so lines = 0 if file is empty
             for i, line in enumerate(f):
-                if ',acquired,' in line:
-                    acquired += 1
-                elif ',missing,' in line:
-                    missing += 1
-                elif ',lost,' in line or ',init,' in line:
-                    lost += 1
+                vals = line.split(',')
+                state, x, y = vals[1:4]
+                if state == "init":
+                    state = "lost"
+                states[state] += 1
+                try:
+                    if state != "lost":
+                        x = "%0.3f" % (float(x) - math.fmod(float(x), 1.0/15))
+                        y = "%0.3f" % (float(y) - math.fmod(float(y), 1.0/10))
+                        heatmap[(x,y)] += 1
+                except ValueError:
+                    pass  # not super important if we can't parse x,y
             lines = i+1
         name = track.split('/')[-1]
-        aml = ["%0.3f" % (x / float(lines)) for x in acquired, missing, lost]
-        tracks.append( (index, track, lines, aml, _imgs(name)) )
+        aml = ["%0.3f" % (states[key] / float(lines)) for key in 'acquired', 'missing', 'lost']
+        if heatmap:
+            maxheat = max(heatmap.values())
+            heat = [(key[0], key[1], str(float(value)/maxheat)) for key, value in heatmap.items()]
+        else:
+            heat = []
+        tracks.append( (index, track, lines, aml, heat, _imgs(name)) )
     return dict(tracks=tracks)
 
 

@@ -30,15 +30,35 @@ span#filterclear {
   color: #999;
   cursor: pointer;
 }
-th.points_cell, td.points_cell {
-  text-align: right;
-}
 body {
   overflow-y: scroll;  /* Scroll bar always present -- avoids bouncing on hide/show of rows */
 }
+.number_cell {
+  text-align: right;
+}
+.svg_cell {
+  vertical-align: middle;
+  position: relative;
+}
 svg.aml_chart {
-  height: 1em;
   width: 4em;
+  height: 1em;
+  /* centering */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: -2em;  /* half width */
+  margin-top: -0.5em;  /* half height */
+}
+svg.heatmap {
+  width: 3em;
+  height: 2em;
+  /* centering */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: -1.5em;  /* half width */
+  margin-top: -1em;  /* half height */
 }
 </style>
 <script type="text/javascript">
@@ -87,6 +107,7 @@ $(function() {
     togglesel(row);
   });
   makeCharts();
+  makeHeatMaps();
 });
 
 function makeCharts() {
@@ -95,19 +116,43 @@ function makeCharts() {
     var acquired = parseFloat(data[0]);
     var missing = parseFloat(data[1]);
     var lost = parseFloat(data[2]);
-    var a = acquired*100;
-    var b = missing*100;
-    var c = lost*100;
+    var a = acquired;
+    var b = missing;
+    var c = lost;
 
     var s = Snap(this);
     s.group(
       // Chrome requires the title tag to be in a group with the graphics
       // elements (not just part of the <svg> itself) to display it as a tooltip.
       Snap.parse("<title>" + this.getAttribute('title') + "</title>"),
-      s.rect(0,0,a,20).attr({fill: '#0d0'}),
-      s.rect(a,0,b,20).attr({fill: '#fc0'}),
-      s.rect(a+b,0,c,20).attr({fill: '#d00'})
+      s.rect(0,0,a,1).attr({fill: '#0d0'}),
+      s.rect(a,0,b,1).attr({fill: '#fc0'}),
+      s.rect(a+b,0,c,1).attr({fill: '#d00'})
     );
+  });
+}
+
+function makeHeatMaps() {
+  // number of buckets we're receiving and plotting
+  var _width = 15;
+  var _height = 10;
+
+  $("svg.heatmap").each(function() {
+    var data = $(this).data("values").split('|');
+
+    var s = Snap(this);
+    // background
+    s.rect(0,0,15,10).attr({fill: Snap.rgb(240,240,240)});
+
+    for (var i = 0 ; i < data.length ; i++) {
+      point = data[i].split(',');
+      var x = parseFloat(point[0])*_width;
+      var y = parseFloat(point[1])*_height;
+      var amt = parseFloat(point[2]);
+      amt = Math.sqrt(amt);  // scale so lower values are more intense/visible
+      color = Snap.rgb(240-240*amt, 240-200*amt, 240-120*amt);
+      s.rect(x, _height-1-y, 1, 1).attr({fill: color})
+    }
   });
 }
 
@@ -211,17 +256,18 @@ function do_unarchive(path, index) {
               </button>
             </th>
             <th width="100%">Log file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
-            <th class="points_cell">Points</th>
-            <th><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
+            <th class="number_cell">Points</th>
+            <th class="svg_cell"><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
+            <th class="svg_cell">Position heatmap</th>
             <th>Plots</th>
             <th>Actions</th>
           </tr>
         </thead>
-        %for index, path, points, aml, img_count in tracks:
+        %for index, path, points, aml, heat, img_count in tracks:
         <tr class="undo_row" id="row_{{index}}_undo">
           <td></td>
           <td>{{path}}</td>
-          <td colspan=3><i>Archived</i></td>
+          <td colspan=4><i>Archived</i></td>
           <td>
             <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{path}}', {{index}});" title="Unarchive">
               <span class="glyphicon glyphicon-log-in"></span>
@@ -236,8 +282,15 @@ function do_unarchive(path, index) {
             </button>
           </td>
           <td class="logfile_cell"><a href="/{{path}}">{{path}}</a></td>
-          <td class="points_cell">{{points}}</td>
-          <td><svg class="aml_chart" viewbox="0 0 100 20" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}"></svg></td>
+          <td class="number_cell">{{points}}</td>
+          <td class="svg_cell">
+            <svg class="aml_chart" viewbox="0 0 1 0.1" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}" preserveAspectRatio="none"></svg>
+          </td>
+          <td class="svg_cell">
+            %if heat:
+            <svg class="heatmap" viewbox="0 0 15 10" data-values="{{'|'.join(','.join(item) for item in heat)}}" title="Position heatmap" preserveAspectRatio="none"></svg>
+            %end
+          </td>
           <td>
             %if img_count:
             <a href="/view/{{path}}">View</a>
@@ -248,10 +301,10 @@ function do_unarchive(path, index) {
             <button type="button" class="btn btn-default btn-xs" onclick="do_post('/analyze/', 'path={{path}}');">
               %if img_count:
               <span class="glyphicon glyphicon-refresh"></span>
-              Re-analyze
+              Re-plot
               %else:
               <span class="glyphicon glyphicon-plus"></span>
-              Analyze
+              Plot
               %end
             </button>
             %end
