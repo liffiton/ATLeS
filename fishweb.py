@@ -109,11 +109,13 @@ def index():
     global track_data_cache
     tracks = []
     for index, track in enumerate(_tracks()):
-        if track in track_data_cache:
-            lines, aml, heat = track_data_cache[track]
+        mtime = os.stat(track).st_mtime
+        key = "%f|%s" % (mtime, track)
+        if key in track_data_cache:
+            lines, aml, heat = track_data_cache[key]
         else:
             lines, aml, heat = _get_track_data(track)
-            track_data_cache[track] = (lines, aml, heat)
+            track_data_cache[key] = (lines, aml, heat)
         name = track.split('/')[-1]
         tracks.append( (index, track, lines, aml, heat, _imgs(name)) )
     return dict(tracks=tracks)
