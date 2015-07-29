@@ -10,10 +10,16 @@ fishbox.py:
   wiringpi2   (for controlling light bar via PWM; 'sudo pip install wiringpi2')
 
 fishweb.py:
-  bottle         ('sudo pip install bottle')
-  python-daemon  ('sudo pip install python-daemon')
-  matplotlib     ('sudo pip install matplotlib' -- the package available via apt-get is too old)
-  numpy          ('sudo pip install numpy' -- the package available via apt-get is too old)
+  bottle
+  wtforms
+  python-daemon
+  matplotlib
+  numpy
+
+  To install all of these:
+    sudo pip install bottle wtforms python-daemon matplotlib numpy
+
+Note: the matplotlib and numpy packages available via apt-get are too old
 
 Note: 'pip install matplotlib' fails on a stock RPi B+ with an out-of-memory error.  It can be corrected by adding swap (http://stackoverflow.com/a/29467260), but it should not be an issue on RPi 2 w/ 1GB RAM.
 
