@@ -8,6 +8,7 @@ import logging
 import os
 import signal
 import sys
+import threading
 import time
 
 import experiment
@@ -123,10 +124,16 @@ def init_logging(args, conf):
 def sighandler(signum, frame):
     if signum == signal.SIGALRM:
         logging.info("Terminating experiment after timeout.")
+        sys.exit(0)
     elif signum == signal.SIGINT:
         logging.info("Caught ctrl-C; exiting.")
-
-    sys.exit(0)
+        sys.exit(1)
+    elif signum == signal.SIGTERM:
+        logging.info("Caught SIGTERM; exiting.")
+        sys.exit(1)
+    else:
+        logging.warn("Unexpected signal received (%d); exiting." % signum)
+        sys.exit(1)
 
 
 def main():
@@ -150,8 +157,9 @@ def main():
         signal.signal(signal.SIGALRM, sighandler)
         signal.alarm(args.time*60)
 
-    # catch SIGINT (ctrl-C)
+    # catch SIGINT (ctrl-C) and SIGTERM
     signal.signal(signal.SIGINT, sighandler)
+    signal.signal(signal.SIGTERM, sighandler)
 
     # setup lock file
     try:
@@ -163,7 +171,17 @@ def main():
 
     exp = experiment.Experiment(conf, args, stream, sighandler)
 
-    exp.run()
+    # run in separate thread so signal handler is more reliable
+    runthread = threading.Thread(target=exp.run)
+    runthread.daemon = True       # so thread is killed when main thread exits (e.g. in signal handler)
+    runthread.start()
+    if sys.version_info[0] >= 3:
+        runthread.join()
+    else:
+        # In Python 2, a timeout is required for join() to not just
+        # call a blocking C function (thus blocking the signal handler).
+        # However, infinity works.
+        runthread.join(float("inf"))
 
     sys.exit(0)
 
