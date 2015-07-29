@@ -30,8 +30,8 @@ $(function() {
     update_ini(iniFile);
   });
   update_ini($("#inifile option:selected").text());
-  $("#lockfile_delbutton").click(function(e) {
-  $.post('/delete_lockfile/', function(data) {$("#lockfile_warning").hide();});
+  $("#clearbutton").click(function(e) {
+    $.post('/clear_experiment/', function(data) {$("#lockfile_warning").hide();});
   });
 });
 </script>
@@ -45,10 +45,10 @@ $(function() {
     <div class="col-sm-12">
       <div class="alert alert-danger">
         <p><strong>Warning:</strong> Due to an existing lockfile, it looks like an experiment is already running on this box.  Please wait for it to finish before starting another.</p>
-        <p>You may override this (deleting the lockfile) if you are sure this warning is mistaken:
-          <button type="button" class="btn btn-danger" id="lockfile_delbutton">
+        <p>You may override this (ending any running experiment and deleting the lockfile) if you really want to:
+          <button type="button" class="btn btn-danger" id="clearbutton">
             <span class="glyphicon glyphicon-fire"></span>
-            Delete Lockfile
+            Clear experiment
             <span class="glyphicon glyphicon-fire"></span>
           </button>
         </p>

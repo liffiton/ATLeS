@@ -8,8 +8,10 @@ import os
 import re
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
+import time
 try:
     from StringIO import StringIO
 except ImportError:
@@ -31,7 +33,7 @@ matplotlib.use('Agg')
 import analyze
 
 _LOGDIR = "logs/"
-_LOCKFILE = _LOGDIR + "explockfile"
+_LOCKFILE = _LOGDIR + "current_experiment.lock"
 _INIDIR = "ini/"
 _IMGDIR = _LOGDIR + "img/"
 _ARCHIVEDIR = _LOGDIR + "archive/"
@@ -84,7 +86,10 @@ def _get_track_data(track):
             except ValueError:
                 pass  # not super important if we can't parse x,y
         lines = i+1
-    aml = ["%0.3f" % (states[key] / float(lines)) for key in ('acquired', 'missing', 'lost')]
+    if lines:
+        aml = ["%0.3f" % (states[key] / float(lines)) for key in ('acquired', 'missing', 'lost')]
+    else:
+        aml = []
     if heatmap:
         maxheat = max(heatmap.values())
         heat = [(key[0], key[1], str(float(value)/maxheat)) for key, value in heatmap.items()]
@@ -114,15 +119,49 @@ def index():
     return dict(tracks=tracks)
 
 
+@route('/lock_data/')
+def lock_data():
+    if not _lock_exists():
+        return None
+
+    with open(_LOCKFILE, 'r') as f:
+        pid, starttime, runtime = (int(line) for line in f)
+        return {'pid': pid,
+                'starttimestr': time.strftime("%X", time.localtime(starttime)),
+                'starttime': starttime,
+                'runtime': runtime
+                }
+
+
 @route('/new/')
 def new_experiment():
     form = CreateExperimentForm()
     return template('new', form=form, lock_exists=_lock_exists())
 
 
-@post('/delete_lockfile/')
-def post_delete_lockfile():
-    os.unlink(_LOCKFILE)
+@post('/clear_experiment/')
+def post_clear_experiment():
+    # kill process
+    with open(_LOCKFILE, 'r') as f:
+        pid, starttime, runtime = (int(line) for line in f)
+        print("Killing PID %d" % pid)
+        try:
+            os.kill(pid, signal.SIGTERM)
+            time.sleep(0.5)
+            os.kill(pid, signal.SIGKILL)
+            time.sleep(0.1)
+            os.kill(pid, signal.SIGKILL)
+        except OSError:
+            # at some point, we should get a "No such process error",
+            # whether due to the process not existing in the first place,
+            # or one of the signals succeeding
+            pass
+    # remove existing lockfile
+    try:
+        os.unlink(_LOCKFILE)
+    except:
+        # might not exist anymore
+        pass
 
 
 def _is_inifile(form, field):

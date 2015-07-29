@@ -16,7 +16,7 @@ import tracking
 
 
 _LOGDIR = "logs/"
-_LOCKFILE = _LOGDIR + "explockfile"
+_LOCKFILE = _LOGDIR + "current_experiment.lock"
 
 
 def greedy_parse(s):
@@ -163,9 +163,16 @@ def main():
 
     # setup lock file
     try:
-        os.open(_LOCKFILE, os.O_CREAT | os.O_EXCL)
+        # O_CREAT | O_EXCL ensure that this call creates the file,
+        # raises OSError if file exists
+        lockfd = os.open(_LOCKFILE, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        lockfile = os.fdopen(lockfd, 'w')
+        # store PID, start time (in UTC), and experiment runtime
+        lockfile.write("%d\n%d\n%d\n" % (os.getpid(), int(time.time()), args.time*60 if args.time else 0))
+        lockfile.close()
+        # remove lockfile at exit
         atexit.register(os.unlink, _LOCKFILE)
-    except:
+    except ValueError:
         logging.error("It appears an experiment is already running (%s exists).  Please wait or end that experiment before starting another." % _LOCKFILE)
         sys.exit(1)
 

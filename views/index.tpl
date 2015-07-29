@@ -7,6 +7,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 <style>
+div.my-header {
+  padding-top: 1em;
+  border-bottom: 2px solid #ddd;
+}
+div#exp_progress {
+  padding: 0.5em;
+  margin-bottom: 0.5em;
+  display: none;  /* hidden by default */
+}
 tr.undo_row {
   display: none;  /* default, will be overridden to display */
   color: #999999;
@@ -60,6 +69,12 @@ svg.heatmap {
   margin-left: -1.5em;  /* half width */
   margin-top: -1em;  /* half height */
 }
+.alert .progress {
+  margin-bottom: 0;
+}
+#rem_in, #rem_out {
+  padding-right: 0.3em;
+}
 </style>
 <script type="text/javascript">
 function do_post(url, query, check) {
@@ -74,7 +89,7 @@ function do_post(url, query, check) {
   document.body.appendChild(form)
     form.submit();
 }
-function async_post(url, query) {
+function async_post(url, query, check, success) {
   $.post(url + "?" + query);
 }
 
@@ -92,6 +107,46 @@ function filter_rows(value) {
   update_selection();
 }
 
+function updateProgress(data) {
+  $("#exp_run_since").text(data["starttimestr"]);
+
+  var start = parseInt(data["starttime"])*1000;
+  var runtime = parseInt(data["runtime"])*1000;
+  var startdate = new Date(start);
+  var curdate = new Date();
+  var millis_gone = curdate.getTime() - startdate.getTime();
+  var millis_remaining = (startdate.getTime() + runtime) - curdate.getTime();
+
+  var barwidth = Math.min(100, 100 * millis_gone / runtime);
+  $("#exp_progressbar").width(barwidth + "%");
+
+  var min_remaining = Math.round(millis_remaining / 1000 / 60);
+  var remtext = min_remaining + " min remaining";
+  if (barwidth < 50) {
+    $("#rem_in").html("");
+    $("#rem_out").html(remtext);
+  }
+  else {
+    $("#rem_in").html(remtext);
+    $("#rem_out").html("");
+  }
+}
+
+function checkProgress() {
+  $.get('/lock_data/').success(function(data) {
+    if (data == '') {
+      $("#exp_progress").hide();
+      $("#new_exp_button").show();
+    }
+    else {
+      updateProgress(data);
+      $("#exp_progress").show();
+      $("#new_exp_button").hide();
+    }
+  });
+  window.setTimeout(checkProgress, 5000);
+}
+
 // setup handlers / onload stuff
 $(function() {
   $("#filterclear").click(function(e) {
@@ -106,13 +161,24 @@ $(function() {
     var row = $(this).closest("tr");
     togglesel(row);
   });
+  $("#clear_exp_button").click(function(e) {
+    var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
+    if (! go) return;
+    $.post("/clear_experiment/")
+      .always(checkProgress);
+  });
   makeCharts();
   makeHeatMaps();
+  checkProgress();
 });
 
 function makeCharts() {
   $("svg.aml_chart").each(function() {
-    var data = $(this).data("values").split('|');
+    var rawdata = $(this).data("values");
+    if (rawdata == "") {
+      return;
+    }
+    var data = rawdata.split('|');
     var acquired = parseFloat(data[0]);
     var missing = parseFloat(data[1]);
     var lost = parseFloat(data[2]);
@@ -235,14 +301,28 @@ function do_unarchive(path, index) {
 <body>
 <div class="container">
   <div class="row">
-    <div class="col-lg-10 col-md-12 col-sm-12">
-      <h1>
-        <a class="btn btn-primary pull-right" href="/new/">
+    <div class="my-header col-lg-10 col-md-12 col-sm-12">
+      <div id="exp_progress" class="col-sm-6 col-md-5 col-lg-4 alert alert-info small pull-right">
+        <button id="clear_exp_button" type="button" class="btn btn-danger btn-xs pull-right" title="Kill experiment">
+          <span class="glyphicon glyphicon-remove"></span>
+        </button>
+        <strong>Experiment running</strong> since <span id="exp_run_since"></span>.
+        <div class="progress" style="width: 90%;">
+          <div id="exp_progressbar" class="progress-bar progress-bar-striped active" role="progressbar" style="width: 0%;">
+            <span class="pull-right" id="rem_in"></span>
+          </div>
+          <span class="pull-right" id="rem_out"></span>
+        </div>
+      </div>
+      <div id="new_exp_button" class="pull-right">
+        <a class="btn btn-primary" href="/new/">
           <span class="glyphicon glyphicon-plus-sign"></span>
           Start New Experiment
         </a>
-        <span>Fishybox Log Analyzer/Viewer</span>
-      </h1>
+      </div>
+      <span class="h1">
+        Fishybox Log Analyzer/Viewer
+      </span>
     </div>
   </div>
   <div class="row">
