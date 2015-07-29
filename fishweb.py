@@ -10,7 +10,10 @@ import shlex
 import shutil
 import subprocess
 import sys
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
 ## Import gevent and monkey-patch before importing bottle.
@@ -81,7 +84,7 @@ def _get_track_data(track):
             except ValueError:
                 pass  # not super important if we can't parse x,y
         lines = i+1
-    aml = ["%0.3f" % (states[key] / float(lines)) for key in 'acquired', 'missing', 'lost']
+    aml = ["%0.3f" % (states[key] / float(lines)) for key in ('acquired', 'missing', 'lost')]
     if heatmap:
         maxheat = max(heatmap.values())
         heat = [(key[0], key[1], str(float(value)/maxheat)) for key, value in heatmap.items()]
@@ -124,7 +127,6 @@ def post_delete_lockfile():
 
 def _is_inifile(form, field):
     if field.data not in _inis():
-        print str(field)
         raise ValidationError("Must specify an existing .ini file.")
 
 
@@ -219,7 +221,7 @@ def post_stats():
     all_keys[:0] = ['Log file']  # prepend 'Log file' header
 
     if do_csv:
-        output = StringIO.StringIO()
+        output = StringIO()
         writer = csv.DictWriter(output, fieldnames=all_keys)
         writer.writeheader()
         for stat in stats:
