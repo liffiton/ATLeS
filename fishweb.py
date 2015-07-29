@@ -92,7 +92,7 @@ def _get_track_data(track):
         aml = []
     if heatmap:
         maxheat = max(heatmap.values())
-        heat = [(key[0], key[1], str(float(value)/maxheat)) for key, value in heatmap.items()]
+        heat = [(key[0], key[1], "%0.3f" % (float(value)/maxheat)) for key, value in heatmap.items()]
     else:
         heat = []
 
