@@ -91,7 +91,6 @@ $(function() {
 
 function makeCharts() {
   $("svg.aml_chart").each(function() {
-    var s = Snap(this);
     var data = $(this).data("values").split('|');
     var acquired = parseFloat(data[0]);
     var missing = parseFloat(data[1]);
@@ -99,9 +98,16 @@ function makeCharts() {
     var a = acquired*100;
     var b = missing*100;
     var c = lost*100;
-    s.rect(0,0,a,20).attr({fill: '#0d0'});
-    s.rect(a,0,b,20).attr({fill: '#fc0'});
-    s.rect(a+b,0,c,20).attr({fill: '#d00'});
+
+    var s = Snap(this);
+    s.group(
+      // Chrome requires the title tag to be in a group with the graphics
+      // elements (not just part of the <svg> itself) to display it as a tooltip.
+      Snap.parse("<title>" + this.getAttribute('title') + "</title>"),
+      s.rect(0,0,a,20).attr({fill: '#0d0'}),
+      s.rect(a,0,b,20).attr({fill: '#fc0'}),
+      s.rect(a+b,0,c,20).attr({fill: '#d00'})
+    );
   });
 }
 
