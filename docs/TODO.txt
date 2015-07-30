@@ -23,6 +23,9 @@ Circuits
 
 FishWeb / Analyze
 -----------------
+ - Put all experiment parameters in every row of track file and stats file
+ - Experiment progress indicator should know when timing actually started
+ - Kill/clear experiment leaves camera in unusable state until reboot
 
 
 FishBox [.py]
