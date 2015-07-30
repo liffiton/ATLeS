@@ -266,6 +266,8 @@ function update_buttons() {
   $('#statsbutton').toggleClass('btn-primary', count > 0);
   $('#statscsvbutton').toggleClass('disabled', count == 0);
   $('#statscsvbutton').toggleClass('btn-primary', count > 0);
+  $('#replotselbutton').toggleClass('disabled', count == 0);
+  $('#replotselbutton').toggleClass('btn-primary', count > 0);
   $('#selectallbutton').toggleClass('btn-default', count < row_count);
   $('#selectallbutton').toggleClass('btn-primary', count == row_count);
 }
@@ -295,6 +297,13 @@ function do_unarchive(path, index) {
   async_post('/unarchive/', 'path=' + path);
   $("#row_" + index).show();
   $("#row_" + index + "_undo").hide();
+}
+
+function analyze_selection() {
+  var go = confirm("This operation will run in the background with no feedback while running or when complete (sorry).");
+  if (! go) return;
+  var sels = Object.keys(selection).sort();
+  async_post('/analyze_selection/', 'selection=' + sels.join('|'));
 }
 </script>
 </head>
@@ -412,12 +421,9 @@ function do_unarchive(path, index) {
         <button type="button" class="btn btn-default disabled" id="statscsvbutton" onclick="do_stats_csv();">
           Download Statistics (CSV)
         </button>
-        </p>
-        <p>
-        Global actions:
-        <button type="button" class="btn btn-default" title="Re-analyze All" onclick="do_post('/analyze_all/', null, 'This will take a long time with no feedback while running.');">
+        <button type="button" class="btn btn-default disabled" title="Re-plot" id="replotselbutton" onclick="analyze_selection();">
           <span class="glyphicon glyphicon-refresh"></span>
-          All
+          Re-plot
         </button>
         </p>
       </div>

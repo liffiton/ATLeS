@@ -297,14 +297,16 @@ def post_analyze():
     redirect("/view/%s" % logname)
 
 
-@post('/analyze_all/')
-def post_analyze_all():
-    def do_all():
-        for track in _tracks():
-            _do_analyze(track)
-    p = multiprocessing.Process(target=do_all)
+def _analyze_selection(lognames):
+    for track in lognames:
+        _do_analyze(track)
+
+
+@post('/analyze_selection/')
+def post_analyze_selection():
+    lognames = request.query.selection.split('|')
+    p = multiprocessing.Process(target=_analyze_selection, args=(lognames,))
     p.start()
-    redirect("/")
 
 
 @post('/compare/')
