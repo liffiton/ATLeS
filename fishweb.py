@@ -74,7 +74,11 @@ def _get_track_data(track):
         i = -1  # so lines = 0 if file is empty
         for i, line in enumerate(f):
             vals = line.split(',')
-            state, x, y = vals[1:4]
+            try:
+                state, x, y = vals[1:4]
+            except ValueError:
+                # most likely an empty line
+                break
             if state == "init":
                 state = "lost"
             states[state] += 1
