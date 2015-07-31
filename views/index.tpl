@@ -317,7 +317,7 @@ function analyze_selection() {
         </button>
         <strong>Experiment running</strong> since <span id="exp_run_since"></span>.
         <div class="progress" style="width: 90%;">
-          <div id="exp_progressbar" class="progress-bar progress-bar-striped active" role="progressbar" style="width: 0%;">
+          <div id="exp_progressbar" class="progress-bar progress-bar-striped" role="progressbar" style="width: 0%;">
             <span class="pull-right" id="rem_in"></span>
           </div>
           <span class="pull-right" id="rem_out"></span>
