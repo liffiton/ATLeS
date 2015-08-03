@@ -153,7 +153,9 @@ def post_clear_experiment():
         print("Killing PID %d" % pid)
         try:
             os.kill(pid, signal.SIGTERM)
-            time.sleep(0.5)
+            time.sleep(1.0)
+            os.kill(pid, signal.SIGTERM)
+            time.sleep(1.0)
             os.kill(pid, signal.SIGKILL)
             time.sleep(0.1)
             os.kill(pid, signal.SIGKILL)

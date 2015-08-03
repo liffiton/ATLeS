@@ -4,6 +4,12 @@
 "Dev" RPi 2 B+ (pi3):
  - 10.2.6.248  [in Mark's office]
 
+
+To run main web interface:
+  sudo python fishweb.py --daemon
+
+
+
 Fish tank measurements:
  - Height w/ feet:   16.0cm
  - Height w/o feet:  15.4cm

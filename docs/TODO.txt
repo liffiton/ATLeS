@@ -32,7 +32,10 @@ FishBox [.py]
 -------------
 
 Big / Important:
- - Make background subtractor adaptive, modifying sensitivity to hit 1 detection exactly. (See babyfish code.)
+ - Switch to pigpio library for PWM -- runs separate daemon as root, all rest
+   as unprivileged user.
+ - Make background subtractor adaptive, modifying sensitivity to hit 1
+   detection exactly. (See babyfish code.)
 
 Medium:
  - Utility to create an .ini file interactively (w/ camera view, clicking,
