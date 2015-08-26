@@ -24,6 +24,11 @@ Circuits
 FishWeb / Analyze
 -----------------
  - Put all experiment parameters in every row of track file and stats file
+   - At *least* put it in every row of stats file
+ - Stay on experiment creation page when submitting/creating a new experiment
+   - Use is to just submit same experiment again and again...
+ - :?: Is the random choice made for stim vs no recorded anywhere?
+ - :?: When does the data output/recording start?  How is that indicated?
  - Experiment progress indicator should know when timing actually started
  - Kill/clear experiment leaves camera in unusable state until reboot
 
