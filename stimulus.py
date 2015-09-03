@@ -4,7 +4,6 @@ import multiprocessing
 import os
 import signal
 import sys
-import time
 
 try:
     import wiringpi2
@@ -13,12 +12,6 @@ except ImportError:
     from modulemock import Mockclass
     wiringpi2 = Mockclass()
     _wiringpi2_mocked = True
-
-try:
-    import pygame
-except ImportError:
-    from modulemock import Mockclass
-    pygame = Mockclass()
 
 
 _LIGHT_PWM_PIN = 18  # pin for PWM control of visible light bar
@@ -33,7 +26,7 @@ class StimulusBase(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def begin(self, conf):
+    def begin(self):
         pass
 
     @abc.abstractmethod
@@ -58,8 +51,8 @@ class ThreadedStimulus(StimulusBase):
         self._helper = helperclass(*args, **kwargs)
         self._p = None  # the separate process running the stimulus thread
 
-    def begin(self, conf):
-        self._helper.begin(conf)
+    def begin(self):
+        self._helper.begin()
         self._p = multiprocessing.Process(target=self._helper.stimulus_thread, args=(self._child_pipe,))
         self._p.start()
         atexit.register(self.end)
@@ -85,7 +78,7 @@ class DummyStimulus(StimulusBase):
     def __init__(self):
         self._stimcount = 0
 
-    def begin(self, conf):
+    def begin(self):
         print("Dummy: begin()")
 
     def end(self):
@@ -97,98 +90,10 @@ class DummyStimulus(StimulusBase):
             self._stimcount += 1
 
 
-class VisualStimulus(ThreadedStimulus):
-    def __init__(self):
-        '''Initialize as a ThreadedStimulus with StimulusFlashing helper, passed kwarg for fps'''
-        super(VisualStimulus, self).__init__(StimulusFlashing, fps=6)
-
-
 class LightBarStimulus(ThreadedStimulus):
     def __init__(self, freq_Hz):
         '''Initialize as a ThreadedStimulus with StimulusLightBar helper, passed kwarg for freq_Hz'''
         super(LightBarStimulus, self).__init__(StimulusLightBar, freq_Hz)
-
-
-class PygameHelper(object):
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, fps):
-        self._fps = fps
-        self._screen = None
-
-    def begin(self, conf):
-        '''Create a window in the specific location with the specified dimensions.'''
-
-        # Figure out x,y coordinates if given as negative values (i.e., from right/bottom)
-        pygame.init()
-        info = pygame.display.Info()
-        if conf['x'] < 0:
-            conf['x'] = info.current_w - conf['width'] + conf['x'] + 1
-        if conf['y'] < 0:
-            conf['y'] = info.current_h - conf['height'] + conf['y'] + 1
-
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (conf['x'], conf['y'])
-        self._screen = pygame.display.set_mode((conf['width'], conf['height']))
-        #self._screen = pygame.display.set_mode((640, 480), pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.FULLSCREEN)
-        pygame.mouse.set_visible(False)
-
-    def stimulus_thread(self, pipe):
-        # ignore signals that will be handled by parent
-        signal.signal(signal.SIGALRM, signal.SIG_IGN)
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-        while True:
-            self._draw()
-            pygame.display.flip()
-
-            # check pipe for commands
-            while pipe.poll():
-                val = pipe.recv()
-
-                if val == 'end' or val is None:
-                    return
-
-                self._handle_command(val)
-
-            # check pygame events for quit
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT or event.type == pygame.KEYUP:
-                    pipe.send('quit')
-                    return
-
-            time.sleep(1.0 / self._fps)
-
-    @abc.abstractmethod
-    def _draw(self):
-        pass
-
-    @abc.abstractmethod
-    def _handle_command(self, cmd):
-        pass
-
-
-class StimulusFlashing(PygameHelper):
-    def __init__(self, fps=10):
-        super(StimulusFlashing, self).__init__(fps)
-        self._on = False
-        self._flash = True  # so it starts lit
-        self._bgcolor = (0,0,0)  # black
-        self._oncolor = (255,255,255)  # white
-
-    def _handle_command(self, cmd):
-        if cmd:
-            self._on = True
-        else:
-            self._on = False
-            self._flash = True  # so it starts lit next time
-
-    def _draw(self):
-        if self._on and self._flash:
-            self._screen.fill(self._oncolor)
-        else:
-            self._screen.fill(self._bgcolor)
-        if self._on:
-            self._flash = not self._flash
 
 
 class StimulusLightBar(object):
@@ -242,7 +147,7 @@ class StimulusLightBar(object):
         else:
             self._light_ambient()
 
-    def begin(self, conf):
+    def begin(self):
         pass
 
     def stimulus_thread(self, pipe):
