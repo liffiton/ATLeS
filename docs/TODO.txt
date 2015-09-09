@@ -63,6 +63,4 @@ Testing/validation:
  - Check carefully how invalid entries ['lost'] will affect collected metrics
 
 BUGS:
- - --time-from-trigger crashes on first trigger on commandline.
-   (error about signal() can only be called from main thread)
 
