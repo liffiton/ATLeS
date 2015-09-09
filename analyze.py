@@ -1,9 +1,9 @@
 import argparse
 import math
 try:
-    from ConfigParser import RawConfigParser
+    from ConfigParser import RawConfigParser, MissingSectionHeaderError
 except ImportError:
-    from configparser import RawConfigParser
+    from configparser import RawConfigParser, MissingSectionHeaderError
 import matplotlib.pyplot as plt
 from matplotlib import collections, gridspec, lines, patches
 import numpy as np
@@ -121,9 +121,15 @@ class Grapher(object):
         curstats['Setup file'] = setupfile
 
         parser = RawConfigParser()
-        parser.read(setupfile)
+        try:
+            parser.read(setupfile)
+        except MissingSectionHeaderError:
+            return curstats
 
         for section in sections:
+            if section not in parser.sections():
+                continue
+
             for key in parser.options(section):
                 curstats[section + "__" + key] = parser.get(section, key)
 
