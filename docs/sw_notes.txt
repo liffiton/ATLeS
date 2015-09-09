@@ -1,13 +1,37 @@
 FishyCam on the Raspberry Pi
 ============================
 
-Python Package dependencies
+OS Setup
+--------
+
+Using the provided image [TODO]:
+  * Log in with username 'pi', default password 'fishypi'.
+
+[TODO: Issues w/ current build]
+  * ~pi/fishycam is cloned from hyperion
+  * pi's RSA pubkey is added to hyperion as mliffito
+
+Alternatively, if you want to set up the environment yourself, refer to the
+following sections.
+
+
+Installing FishyCam from Scratch
+================================
+
+Python Package Dependencies
 ---------------------------
 
+Before installing the python modules themselves, install the required libraries:
+
+  $ sudo apt-get install python-dev
+
+Many python packages are most easily installed via pip.  To install pip,
+follow the instructions here: https://pip.pypa.io/en/latest/installing.html
+
 fishbox.py:
-  cv2         (for OpenCV; see opencv_notes.txt)
-  smbus       (for reading sensor values; 'sudo apt-get install python-smbus')
-  wiringpi2   (for controlling light bar via PWM; 'sudo pip install wiringpi2')
+  cv2         (for OpenCV)
+  smbus       (for reading sensor values)
+  wiringpi2   (for controlling light bar via PWM)
 
 fishweb.py:
   bottle
@@ -16,12 +40,18 @@ fishweb.py:
   matplotlib
   numpy
 
-  To install all of these:
-    sudo pip install bottle wtforms python-daemon matplotlib numpy
+Note: the matplotlib and numpy packages available via apt-get are too old to use in FishyCam.
 
-Note: the matplotlib and numpy packages available via apt-get are too old
+To install cv2, see opencv_notes.txt.
 
-Note: 'pip install matplotlib' fails on a stock RPi B+ with an out-of-memory error.  It can be corrected by adding swap (http://stackoverflow.com/a/29467260), but it should not be an issue on RPi 2 w/ 1GB RAM.
+To install smbus:
+  $ sudo apt-get install python-smbus
+
+To install all of the remaining but matplotlib:
+  $ sudo pip install wiringpi2 bottle wtforms python-daemon numpy
+
+To install matplotlib, we have to work around an issue with pip.  'pip install matplotlib' fails on a stock RPi (both models 1 and 2) with a memory error.  To work around this, install it without using the cache (thanks to: http://stackoverflow.com/a/31526029):
+  $ sudo pip install --no-cache-dir matplotlib
 
 
 Runtime dependencies
@@ -45,6 +75,9 @@ Alternatively, modprobe can be used to load them manually at any time:
   sudo modprobe bcm2835-v4l2
   sudo modprobe i2c-dev
 
+
+Notes on Running FishyCam
+=========================
 
 Framerate
 ---------

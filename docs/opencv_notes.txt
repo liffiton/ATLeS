@@ -25,6 +25,16 @@ Packages that need to be installed in addition to the defaults.  [There may be s
   libtiff-dev
   libjasper-dev
 
+To install these:
+  $ sudo apt-get install cmake libgtk2.0-dev python-dev libavcodec-dev libavformat-dev libswscale-dev libjpeg8-dev libpng12-dev libtiff-dev libjasper-dev
+
+
+Download OpenCV
+---------------
+
+FishyCam currently works with the latest version of OpenCV 2.4 (2.4.11 as of this writing).
+Download it from http://opencv.org/downloads.html and extract it into its own directory.
+
 
 Modifying OpenCV
 ----------------
