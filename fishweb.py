@@ -17,6 +17,13 @@ try:
 except ImportError:
     from io import StringIO
 
+# crude detection of whether we're on a Pi / have to run fishbox as root.
+try:
+    import wiringpi2  # noqa - it's fine that we're importing and not using
+    _wiringpi2_available = True
+except ImportError:
+    _wiringpi2_available = False
+
 # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
 ## Import gevent and monkey-patch before importing bottle.
 #from gevent import monkey
@@ -207,10 +214,10 @@ def post_create():
     stimulus = request.forms.stimulus
     inifile = request.forms.inifile
 
-    if sys.platform in ['cygwin', 'nt']:
-        cmdparts = []
-    else:
+    if _wiringpi2_available and os.geteuid() != 0:
         cmdparts = ['sudo']  # fishbox.py must be run as root!
+    else:
+        cmdparts = []
     cmdparts.append(_EXPSCRIPT)
     cmdparts.append("-t %d" % timelimit)
     if startfromtrig:
