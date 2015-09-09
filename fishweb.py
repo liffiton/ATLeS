@@ -245,8 +245,8 @@ def post_stats():
     for log in logs:
         curstats = {}
         curstats['Log file'] = log
-        g = analyze.Grapher()
-        g.load(log)
+        g = analyze.Grapher(log)
+        curstats.update(g.read_setup(['experiment', 'at_runtime']))
         curstats.update(g.get_stats())
         for i in range(g.len_minutes):
             curstats.update(g.get_stats(minute=i))
@@ -284,8 +284,7 @@ def post_stats():
 
 def _do_analyze(logname):
     name = logname.split('/')[-1]
-    g = analyze.Grapher()
-    g.load(logname)
+    g = analyze.Grapher(logname)
     g.plot()
     g.savefig(_IMGDIR + "%s.plot.png" % name)
     g.plot_heatmap()
@@ -319,10 +318,8 @@ def post_analyze_selection():
 def post_compare():
     log1 = request.query.p1
     log2 = request.query.p2
-    g1 = analyze.Grapher()
-    g2 = analyze.Grapher()
-    g1.load(log1)
-    g2.load(log2)
+    g1 = analyze.Grapher(log1)
+    g2 = analyze.Grapher(log2)
     g1.plot_leftright()
     g2.plot_leftright(addplot=True)
     name1 = log1.split('/')[-1]

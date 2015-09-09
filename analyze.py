@@ -1,5 +1,9 @@
 import argparse
 import math
+try:
+    from ConfigParser import RawConfigParser
+except ImportError:
+    from configparser import RawConfigParser
 import matplotlib.pyplot as plt
 from matplotlib import collections, gridspec, lines, patches
 import numpy as np
@@ -54,7 +58,9 @@ def _set_backgroundcolor(ax, color):
 
 
 class Grapher(object):
-    def load(self, infile):
+    def __init__(self, infile):
+        self._logfile = infile
+
         time, status, x, y, numpts = np.loadtxt(
             infile,
             delimiter=',',
@@ -107,6 +113,21 @@ class Grapher(object):
         self._y = y
         self._dy = dy
         self._numpts = numpts
+
+    def read_setup(self, sections):
+        curstats = {}
+
+        setupfile = self._logfile.split('-track.csv')[0] + '-setup.txt'
+        curstats['Setup file'] = setupfile
+
+        parser = RawConfigParser()
+        parser.read(setupfile)
+
+        for section in sections:
+            for key in parser.options(section):
+                curstats[section + "__" + key] = parser.get(section, key)
+
+        return curstats
 
     @property
     def len_minutes(self):
@@ -457,8 +478,7 @@ def main():
     parser.add_argument('-L', '--leftright', action='store_true')
     args = parser.parse_args()
 
-    g = Grapher()
-    g.load(args.infile)
+    g = Grapher(args.infile)
 
     stats = g.get_stats()
     maxlen = max(len(key) for key in stats.keys())
