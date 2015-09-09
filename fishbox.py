@@ -213,15 +213,18 @@ def main():
         stream = tracking.Stream(0, conf=conf['camera'], params=params)
 
     # create Experiment object
-    exp = experiment.Experiment(conf, args, stream, sighandler)
+    exp = experiment.Experiment(conf, args, stream)
 
     # setup timeout alarm if needed
     # NOTE: not cross-platform (SIGALRM not available on Windows)
     if args.time and sys.platform in ['cygwin', 'nt']:
         logging.error("Timeout not available under Windows.  Timeout option ignored.")
-    elif args.time and not args.time_from_trigger:
+    elif args.time:
         signal.signal(signal.SIGALRM, sighandler)
-        signal.alarm(args.time*60)
+        if not args.time_from_trigger:
+            # set the alarm here; otherwise (if --time-from-trigger),
+            # it will be set in experiment thread
+            signal.alarm(args.time*60)
 
     # run in separate thread so signal handler is more reliable
     runthread = threading.Thread(target=exp.run)

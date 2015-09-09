@@ -109,7 +109,7 @@ class Watcher(object):
 
 class Experiment(object):
 
-    def __init__(self, conf, args, stream, sighandler):
+    def __init__(self, conf, args, stream):
         self._conf = conf
         self._args = args
         self._stream = stream
@@ -165,8 +165,7 @@ class Experiment(object):
         # Setup printing stats on exit
         atexit.register(self._print_stats)
 
-        # Store signal handler for later time-setting
-        self._sighandler = sighandler
+        # Record whether the alarm has already been set (for --time-from-trigger)
         self._alarm_set = False
 
     def _write_data(self, data, frametime=None):
@@ -234,7 +233,6 @@ class Experiment(object):
 
             # set an alarm if we're supposed to start timing based on the trigger
             if self._args.time and self._args.time_from_trigger and not self._alarm_set:
-                signal.signal(signal.SIGALRM, self._sighandler)
                 signal.alarm(self._args.time*60)
                 self._alarm_set = True
 
