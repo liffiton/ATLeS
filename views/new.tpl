@@ -82,7 +82,6 @@ $(function() {
                 <div class="checkbox">
                   <label>
                     {{!form.startfromtrig}}
-                    <input type="checkbox" name="startFromTrigger">
                     Start timing from first trigger
                   </label>
                 </div>
