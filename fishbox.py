@@ -6,6 +6,7 @@ except ImportError:
     from configparser import RawConfigParser
 import logging
 import os
+import random
 import signal
 import sys
 import threading
@@ -17,6 +18,7 @@ import tracking
 
 _LOGDIR = "logs/"
 _LOCKFILE = _LOGDIR + "current_experiment.lock"
+_expargs = []  # track which arguments are related to the experiment
 
 
 def greedy_parse(s):
@@ -28,8 +30,9 @@ def greedy_parse(s):
     return s
 
 
-def get_conf(config_filename):
+def get_conf(args):
     '''Read a configuration file.'''
+    config_filename = args.inifile
     if not os.path.isfile(config_filename):
         logging.error("Configuration file not found: %s", config_filename)
         sys.exit(1)
@@ -38,7 +41,6 @@ def get_conf(config_filename):
     parser.read(config_filename)
 
     conf = {}
-    conf['_parserobj'] = parser
 
     # create a dictionary for each section
     for section in parser.sections():
@@ -48,7 +50,25 @@ def get_conf(config_filename):
             # greedy_parse() converts each to a float or an int, if it can.
             conf[section][key] = greedy_parse(parser.get(section, key))
 
+    # create a dictionary for relevant cmdline arguments,
+    conf['experiment_args'] = {}
+    for arg in _expargs:
+        conf['experiment_args'][arg] = getattr(args, arg)
+
     return conf
+
+
+def make_runtime_choices(conf):
+    conf['at_runtime'] = {}
+    section = conf['at_runtime']
+    # Determine and record whether stimulus is enabled for this run
+    section['dostim'] = True
+    if conf['experiment_args']['nostim']:
+        section['dostim'] = False
+    elif conf['experiment_args']['randstim']:
+        choice = random.choice([True, False])
+        section['dostim'] = choice
+        logging.info("--randstim selected; chose stimulus %s." % ("ENABLED" if choice else "DISABLED"))
 
 
 def get_args():
@@ -68,6 +88,8 @@ def get_args():
                         help='disable all stimulus for this run')
     stimgroup.add_argument('--randstim', action='store_true',
                         help='choose whether to enable or disable stimulus for this run with 50/50 probabilities')
+    global _expargs
+    _expargs = ['time', 'time_from_trigger', 'nostim', 'randstim']
 
     rare_group = parser.add_argument_group('rarely-used arguments')
     rare_group.add_argument('--inifile', type=str, default='ini/default.ini',
@@ -94,6 +116,8 @@ def init_logging(args, conf):
         name = "%s-%s" % (filetimestamp, args.id)
     else:
         name = filetimestamp
+    conf['name'] = name
+
     trackfilename = "%s/%s-track.csv" % (_LOGDIR, name)
     logfilename = "%s/%s.log" % (_LOGDIR, name)
 
@@ -113,12 +137,25 @@ def init_logging(args, conf):
 
     conf['trackfile'] = open(trackfilename, 'w')
 
+
+def write_setup(conf):
     # Record the setup in a -setup.txt file.
-    setupfilename = "%s/%s-setup.txt" % (_LOGDIR, name)
+
+    parser = RawConfigParser()
+    for section in conf:
+        if not isinstance(conf[section], dict):
+            # only record values stored in sections/dicts
+            continue
+
+        parser.add_section(section)
+        for key in conf[section]:
+            parser.set(section, key, conf[section][key])
+
+    setupfilename = "%s/%s-setup.txt" % (_LOGDIR, conf['name'])
     with open(setupfilename, 'w') as setupfile:
-        setupfile.write("Command line:\n    %s\n\n" % (' '.join(sys.argv)))
-        setupfile.write("Configuration file:\n")
-        conf['_parserobj'].write(setupfile)
+        setupfile.write("; Command line:\n;    %s\n;\n" % (' '.join(sys.argv)))
+        setupfile.write("; Configuration:\n")
+        parser.write(setupfile)
 
 
 def sighandler(signum, frame):
@@ -138,8 +175,14 @@ def sighandler(signum, frame):
 
 def main():
     args = get_args()
-    conf = get_conf(args.inifile)
+    conf = get_conf(args)
     init_logging(args, conf)
+
+    # add runtime-decided config
+    make_runtime_choices(conf)
+
+    # record all configuration to the setup file
+    write_setup(conf)
 
     # catch SIGINT (ctrl-C) and SIGTERM
     signal.signal(signal.SIGINT, sighandler)
