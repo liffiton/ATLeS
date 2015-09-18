@@ -1,0 +1,14 @@
+2015-09-18
+----------
+
+To save a disk image of a working/configured Raspberry Pi SD card:
+
+  1) Put card into card reader in a Linux machine.
+  2) 'sudo umount /dev/[device of auto-mounted partition[s]]'
+  3) Use gparted to shrink the root partition on the card to just
+     the used space plus a small buffer.
+  4) [how?] determine the number of blocks now occupied.
+     e.g.: http://raspberrypi.stackexchange.com/a/8314
+  5) Use dd | gzip to create the image using the size from the previous step.
+     e.g.: sudo dd bs=???? count=???? if=/dev/sdd1 | gzip > rpi_image_`date +%d%m%y`.gz
+
