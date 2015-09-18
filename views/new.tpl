@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fishybox: Start New Experiment</title>
 <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+<script src="/static/fishweb.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 <style>
 div#inidisplay {
@@ -14,16 +15,6 @@ pre#inidisplay_contents {
 }
 </style>
 <script type="text/javascript">
-function update_ini(iniFile) {
-  $.get("/" + iniFile, function(data) {
-    lines = data.split('\n');
-    real_lines = lines.filter(function(line) {return line[0] != '#';});
-    contents = real_lines.join('\n').replace("\n", "");
-    $("#inidisplay_name").text(iniFile);
-    $("#inidisplay_contents").text(contents);
-    $("#inidisplay").show();
-  });
-}
 $(function() {
   $("#inifile").change(function(e) {
     var iniFile = this.value;

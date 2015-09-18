@@ -371,6 +371,11 @@ def static_inis(filename):
     return static_file(filename, root=_INIDIR)
 
 
+@route('/static/:path#.+#', name='static')
+def static(path):
+    return static_file(path, root='static')
+
+
 if __name__ == '__main__':
     daemonize = False
     testing = False
