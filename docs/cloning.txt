@@ -1,14 +1,50 @@
-2015-09-18
-----------
+Making a New Image
+==================
 
 To save a disk image of a working/configured Raspberry Pi SD card:
 
   1) Put card into card reader in a Linux machine.
-  2) 'sudo umount /dev/[device of auto-mounted partition[s]]'
+
+  2) Unmount the partitions if auto-mounted (Ubuntu auto-mounts them)
+
+       sudo umount /dev/[device of auto-mounted partition[s]]
+
   3) Use gparted to shrink the root partition on the card to just
-     the used space plus a small buffer.
-  4) [how?] determine the number of blocks now occupied.
-     e.g.: http://raspberrypi.stackexchange.com/a/8314
+     the used space plus a small buffer.  (E.g., with 2.20GiB used,
+     resize2fs wouldn't let me make it 2500MiB, but 3000MiB was okay.)
+
+  4) Determine the number of blocks now occupied.
+     Adapted from: http://raspberrypi.stackexchange.com/a/8314
+
+       sudo fdisk /dev/[device of entire card (e.g., sdd)]
+       p  # to print the partition table,
+          # then record 'End' of final partition and sector size
+
   5) Use dd | gzip to create the image using the size from the previous step.
-     e.g.: sudo dd bs=???? count=???? if=/dev/sdd1 | gzip > rpi_image_`date +%d%m%y`.gz
+    
+       sudo dd bs=[sector size] count=[end of final partition + 1] if=/dev/[device of entire card] | gzip > rpi_image_`date +%Y%m%d`.gz
+
+
+Writing an Image to a New Card
+==============================
+
+  1) Put card into card reader in a Linux machine.
+
+  2) Unmount the partitions if auto-mounted (Ubuntu auto-mounts them)
+
+       sudo umount /dev/[device of auto-mounted partition[s]]
+
+  3) Use gunzip | dd to decompress and write the image to the card
+
+       gunzip -c rpi_image.gz | dd bs=512 of=/dev/[device of entire card]
+
+
+Setting Up a Newly Cloned System
+================================
+
+Login as pi/fishypi.
+
+Run 'sudo raspi-config':
+  1) Expand filesystem to fit
+  2) Set hostname
 
