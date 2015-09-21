@@ -9,7 +9,6 @@ Using the provided image [TODO]:
 
 [TODO: Issues w/ current build]
   * ~pi/fishycam is cloned from hyperion
-  * pi's RSA pubkey is added to hyperion as mliffito
 
 Alternatively, if you want to set up the environment yourself, refer to the
 following sections.
