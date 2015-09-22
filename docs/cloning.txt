@@ -22,7 +22,7 @@ To save a disk image of a working/configured Raspberry Pi SD card:
 
   5) Use dd | gzip to create the image using the size from the previous step.
     
-       sudo dd bs=[sector size] count=[end of final partition + 1] if=/dev/[device of entire card] | gzip > rpi_image_`date +%Y%m%d`.gz
+       sudo dd bs=[sector size] count=[end of final partition + 1] if=/dev/[device of entire card] | gzip > fishypi_`date +%Y%m%d`.img.gz
 
 
 Writing an Image to a New Card
@@ -36,7 +36,7 @@ Writing an Image to a New Card
 
   3) Use gunzip | dd to decompress and write the image to the card
 
-       gunzip -c rpi_image.gz | dd bs=512 of=/dev/[device of entire card]
+       gunzip -c fishypi.gz | dd bs=1M of=/dev/[device of entire card]
 
 
 Setting Up a Newly Cloned System
