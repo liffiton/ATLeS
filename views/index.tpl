@@ -2,7 +2,7 @@
 
 <div class="container">
   <div class="row">
-    <div class="my-header col-lg-10 col-md-12 col-sm-12">
+    <div class="my-header col-lg-12 col-md-12 col-sm-12">
       <div id="header_right" class="col-sm-6 col-md-5 col-lg-4 pull-right">
         <div id="exp_progress" class="alert alert-info small">
           <button id="clear_exp_button" type="button" class="btn btn-danger btn-xs pull-right" title="Kill experiment">

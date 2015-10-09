@@ -32,7 +32,10 @@ span#filterclear {
   cursor: pointer;
 }
 span.hostname {
-  color: #993300;
+  color: #b60;
+  background: #fe8;
+  padding: 0 0.1em;
+  border-radius: 0.3em;
 }
 body {
   overflow-y: scroll;  /* Scroll bar always present -- avoids bouncing on hide/show of rows */
