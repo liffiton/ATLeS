@@ -147,8 +147,10 @@ $(function() {
     $.post("/clear_experiment/")
       .always(checkProgress);
   });
-  makeCharts();
-  makeHeatMaps();
+  // create all valid/missing/lost charts by default
+  $("svg.aml_chart").each(makeChart);
+  // create heatmaps only on mouseover (and only once for each element) to save memory/CPU time
+  $("svg.heatmap").one('mouseenter', makeHeatMap);
   checkProgress();
 });
 </script>

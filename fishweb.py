@@ -92,8 +92,9 @@ def _get_track_data(track):
             states[state] += 1
             try:
                 if state != "lost":
-                    x = "%0.3f" % (float(x) - math.fmod(float(x), 1.0/15))
-                    y = "%0.3f" % (float(y) - math.fmod(float(y), 1.0/10))
+                    # convert to [typically 3 digit] integer in range 0-1000
+                    x = "%d" % (1000.0 * (float(x) - math.fmod(float(x), 1.0/15)))
+                    y = "%d" % (1000.0 * (float(y) - math.fmod(float(y), 1.0/10)))
                     heatmap[(x,y)] += 1
             except ValueError:
                 pass  # not super important if we can't parse x,y
@@ -104,7 +105,7 @@ def _get_track_data(track):
         aml = []
     if heatmap:
         maxheat = max(heatmap.values())
-        heat = [(key[0], key[1], "%0.3f" % (float(value)/maxheat)) for key, value in heatmap.items()]
+        heat = [(key[0], key[1], "%d" % (1000 * float(value)/maxheat)) for key, value in heatmap.items()]
     else:
         heat = []
 

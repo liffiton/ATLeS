@@ -68,11 +68,10 @@ function checkProgress() {
   window.setTimeout(checkProgress, 5000);
 }
 
-function makeCharts() {
-  $("svg.aml_chart").each(function() {
+function makeChart() {
     var rawdata = $(this).data("values");
     if (rawdata == "") {
-      return;
+        return;
     }
     var data = rawdata.split('|');
     var acquired = parseFloat(data[0]);
@@ -84,22 +83,20 @@ function makeCharts() {
 
     var s = Snap(this);
     s.group(
-      // Chrome requires the title tag to be in a group with the graphics
-      // elements (not just part of the <svg> itself) to display it as a tooltip.
-      Snap.parse("<title>" + this.getAttribute('title') + "</title>"),
-      s.rect(0,0,a,1).attr({fill: '#0d0'}),
-      s.rect(a,0,b,1).attr({fill: '#fc0'}),
-      s.rect(a+b,0,c,1).attr({fill: '#d00'})
+        // Chrome requires the title tag to be in a group with the graphics
+        // elements (not just part of the <svg> itself) to display it as a tooltip.
+        Snap.parse("<title>" + this.getAttribute('title') + "</title>"),
+        s.rect(0,0,a,1).attr({fill: '#0d0'}),
+        s.rect(a,0,b,1).attr({fill: '#fc0'}),
+        s.rect(a+b,0,c,1).attr({fill: '#d00'})
     );
-  });
 }
 
-function makeHeatMaps() {
-  // number of buckets we're receiving and plotting
-  var _width = 15;
-  var _height = 10;
+function makeHeatMap() {
+    // number of buckets we're receiving and plotting
+    var _width = 15;
+    var _height = 10;
 
-  $("svg.heatmap").each(function() {
     var data = $(this).data("values").split('|');
 
     var s = Snap(this);
@@ -107,15 +104,14 @@ function makeHeatMaps() {
     s.rect(0,0,15,10).attr({fill: Snap.rgb(240,240,240)});
 
     for (var i = 0 ; i < data.length ; i++) {
-      point = data[i].split(',');
-      var x = parseFloat(point[0])*_width;
-      var y = parseFloat(point[1])*_height;
-      var amt = parseFloat(point[2]);
-      amt = Math.sqrt(amt);  // scale so lower values are more intense/visible
-      color = Snap.rgb(240-240*amt, 240-200*amt, 240-120*amt);
-      s.rect(x, _height-1-y, 1, 1).attr({fill: color})
+        point = data[i].split(',');
+        var x = parseInt(point[0]) / 1000 * _width;
+        var y = parseInt(point[1]) / 1000 * _height;
+        var amt = parseInt(point[2]) / 1000;
+        amt = Math.sqrt(amt);  // scale so lower values are more intense/visible
+        color = Snap.rgb(240-240*amt, 240-200*amt, 240-120*amt);
+        s.rect(x, _height-1-y, 1, 1).attr({fill: color})
     }
-  });
 }
 
 // keep track of selected tracks
