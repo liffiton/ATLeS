@@ -1,113 +1,5 @@
-<!doctype html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{hostname}} Fishybox Log Analyzer/Viewer</title>
-<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
-<script src="/static/fishweb.js"></script>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-<style>
-div.my-header {
-  padding-top: 1em;
-  border-bottom: 2px solid #ddd;
-}
-div#exp_progress {
-  padding: 0.5em;
-  margin-bottom: 0.5em;
-  display: none;  /* hidden by default */
-}
-tr.undo_row {
-  display: none;  /* default, will be overridden to display */
-  color: #999999;
-  background: #eeeeee;
-}
-td.actionbuttons {
-  white-space: nowrap;  /* keep all buttons on one line */
-}
-input#rowfilter {
-  font-weight: normal;
-  margin-left: 2em;
-  padding: 0 0.5em;
-  border-radius: 10em;
-  border: solid 1px #ccc;
-  box-shadow: 1px 1px 2px 1px #ccc;
-}
-span#filterclear {
-  position: relative;
-  left: -1.2em;
-  top: -0.1em;
-  color: #999;
-  cursor: pointer;
-}
-span.hostname {
-  color: #993300;
-}
-body {
-  overflow-y: scroll;  /* Scroll bar always present -- avoids bouncing on hide/show of rows */
-}
-.number_cell {
-  text-align: right;
-}
-.svg_cell {
-  vertical-align: middle;
-  position: relative;
-}
-svg.aml_chart {
-  width: 4em;
-  height: 1em;
-  /* centering */
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-left: -2em;  /* half width */
-  margin-top: -0.5em;  /* half height */
-}
-svg.heatmap {
-  width: 3em;
-  height: 2em;
-  /* centering */
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-left: -1.5em;  /* half width */
-  margin-top: -1em;  /* half height */
-}
-.alert .progress {
-  margin-bottom: 0;
-}
-#rem_in, #rem_out {
-  padding-right: 0.3em;
-}
-</style>
-<script type="text/javascript">
-// setup handlers / onload stuff
-$(function() {
-  $("#filterclear").click(function(e) {
-    $("#rowfilter").val('');
-    $("#rowfilter").trigger('input');
-  });
-  $("#rowfilter").on('input', function(e) {
-    filter_rows(this.value);
-  });
-  $("#selectallbutton").click(toggle_select_all);
-  $("tr.log_row .selectbutton").click(function(e) {
-    var row = $(this).closest("tr");
-    togglesel(row);
-  });
-  $("#clear_exp_button").click(function(e) {
-    var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
-    if (! go) return;
-    $.post("/clear_experiment/")
-      .always(checkProgress);
-  });
-  makeCharts();
-  makeHeatMaps();
-  checkProgress();
-});
-</script>
-</head>
-<body>
+% rebase('base.tpl', title='Log Analyzer/Viewer')
+
 <div class="container">
   <div class="row">
     <div class="my-header col-lg-10 col-md-12 col-sm-12">
@@ -233,5 +125,30 @@ $(function() {
   </div>
 
 </div>
-</body>
-</html>
+
+<script type="text/javascript">
+// setup handlers / onload stuff
+$(function() {
+  $("#filterclear").click(function(e) {
+    $("#rowfilter").val('');
+    $("#rowfilter").trigger('input');
+  });
+  $("#rowfilter").on('input', function(e) {
+    filter_rows(this.value);
+  });
+  $("#selectallbutton").click(toggle_select_all);
+  $("tr.log_row .selectbutton").click(function(e) {
+    var row = $(this).closest("tr");
+    togglesel(row);
+  });
+  $("#clear_exp_button").click(function(e) {
+    var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
+    if (! go) return;
+    $.post("/clear_experiment/")
+      .always(checkProgress);
+  });
+  makeCharts();
+  makeHeatMaps();
+  checkProgress();
+});
+</script>

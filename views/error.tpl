@@ -1,11 +1,5 @@
-<!doctype html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fishybox: Error</title>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-</head>
-<body>
+% rebase('base.tpl', title='Error')
+
 <div class="container">
   <h1>Fishybox: Error</h1>
 
@@ -20,5 +14,3 @@
   </div>
 
 </div>
-</body>
-</html>

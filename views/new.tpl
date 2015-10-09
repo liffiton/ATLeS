@@ -1,35 +1,7 @@
-<!doctype html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fishybox: Start New Experiment</title>
-<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
-<script src="/static/fishweb.js"></script>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-<style>
-div#inidisplay {
-  display: none;
-}
-pre#inidisplay_contents {
-  max-height: 30em;
-}
-</style>
-<script type="text/javascript">
-$(function() {
-  $("#inifile").change(function(e) {
-    var iniFile = this.value;
-    update_ini(iniFile);
-  });
-  update_ini($("#inifile option:selected").text());
-  $("#clearbutton").click(function(e) {
-    $.post('/clear_experiment/', function(data) {$("#lockfile_warning").hide();});
-  });
-});
-</script>
-</head>
-<body>
+% rebase('base.tpl', title='New Experiment')
+
 <div class="container">
-  <h1>Fishybox: Start New Experiment</h1>
+  <h1>Fishybox New Experiment: <span class="hostname">{{hostname}}</span></h1>
 
   %if lock_exists:
   <div class="row" id="lockfile_warning">
@@ -132,5 +104,16 @@ $(function() {
   </div>
 
 </div>
-</body>
-</html>
+
+<script type="text/javascript">
+$(function() {
+  $("#inifile").change(function(e) {
+    var iniFile = this.value;
+    update_ini(iniFile);
+  });
+  update_ini($("#inifile option:selected").text());
+  $("#clearbutton").click(function(e) {
+    $.post('/clear_experiment/', function(data) {$("#lockfile_warning").hide();});
+  });
+});
+</script>

@@ -130,8 +130,7 @@ def index():
             track_data_cache[key] = (lines, aml, heat)
         name = track.split('/')[-1]
         tracks.append( (index, track, lines, aml, heat, _imgs(name)) )
-    hostname = platform.node()
-    return dict(tracks=tracks, hostname=hostname)
+    return dict(tracks=tracks, hostname=platform.node())
 
 
 @route('/lock_data/')
@@ -151,7 +150,7 @@ def lock_data():
 @route('/new/')
 def new_experiment():
     form = CreateExperimentForm()
-    return template('new', form=form, lock_exists=_lock_exists())
+    return template('new', form=form, lock_exists=_lock_exists(), hostname=platform.node())
 
 
 @post('/clear_experiment/')
