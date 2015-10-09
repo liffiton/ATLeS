@@ -235,7 +235,7 @@ def post_create():
 
     subprocess.Popen(cmdargs)
 
-    redirect("/")
+    redirect("/new/")
 
 
 @route('/view/<logname:path>')
