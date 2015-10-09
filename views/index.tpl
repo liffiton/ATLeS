@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fishybox Log Analyzer/Viewer</title>
+<title>{{hostname}} Fishybox Log Analyzer/Viewer</title>
 <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
 <script src="/static/fishweb.js"></script>
@@ -39,6 +39,9 @@ span#filterclear {
   top: -0.1em;
   color: #999;
   cursor: pointer;
+}
+span.hostname {
+  color: #993300;
 }
 body {
   overflow-y: scroll;  /* Scroll bar always present -- avoids bouncing on hide/show of rows */
@@ -129,7 +132,7 @@ $(function() {
         </div>
       </div>
       <span class="h1">
-        Fishybox Log Analyzer/Viewer
+        Fishybox Log Analyzer/Viewer: <span class="hostname">{{hostname}}</span>
       </span>
     </div>
   </div>

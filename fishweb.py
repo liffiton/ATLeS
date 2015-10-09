@@ -5,6 +5,7 @@ import glob
 import math
 import multiprocessing
 import os
+import platform
 import re
 import shlex
 import shutil
@@ -129,7 +130,8 @@ def index():
             track_data_cache[key] = (lines, aml, heat)
         name = track.split('/')[-1]
         tracks.append( (index, track, lines, aml, heat, _imgs(name)) )
-    return dict(tracks=tracks)
+    hostname = platform.node()
+    return dict(tracks=tracks, hostname=hostname)
 
 
 @route('/lock_data/')
