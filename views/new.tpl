@@ -3,23 +3,30 @@
 <div class="container">
   <h1>Fishybox New Experiment: <span class="hostname">{{hostname}}</span></h1>
 
-  %if lock_exists:
-  <div class="row" id="lockfile_warning">
-    <div class="col-sm-12">
-      <div class="alert alert-danger">
-        <p><strong>Warning:</strong> Due to an existing lockfile, it looks like an experiment is already running on this box.  Please wait for it to finish before starting another.</p>
-        <p>You may override this (ending any running experiment and deleting the lockfile) if you really want to:
-          <button type="button" class="btn btn-danger" id="clearbutton">
-            <span class="glyphicon glyphicon-fire"></span>
-            Clear experiment
-            <span class="glyphicon glyphicon-fire"></span>
-          </button>
-        </p>
+  <div class="row" id="exp_progress">
+    <div class="col-sm-6 col-sm-offset-1 alert alert-info">
+      <strong>Experiment running</strong> since <span id="exp_run_since"></span>.
+      <div class="progress" style="width: 100%;">
+        <div id="exp_progressbar" class="progress-bar progress-bar-striped" role="progressbar" style="width: 0%;">
+          <span class="pull-right" id="rem_in"></span>
+        </div>
+        <span class="pull-right" id="rem_out"></span>
       </div>
     </div>
+    <div class="col-sm-4 col-sm-offset-1 alert alert-danger">
+      <p>Due to an existing lockfile, it looks like an experiment is already running on this box.  Only one experiment can run at a time.</p>
+      <p>You may override this (ending any running experiment and deleting the lockfile) if you really want to:</p>
+      <p>
+        <button type="button" class="btn btn-danger" id="clear_exp_button">
+          <span class="glyphicon glyphicon-fire"></span>
+          Clear experiment
+          <span class="glyphicon glyphicon-fire"></span>
+        </button>
+      </p>
+    </div>
   </div>
-  %end
-  <div class="row">
+
+  <div class="row" id="exp_new">
     <div class="col-lg-6 col-md-8 col-sm-10">
       <form class="form-horizontal" action="/create/" method="post">
         <div class="panel panel-default" id="experiment_form">
@@ -112,8 +119,13 @@ $(function() {
     update_ini(iniFile);
   });
   update_ini($("#inifile option:selected").text());
-  $("#clearbutton").click(function(e) {
-    $.post('/clear_experiment/', function(data) {$("#lockfile_warning").hide();});
+
+  $("#clear_exp_button").click(function(e) {
+    var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
+    if (! go) return;
+    $.post("/clear_experiment/")
+      .always(checkProgress);
   });
+  checkProgress();
 });
 </script>

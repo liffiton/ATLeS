@@ -41,8 +41,14 @@ function updateProgress(data) {
   var barwidth = Math.min(100, 100 * millis_gone / runtime);
   $("#exp_progressbar").width(barwidth + "%");
 
-  var min_remaining = Math.round(millis_remaining / 1000 / 60);
-  var remtext = min_remaining + " min remaining";
+  if (millis_remaining < 60*1000) {
+    var sec_remaining = Math.round(millis_remaining / 1000);
+    var remtext = sec_remaining + " sec remaining";
+  }
+  else {
+    var min_remaining = Math.round(millis_remaining / 1000 / 60);
+    var remtext = min_remaining + " min remaining";
+  }
   if (barwidth < 50) {
     $("#rem_in").html("");
     $("#rem_out").html(remtext);
@@ -57,15 +63,15 @@ function checkProgress() {
   $.get('/lock_data/').success(function(data) {
     if (data == '') {
       $("#exp_progress").hide();
-      $("#new_exp_button").show();
+      $("#exp_new").show();
     }
     else {
       updateProgress(data);
       $("#exp_progress").show();
-      $("#new_exp_button").hide();
+      $("#exp_new").hide();
     }
   });
-  window.setTimeout(checkProgress, 5000);
+  window.setTimeout(checkProgress, 2000);
 }
 
 function makeChart() {

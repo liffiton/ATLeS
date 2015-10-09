@@ -16,7 +16,7 @@
             <span class="pull-right" id="rem_out"></span>
           </div>
         </div>
-        <div id="new_exp_button" class="pull-right">
+        <div id="exp_new" class="pull-right">
           <a class="btn btn-primary" href="/new/">
             <span class="glyphicon glyphicon-plus-sign"></span>
             Start New Experiment
