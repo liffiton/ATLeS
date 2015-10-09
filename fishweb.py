@@ -208,7 +208,7 @@ def post_create():
     # validate form data
     form = CreateExperimentForm(request.forms)
     if not form.validate():
-        return template('new', form=form, lock_exists=_lock_exists())
+        return template('new', form=form, lock_exists=_lock_exists(), hostname=platform.node())
 
     expname = request.forms.expname
     timelimit = int(request.forms.timelimit)
