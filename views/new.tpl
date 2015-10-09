@@ -1,7 +1,7 @@
 % rebase('base.tpl', title='New Experiment')
 
 <div class="container">
-  <h1>Fishybox New Experiment: <span class="hostname">{{hostname}}</span></h1>
+  <h1><a href="/">Fishybox</a> New Experiment: <span class="hostname">{{hostname}}</span></h1>
 
   <div class="row" id="exp_progress">
     <div class="col-sm-6 col-sm-offset-1 alert alert-info">
