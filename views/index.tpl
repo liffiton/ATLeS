@@ -34,7 +34,7 @@
         <thead>
           <tr>
             <th>
-              <button type="button" class="btn btn-default btn-xs text-muted" id="selectallbutton" title='Select All'>
+              <button type="button" class="btn btn-default btn-xs text-muted _selectallbutton" title='Select All'>
                 <span class="glyphicon glyphicon-ok"></span>
               </button>
             </th>
@@ -97,12 +97,19 @@
           </td>
         </tr>
         %end
+        <tr>
+          <td colspan=7>
+            <button type="button" class="btn btn-default btn-xs text-muted _selectallbutton" title='Select All'>
+              <span class="glyphicon glyphicon-ok"></span> De/Select All
+            </button>
+          </td>
+        </tr>
       </table>
     </div>
   </div>
 
   <div class="row">
-    <div class="col-lg-6 col-md-8 col-sm-10">
+    <div class="col-lg-12 col-md-12 col-sm-12">
       <div class="well">
         <p>
         With selection:
@@ -113,7 +120,10 @@
           View Statistics
         </button>
         <button type="button" class="btn btn-default disabled" id="statscsvbutton" onclick="do_stats_csv();">
-          Download Statistics (CSV)
+          Download Statistics [.csv]
+        </button>
+        <button type="button" class="btn btn-default disabled" id="downloadbutton" onclick="do_download();">
+          Download Tracks [.zip]
         </button>
         <button type="button" class="btn btn-default disabled" title="Re-plot" id="replotselbutton" onclick="analyze_selection();">
           <span class="glyphicon glyphicon-refresh"></span>
@@ -136,7 +146,7 @@ $(function() {
   $("#rowfilter").on('input', function(e) {
     filter_rows(this.value);
   });
-  $("#selectallbutton").click(toggle_select_all);
+  $("._selectallbutton").click(toggle_select_all);
   $("tr.log_row .selectbutton").click(function(e) {
     var row = $(this).closest("tr");
     togglesel(row);

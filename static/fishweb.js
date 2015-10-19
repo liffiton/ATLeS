@@ -164,10 +164,12 @@ function update_buttons() {
   $('#statsbutton').toggleClass('btn-primary', count > 0);
   $('#statscsvbutton').toggleClass('disabled', count == 0);
   $('#statscsvbutton').toggleClass('btn-primary', count > 0);
+  $('#downloadbutton').toggleClass('disabled', count == 0);
+  $('#downloadbutton').toggleClass('btn-primary', count > 0);
   $('#replotselbutton').toggleClass('disabled', count == 0);
   $('#replotselbutton').toggleClass('btn-primary', count > 0);
-  $('#selectallbutton').toggleClass('btn-default', count < row_count);
-  $('#selectallbutton').toggleClass('btn-primary', count == row_count);
+  $('._selectallbutton').toggleClass('btn-default', count < row_count);
+  $('._selectallbutton').toggleClass('btn-primary', count == row_count);
 }
 
 function do_compare() {
@@ -183,6 +185,11 @@ function do_stats() {
 function do_stats_csv() {
   var sels = Object.keys(selection).sort();
   do_post('/stats/', 'csv=true&logs=' + sels.join('|'));
+}
+
+function do_download() {
+  var sels = Object.keys(selection).sort();
+  do_post('/download/', 'logs=' + sels.join('|'));
 }
 
 function do_archive(path, index) {

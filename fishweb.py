@@ -12,7 +12,9 @@ import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import time
+import zipfile
 try:
     from StringIO import StringIO
 except ImportError:
@@ -243,6 +245,26 @@ def post_create():
 def view_log(logname):
     name = logname.split('/')[-1]
     return dict(imgs=_imgs(name), logname=logname)
+
+
+@post('/download/')
+def post_download():
+    logs = request.query.logs.split('|')
+
+    # write the archive into a temporary in-memory file-like object
+    temp = tempfile.SpooledTemporaryFile()
+    with zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED) as archive:
+        for log in logs:
+            archive.write(log)
+    temp.seek(0)
+
+    # force a download; give it a filename and mime type
+    response.set_header('Content-Disposition', 'attachment; filename="tracks.zip"')
+    response.set_header('Content-Type', 'application/zip')
+
+    # relying on garbage collector to delete tempfile object
+    # (and hence the file itself) when done sending
+    return temp
 
 
 @post('/stats/')
