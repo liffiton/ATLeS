@@ -4,7 +4,6 @@
 
 import argparse
 import cv2
-import subprocess
 import time
 
 import tracking
@@ -18,8 +17,14 @@ def main():
     parser.add_argument('-e', '--exposure', type=int, nargs='?', default=200)
     args = parser.parse_args()
 
+    conf = {
+        'frame_w': args.width,
+        'frame_h': args.height,
+        'fps': args.fps,
+        'exposure': args.exposure
+    }
     params = {}
-    stream = tracking.Stream(0, w=args.width, h=args.height, params=params, fps=args.fps, exposure=args.exposure)
+    stream = tracking.Stream(0, conf, params)
 
     cv2.namedWindow("preview")
 
