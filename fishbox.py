@@ -17,6 +17,7 @@ import tracking
 
 
 _LOGDIR = "logs/"
+_IMGDIR = "logs/debug_frames"
 _LOCKFILE = _LOGDIR + "current_experiment.lock"
 _expargs = []  # track which arguments are related to the experiment
 
@@ -78,6 +79,8 @@ def get_args():
                         help='experiment ID (optional), added to output filenames')
     parser.add_argument('-w', '--watch', action='store_true',
                         help='create a window to see the camera view and tracking information')
+    parser.add_argument('--debug-frames', type=int, default=100,
+                        help='save an image of the current frame when tracking fails every DEBUG_FRAMES frames (default: 100; 0 means no debug frames will be written)')
     exp_group = parser.add_argument_group('experiment settings')
     exp_group.add_argument('-t', '--time', type=int, default=None,
                         help='limit the experiment to TIME minutes (default: run forever / until stopped with CTRL-C)')
@@ -106,10 +109,6 @@ def init_logging(args, conf):
     '''Initialize the logging system.  Uses argdir and id from args, adds 'trackfile' to conf
        as a file object to which track data should be written.'''
 
-    # ensure log directory exists
-    if not os.path.exists(_LOGDIR):
-        os.makedirs(_LOGDIR)
-
     # setup log files
     filetimestamp = time.strftime("%Y%m%d-%H%M%S")
     if args.id:
@@ -117,6 +116,14 @@ def init_logging(args, conf):
     else:
         name = filetimestamp
     conf['name'] = name
+
+    # ensure log and image directories exist
+    if not os.path.exists(_LOGDIR):
+        os.makedirs(_LOGDIR)
+    debugframe_dir = "%s/%s" % (_IMGDIR, name)
+    if not os.path.exists(debugframe_dir):
+        os.makedirs(debugframe_dir)
+    conf['debugframe_dir'] = debugframe_dir
 
     trackfilename = "%s/%s-track.csv" % (_LOGDIR, name)
     logfilename = "%s/%s.log" % (_LOGDIR, name)

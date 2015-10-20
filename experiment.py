@@ -164,6 +164,9 @@ class Experiment(object):
         # Record whether the alarm has already been set (for --time-from-trigger)
         self._alarm_set = False
 
+        # Record when we last saved a debug frame (-1000000 is effectively "never")
+        self._prev_dbg_frame = -1000000
+
     def _write_data(self, data, frametime=None):
         '''Write a piece of data to the log file.
 
@@ -189,10 +192,20 @@ class Experiment(object):
         '''
         return frame[self._ty1:self._ty2, self._tx1:self._tx2, channel]
 
+    def _save_debug_frame(self, frame, subframe, frame_num, status):
+        ''' Save a copy of the current frame for debugging. '''
+        imgfile = "%s/fame_%d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
+        cv2.imwrite(imgfile, frame)
+        subimgfile = "%s/subframe_%d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
+        cv2.imwrite(subimgfile, subframe)
+
     def _do_tracking(self, frame, frame_num):
         # Process the frame (finds contours, centroids, and updates background subtractor)
         subframe = self._extract_subframe(frame)
         self._proc.process_frame(subframe)
+
+        if frame_num == 1:
+            self._save_debug_frame(frame, subframe, frame_num, 'start')
 
         # Wait for the background subtractor to learn/stabilize
         # before logging or using data.
@@ -229,6 +242,11 @@ class Experiment(object):
             self._write_data(data, frametime=frame_num*1.0/self._fps)
         else:
             self._write_data(data)
+
+        if self._args.debug_frames and status in {'lost', 'missing'}:
+            if frame_num - self._prev_dbg_frame >= self._args.debug_frames:
+                self._save_debug_frame(frame, subframe, frame_num, status)
+                self._prev_dbg_frame = frame_num
 
         if status != 'lost' and self._trigger(pos_tank):
             # Only provide a stimulus if we know where the fish is
