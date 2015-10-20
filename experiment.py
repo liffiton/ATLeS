@@ -127,10 +127,6 @@ class Experiment(object):
             self._framecount, self._fps = self._stream.get_video_stats()
             logging.info("Video file: %d frames, %d fps", self._framecount, self._fps)
 
-        # Create Watcher
-        if self._args.watch:
-            self._watcher = Watcher(self._tx1, self._tx2, self._ty1, self._ty2)
-
         # Create Sensors
         if sensors is not None:
             self._sensors = sensors.Sensors()
@@ -184,10 +180,19 @@ class Experiment(object):
             frametime = time.time() - self._starttime
         self._conf['trackfile'].write("%0.4f,%s" % (frametime, str(data)))
 
+    def _extract_subframe(self, frame, channel=2):
+        ''' Extract the relevant portion of a frame,
+        using the configuration's tank bounds and just the given channel.
+
+        Channels:  BGR -> Blue = 0, Green = 1, Red = 2 (default)
+        For fishybox: use the red channel (most IR, least visible light)
+        '''
+        return frame[self._ty1:self._ty2, self._tx1:self._tx2, channel]
+
     def _do_tracking(self, frame, frame_num):
         # Process the frame (finds contours, centroids, and updates background subtractor)
-        tank_crop = frame[self._ty1:self._ty2,self._tx1:self._tx2,:]
-        self._proc.process_frame(tank_crop)
+        subframe = self._extract_subframe(frame)
+        self._proc.process_frame(subframe)
 
         # Wait for the background subtractor to learn/stabilize
         # before logging or using data.
@@ -214,9 +219,11 @@ class Experiment(object):
 
         # Record data
         if pos_tank[0] is None:
-            data = "%s,.,.,%d,%0.2f,%d\n" % (status, len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
+            report_pos = ".,."
         else:
-            data = "%s,%0.3f,%0.3f,%d,%0.2f,%d\n" % (status, pos_tank[0], pos_tank[1], len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
+            report_pos = "%0.3f,%0.3f" % (pos_tank[0], pos_tank[1])
+
+        data = "%s,%s,%d,%0.2f,%d\n" % (status, report_pos, len(self._proc.centroids), sensor_vals['temp'], sensor_vals['lux'])
 
         if self._stream.sourcetype == 'file':
             self._write_data(data, frametime=frame_num*1.0/self._fps)
@@ -241,6 +248,13 @@ class Experiment(object):
 
     def run(self):
         self._stim.begin()
+
+        # Create Watcher here because preview window seems to need to be
+        # created/managed in same thread under Windows, and this method is
+        # run in a different thread than the constructor is.
+        if self._args.watch:
+            _watcher = Watcher(self._tx1, self._tx2, self._ty1, self._ty2)
+
         prevtime = time.time()
         frame_num = 0
 
@@ -263,7 +277,7 @@ class Experiment(object):
             self._do_tracking(frame, frame_num)
 
             if self._args.watch:
-                self._watcher.draw_watch(frame, self._track, self._proc)
+                _watcher.draw_watch(frame, self._track, self._proc)
                 if cv2.waitKey(1) % 256 == 27:
                     logging.info("Escape pressed in preview window; exiting.")
                     break

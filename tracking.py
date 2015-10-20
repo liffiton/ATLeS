@@ -35,36 +35,31 @@ class FrameProcessor(object):
         self._contours = None
         self._centroids = None
 
-    def process_frame(self, frame, channel=2):
-        ''' Process a single frame, using just the given channel.
-
-        Channels:  BGR -> Blue = 0, Green = 1, Red = 2 (default)
-        For fishybox: use the red channel (most IR, least visible light)
-        '''
-
+    def process_frame(self, frame):
+        ''' Process a single frame. '''
         # reset contours and centroids
         self._contours = None
         self._centroids = None
 
         # grayscale copy
-        self._gframe = frame[:,:,channel]
+        self._frame = frame
 
         # subtract background, clean up image
         self._sub_bg()
 
     def _sub_bg(self):
-        mask = self._bgs.apply(self._gframe, learningRate=self._learning_rate)
-        self._gframe = self._gframe & mask
+        mask = self._bgs.apply(self._frame, learningRate=self._learning_rate)
+        self._frame = self._frame & mask
 
         # filter out single pixels
-        self._gframe = cv2.erode(self._gframe, self._element_shrink)
+        self._frame = cv2.erode(self._frame, self._element_shrink)
 
         # restore and join nearby regions (in case one fish has a skinny middle...)
-        self._gframe = cv2.dilate(self._gframe, self._element_grow)
+        self._frame = cv2.dilate(self._frame, self._element_grow)
 
     def _get_contours(self):
         # find contours
-        self._contours, _ = cv2.findContours(self._gframe, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        self._contours, _ = cv2.findContours(self._frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     def _get_centroids(self):
         if not self._contours:
