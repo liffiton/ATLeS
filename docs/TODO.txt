@@ -28,8 +28,6 @@ Software (overall)
 
 FishWeb / Analyze
 -----------------
- - Stay on experiment creation page when submitting/creating a new experiment
-   - Use is to just submit same experiment again and again...
  - :?: When does the data output/recording start?  How is that indicated?
  - Experiment progress indicator should know when timing actually started
 
@@ -46,6 +44,7 @@ Big / Important:
  - Make background subtractor adaptive, modifying sensitivity to hit 1
    detection exactly. (See babyfish code.)
  - Record image at start and end (and other times?) of experiment
+ - Record image when tracking is lost (for diagnosis)
 
 Medium:
  - Utility to create an .ini file interactively (w/ camera view, clicking,
