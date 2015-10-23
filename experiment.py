@@ -243,7 +243,7 @@ class Experiment(object):
         else:
             self._write_data(data)
 
-        if self._args.debug_frames and status in {'lost', 'missing'}:
+        if self._args.debug_frames and status in {'lost', 'missing', 'init'}:
             if frame_num - self._prev_dbg_frame >= self._args.debug_frames:
                 self._save_debug_frame(frame, subframe, frame_num, status)
                 self._prev_dbg_frame = frame_num
