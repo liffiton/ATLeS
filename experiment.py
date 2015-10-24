@@ -194,7 +194,7 @@ class Experiment(object):
 
     def _save_debug_frame(self, frame, subframe, frame_num, status):
         ''' Save a copy of the current frame for debugging. '''
-        imgfile = "%s/fame_%d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
+        imgfile = "%s/frame_%d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
         cv2.imwrite(imgfile, frame)
         subimgfile = "%s/subframe_%d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
         cv2.imwrite(subimgfile, subframe)
