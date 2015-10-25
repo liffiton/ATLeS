@@ -78,22 +78,22 @@ def index():
     return dict(tracks=tracks, hostname=platform.node())
 
 
-@route('/view/<logname:path>')
+@route('/view/<trackname:path>')
 @view('view')
-def view_log(logname):
-    name = logname.split('/')[-1]
-    return dict(imgs=_imgs(name), logname=logname)
+def view_track(trackname):
+    name = trackname.split('/')[-1]
+    return dict(imgs=_imgs(name), trackname=trackname)
 
 
 @post('/download/')
 def post_download():
-    logs = request.query.logs.split('|')
+    tracks = request.query.tracks.split('|')
 
     # write the archive into a temporary in-memory file-like object
     temp = tempfile.SpooledTemporaryFile()
     with zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED) as archive:
-        for log in logs:
-            archive.write(log)
+        for track in tracks:
+            archive.write(track)
     temp.seek(0)
 
     # force a download; give it a filename and mime type

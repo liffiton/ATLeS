@@ -59,7 +59,7 @@ def _set_backgroundcolor(ax, color):
 
 class Grapher(object):
     def __init__(self, infile):
-        self._logfile = infile
+        self._trackfile = infile
 
         time, status, x, y, numpts = np.loadtxt(
             infile,
@@ -117,7 +117,7 @@ class Grapher(object):
     def read_setup(self, sections):
         curstats = {}
 
-        setupfile = self._logfile.split('-track.csv')[0] + '-setup.txt'
+        setupfile = self._trackfile.split('-track.csv')[0] + '-setup.txt'
         curstats['Setup file'] = setupfile
 
         parser = RawConfigParser()
@@ -476,7 +476,7 @@ class Grapher(object):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Analyze zebrafish Skinner box experiment logs.')
+    parser = argparse.ArgumentParser(description='Analyze zebrafish Skinner box experiment tracks.')
     parser.add_argument('infile', type=str)
     parser.add_argument('outfile', type=str, nargs='?')
     parser.add_argument('-H', '--heat', action='store_true')

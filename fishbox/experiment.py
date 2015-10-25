@@ -168,7 +168,7 @@ class Experiment(object):
         self._prev_dbg_frame = -1000000
 
     def _write_data(self, data, frametime=None):
-        '''Write a piece of data to the log file.
+        '''Write a piece of data to the track file.
 
         Arguments:
             data: String

@@ -16,9 +16,9 @@ function async_post(url, query, check, success) {
 
 function filter_rows(value) {
   var re = new RegExp(value);
-  $("tr.log_row").each(function() {
-    logfile = $(this).find(".logfile_cell").text();
-    if (re.test(logfile)) {
+  $("tr.track_row").each(function() {
+    trackfile = $(this).find(".trackfile_cell").text();
+    if (re.test(trackfile)) {
       $(this).show();
     }
     else {
@@ -131,10 +131,10 @@ function togglesel(row) {
   update_selection();
 }
 function toggle_select_all() {
-  var log_rows = $("tr.log_row").filter(":visible");
-  var row_count = log_rows.length;
+  var track_rows = $("tr.track_row").filter(":visible");
+  var row_count = track_rows.length;
   var notall = (sel_count() < row_count);
-  log_rows.each(function() {
+  track_rows.each(function() {
     var sel_button = $(this).find(".selectbutton");
     if (notall != sel_button.hasClass('btn-primary')) {
       togglesel(this);
@@ -143,8 +143,8 @@ function toggle_select_all() {
 }
 function update_selection() {
   selection = Object.create(null);  // reset
-  var log_rows = $("tr.log_row").filter(":visible");
-  log_rows.each(function() {
+  var track_rows = $("tr.track_row").filter(":visible");
+  track_rows.each(function() {
     var path = $(this).data('path');
     var sel_button = $(this).find(".selectbutton");
     if (sel_button.hasClass('btn-primary')) {
@@ -156,8 +156,8 @@ function update_selection() {
 }
 function update_buttons() {
   var count = sel_count();
-  var log_rows = $("tr.log_row").filter(":visible");
-  var row_count = log_rows.length;
+  var track_rows = $("tr.track_row").filter(":visible");
+  var row_count = track_rows.length;
   $('#comparebutton').toggleClass('disabled', count != 2);
   $('#comparebutton').toggleClass('btn-primary', count == 2);
   $('#statsbutton').toggleClass('disabled', count == 0);
@@ -179,17 +179,17 @@ function do_compare() {
 
 function do_stats() {
   var sels = Object.keys(selection).sort();
-  do_post('/stats/', 'logs=' + sels.join('|'));
+  do_post('/stats/', 'tracks=' + sels.join('|'));
 }
 
 function do_stats_csv() {
   var sels = Object.keys(selection).sort();
-  do_post('/stats/', 'csv=true&logs=' + sels.join('|'));
+  do_post('/stats/', 'csv=true&tracks=' + sels.join('|'));
 }
 
 function do_download() {
   var sels = Object.keys(selection).sort();
-  do_post('/download/', 'logs=' + sels.join('|'));
+  do_post('/download/', 'tracks=' + sels.join('|'));
 }
 
 function do_archive(path, index) {

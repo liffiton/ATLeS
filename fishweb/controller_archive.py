@@ -6,8 +6,8 @@ from fishweb import conf
 
 @post('/archive/')
 def post_archive():
-    logname = request.query.path
-    name = logname.split('/')[-1].split('-track')[0]
+    trackname = request.query.path
+    name = trackname.split('/')[-1].split('-track')[0]
     assert(name != '')
     allfiles = glob.glob(conf.TRACKDIR + "%s[.-]*" % name)
     for f in allfiles:
@@ -16,8 +16,8 @@ def post_archive():
 
 @post('/unarchive/')
 def post_unarchive():
-    logname = request.query.path
-    name = logname.split('/')[-1].split('-track')[0]
+    trackname = request.query.path
+    name = trackname.split('/')[-1].split('-track')[0]
     allfiles = glob.glob(conf.ARCHIVEDIR + "%s[.-]*" % name)
     for f in allfiles:
         shutil.move(f, conf.TRACKDIR)

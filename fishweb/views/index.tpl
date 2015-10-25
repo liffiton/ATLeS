@@ -1,4 +1,4 @@
-% rebase('base.tpl', title='Log Analyzer/Viewer')
+% rebase('base.tpl', title='Track Analyzer/Viewer')
 
 <div class="container">
   <div class="row">
@@ -24,7 +24,7 @@
         </div>
       </div>
       <span class="h1">
-        Fishybox Log Analyzer/Viewer: <span class="hostname">{{hostname}}</span>
+        Fishybox Track Analyzer/Viewer: <span class="hostname">{{hostname}}</span>
       </span>
     </div>
   </div>
@@ -38,7 +38,7 @@
                 <span class="glyphicon glyphicon-ok"></span>
               </button>
             </th>
-            <th width="100%">Log file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
+            <th width="100%">Track file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
             <th class="number_cell">Points</th>
             <th class="svg_cell"><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
             <th class="svg_cell">Position heatmap</th>
@@ -58,13 +58,13 @@
             </button>
           </td>
         </tr>
-        <tr class="log_row" id="row_{{index}}" data-path='{{path}}'>
+        <tr class="track_row" id="row_{{index}}" data-path='{{path}}'>
           <td>
             <button type="button" class="btn btn-default btn-xs text-muted selectbutton" title='Select'>
               <span class="glyphicon glyphicon-ok"></span>
             </button>
           </td>
-          <td class="logfile_cell"><a href="/{{path}}">{{path}}</a></td>
+          <td class="trackfile_cell"><a href="/{{path}}">{{path}}</a></td>
           <td class="number_cell">{{points}}</td>
           <td class="svg_cell">
             <svg class="aml_chart" viewbox="0 0 1 0.1" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}" preserveAspectRatio="none"></svg>
@@ -147,7 +147,7 @@ $(function() {
     filter_rows(this.value);
   });
   $("._selectallbutton").click(toggle_select_all);
-  $("tr.log_row .selectbutton").click(function(e) {
+  $("tr.track_row .selectbutton").click(function(e) {
     var row = $(this).closest("tr");
     togglesel(row);
   });

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fishybox Log {{logname}}</title>
+    <title>Fishybox Track {{trackname}}</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <style type="text/css">
         body {
@@ -15,7 +15,7 @@
 </head>
 <body>
 <div class="container">
-    <h1>Fishybox Log <a href="/{{logname}}">{{logname}}</a></h1>
+    <h1>Fishybox Track <a href="/{{trackname}}">{{trackname}}</a></h1>
     <div class="text-center">
         %for img in imgs:
             <a href="/{{img}}"><img style='max-width: 100%;' src="/{{img}}"></a>

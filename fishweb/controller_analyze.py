@@ -18,14 +18,14 @@ from fishweb import conf
 
 @post('/stats/')
 def post_stats():
-    logs = request.query.logs.split('|')
+    tracks = request.query.tracks.split('|')
     do_csv = request.query.csv
     stats = []
     all_keys = set()
-    for log in logs:
+    for track in tracks:
         curstats = {}
-        curstats['Log file'] = log
-        g = analyze.Grapher(log)
+        curstats['Track file'] = track
+        g = analyze.Grapher(track)
         curstats.update(g.read_setup(['experiment', 'at_runtime']))
         curstats.update(g.get_stats())
         for i in range(g.len_minutes):
@@ -43,9 +43,9 @@ def post_stats():
             else:
                 stat[k] = ""
 
-    all_keys.remove('Log file')  # will be added as first column
+    all_keys.remove('Track file')  # will be added as first column
     all_keys = sorted(list(all_keys))
-    all_keys[:0] = ['Log file']  # prepend 'Log file' header
+    all_keys[:0] = ['Track file']  # prepend 'Track file' header
 
     if do_csv:
         output = StringIO()
@@ -62,9 +62,9 @@ def post_stats():
         return template('stats', keys=all_keys, stats=stats)
 
 
-def _do_analyze(logname):
-    name = logname.split('/')[-1]
-    g = analyze.Grapher(logname)
+def _do_analyze(trackname):
+    name = trackname.split('/')[-1]
+    g = analyze.Grapher(trackname)
     g.plot()
     g.savefig(conf.PLOTDIR + "%s.plot.png" % name)
     g.plot_heatmap()
@@ -77,33 +77,33 @@ def _do_analyze(logname):
 
 @post('/analyze/')
 def post_analyze():
-    logname = request.query.path
-    _do_analyze(logname)
-    redirect("/view/%s" % logname)
+    trackname = request.query.path
+    _do_analyze(trackname)
+    redirect("/view/%s" % trackname)
 
 
-def _analyze_selection(lognames):
-    for track in lognames:
+def _analyze_selection(tracknames):
+    for track in tracknames:
         _do_analyze(track)
 
 
 @post('/analyze_selection/')
 def post_analyze_selection():
-    lognames = request.query.selection.split('|')
-    p = multiprocessing.Process(target=_analyze_selection, args=(lognames,))
+    tracknames = request.query.selection.split('|')
+    p = multiprocessing.Process(target=_analyze_selection, args=(tracknames,))
     p.start()
 
 
 @post('/compare/')
 def post_compare():
-    log1 = request.query.p1
-    log2 = request.query.p2
-    g1 = analyze.Grapher(log1)
-    g2 = analyze.Grapher(log2)
+    track1 = request.query.p1
+    track2 = request.query.p2
+    g1 = analyze.Grapher(track1)
+    g2 = analyze.Grapher(track2)
     g1.plot_leftright()
     g2.plot_leftright(addplot=True)
-    name1 = log1.split('/')[-1]
-    name2 = log2.split('/')[-1]
+    name1 = track1.split('/')[-1]
+    name2 = track2.split('/')[-1]
     # XXX: bit of a hack doing pyplot stuff outside of Grapher...
     matplotlib.pyplot.legend([name1 + " Left", name2 + " Left", name1 + " Right", name2 + " Right"], fontsize=8, loc=2)
 
