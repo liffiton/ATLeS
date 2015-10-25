@@ -66,13 +66,13 @@ def _do_analyze(logname):
     name = logname.split('/')[-1]
     g = analyze.Grapher(logname)
     g.plot()
-    g.savefig(conf.IMGDIR + "%s.plot.png" % name)
+    g.savefig(conf.PLOTDIR + "%s.plot.png" % name)
     g.plot_heatmap()
-    g.savefig(conf.IMGDIR + "%s.heat.png" % name)
+    g.savefig(conf.PLOTDIR + "%s.heat.png" % name)
     g.plot_heatmap(10)
-    g.savefig(conf.IMGDIR + "%s.heat.10.png" % name)
+    g.savefig(conf.PLOTDIR + "%s.heat.10.png" % name)
     g.plot_leftright()
-    g.savefig(conf.IMGDIR + "%s.leftright.png" % name)
+    g.savefig(conf.PLOTDIR + "%s.leftright.png" % name)
 
 
 @post('/analyze/')
@@ -107,6 +107,6 @@ def post_compare():
     # XXX: bit of a hack doing pyplot stuff outside of Grapher...
     matplotlib.pyplot.legend([name1 + " Left", name2 + " Left", name1 + " Right", name2 + " Right"], fontsize=8, loc=2)
 
-    imgname = conf.IMGDIR + "%s_%s_leftrights.png" % (name1, name2)
+    imgname = conf.PLOTDIR + "%s_%s_leftrights.png" % (name1, name2)
     g1.savefig(imgname)
     redirect("/" + imgname)

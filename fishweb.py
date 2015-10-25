@@ -43,7 +43,7 @@ if __name__ == '__main__':
     host = 'localhost' if testing else '0.0.0.0'
 
     # Create needed directories if not already there
-    _mkdir(conf.IMGDIR)
+    _mkdir(conf.PLOTDIR)
     _mkdir(conf.ARCHIVEDIR)
 
     # let bottle know where to find our templates

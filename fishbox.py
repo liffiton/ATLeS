@@ -15,9 +15,9 @@ import time
 from fishbox import experiment, tracking
 
 
-_LOGDIR = "logs/"
-_IMGDIR = "logs/debug_frames"
-_LOCKFILE = _LOGDIR + "current_experiment.lock"
+_TRACKDIR = "data/tracks/"
+_IMGDIR = "data/debug_frames"
+_LOCKFILE = _TRACKDIR + "current_experiment.lock"
 _expargs = []  # track which arguments are related to the experiment
 
 
@@ -117,15 +117,15 @@ def init_logging(args, conf):
     conf['name'] = name
 
     # ensure log and image directories exist
-    if not os.path.exists(_LOGDIR):
-        os.makedirs(_LOGDIR)
+    if not os.path.exists(_TRACKDIR):
+        os.makedirs(_TRACKDIR)
     debugframe_dir = "%s/%s" % (_IMGDIR, name)
     if not os.path.exists(debugframe_dir):
         os.makedirs(debugframe_dir)
     conf['debugframe_dir'] = debugframe_dir
 
-    trackfilename = "%s/%s-track.csv" % (_LOGDIR, name)
-    logfilename = "%s/%s.log" % (_LOGDIR, name)
+    trackfilename = "%s/%s-track.csv" % (_TRACKDIR, name)
+    logfilename = "%s/%s.log" % (_TRACKDIR, name)
 
     # Setup the ROOT level logger to send to a log file and console both
     logger = logging.getLogger()
@@ -157,7 +157,7 @@ def write_setup(conf):
         for key in conf[section]:
             parser.set(section, key, conf[section][key])
 
-    setupfilename = "%s/%s-setup.txt" % (_LOGDIR, conf['name'])
+    setupfilename = "%s/%s-setup.txt" % (_TRACKDIR, conf['name'])
     with open(setupfilename, 'w') as setupfile:
         setupfile.write("; Command line:\n;    %s\n;\n" % (' '.join(sys.argv)))
         setupfile.write("; Configuration:\n")

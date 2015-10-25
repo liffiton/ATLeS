@@ -1,8 +1,11 @@
-LOGDIR = "logs/"
-LOCKFILE = LOGDIR + "current_experiment.lock"
+DATADIR = "data/"
+TRACKDIR = DATADIR + "tracks/"
+LOCKFILE = TRACKDIR + "current_experiment.lock"
+PLOTDIR = DATADIR + "plots/"
+ARCHIVEDIR = DATADIR + "tracks_archive/"
+
 INIDIR = "ini/"
-IMGDIR = LOGDIR + "img/"
-ARCHIVEDIR = LOGDIR + "archive/"
+
 EXPSCRIPT = "python fishbox.py"
 
 APPDIR = "fishweb/"

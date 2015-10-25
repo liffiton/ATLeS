@@ -12,11 +12,11 @@ from fishweb import conf
 
 
 def _tracks():
-    return sorted(glob.glob(conf.LOGDIR + "*-track.csv"))
+    return sorted(glob.glob(conf.TRACKDIR + "*-track.csv"))
 
 
 def _imgs(name):
-    return sorted(glob.glob(conf.IMGDIR + "%s*" % name))
+    return sorted(glob.glob(conf.PLOTDIR + "%s*" % name))
 
 
 def _get_track_data(track):
@@ -105,9 +105,9 @@ def post_download():
     return temp
 
 
-@route('/logs/<filename:path>')
-def static_logs(filename):
+@route('/data/<filename:path>')
+def static_data(filename):
     if filename.endswith('.csv'):
-        return static_file(filename, root=conf.LOGDIR, mimetype='text/plain')
+        return static_file(filename, root=conf.DATADIR, mimetype='text/plain')
     else:
-        return static_file(filename, root=conf.LOGDIR)
+        return static_file(filename, root=conf.DATADIR)
