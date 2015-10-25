@@ -1,5 +1,6 @@
-import sensors
 import time
+
+from fishbox import sensors
 
 
 def main():

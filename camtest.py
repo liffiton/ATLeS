@@ -6,7 +6,7 @@ import argparse
 import cv2
 import time
 
-import tracking
+from fishbox import tracking
 
 
 def main():

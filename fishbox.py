@@ -12,8 +12,7 @@ import sys
 import threading
 import time
 
-import experiment
-import tracking
+from fishbox import experiment, tracking
 
 
 _LOGDIR = "logs/"
