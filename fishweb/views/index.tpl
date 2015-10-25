@@ -46,10 +46,10 @@
             <th>Actions</th>
           </tr>
         </thead>
-        %for index, path, points, aml, heat, img_count in tracks:
+        %for index, path, relpath, points, aml, heat, img_count in tracks:
         <tr class="undo_row" id="row_{{index}}_undo">
           <td></td>
-          <td>{{path}}</td>
+          <td>{{relpath}}</td>
           <td colspan=4><i>Archived</i></td>
           <td>
             <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{path}}', {{index}});" title="Unarchive">
@@ -64,7 +64,7 @@
               <span class="glyphicon glyphicon-ok"></span>
             </button>
           </td>
-          <td class="trackfile_cell"><a href="/{{path}}">{{path}}</a></td>
+          <td class="trackfile_cell"><a href="/{{path}}">{{relpath}}</a></td>
           <td class="number_cell">{{points}}</td>
           <td class="svg_cell">
             <svg class="aml_chart" viewbox="0 0 1 0.1" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}" preserveAspectRatio="none"></svg>

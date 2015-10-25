@@ -1,5 +1,6 @@
 import csv
 import multiprocessing
+import os
 try:
     from StringIO import StringIO
 except ImportError:
@@ -13,7 +14,7 @@ import analyze
 
 from bottle import post, redirect, request, response, template
 
-from fishweb import conf
+from fishweb import conf, utils
 
 
 @post('/stats/')
@@ -62,35 +63,40 @@ def post_stats():
         return template('stats', keys=all_keys, stats=stats)
 
 
-def _do_analyze(trackname):
-    name = trackname.split('/')[-1]
-    g = analyze.Grapher(trackname)
+def _do_analyze(trackfile):
+    trackrel = os.path.relpath(trackfile, conf.TRACKDIR)
+
+    # ensure directories exist for plot creation
+    trackreldir = os.path.dirname(trackrel)
+    utils.mkdir(os.path.join(conf.PLOTDIR, trackreldir))
+
+    g = analyze.Grapher(trackfile)
     g.plot()
-    g.savefig(conf.PLOTDIR + "%s.plot.png" % name)
+    g.savefig(conf.PLOTDIR + "%s.plot.png" % trackrel)
     g.plot_heatmap()
-    g.savefig(conf.PLOTDIR + "%s.heat.png" % name)
+    g.savefig(conf.PLOTDIR + "%s.heat.png" % trackrel)
     g.plot_heatmap(10)
-    g.savefig(conf.PLOTDIR + "%s.heat.10.png" % name)
+    g.savefig(conf.PLOTDIR + "%s.heat.10.png" % trackrel)
     g.plot_leftright()
-    g.savefig(conf.PLOTDIR + "%s.leftright.png" % name)
+    g.savefig(conf.PLOTDIR + "%s.leftright.png" % trackrel)
 
 
 @post('/analyze/')
 def post_analyze():
-    trackname = request.query.path
-    _do_analyze(trackname)
-    redirect("/view/%s" % trackname)
+    trackfile = request.query.path
+    _do_analyze(trackfile)
+    redirect("/view/%s" % trackfile)
 
 
-def _analyze_selection(tracknames):
-    for track in tracknames:
+def _analyze_selection(trackfiles):
+    for track in trackfiles:
         _do_analyze(track)
 
 
 @post('/analyze_selection/')
 def post_analyze_selection():
-    tracknames = request.query.selection.split('|')
-    p = multiprocessing.Process(target=_analyze_selection, args=(tracknames,))
+    trackfiles = request.query.selection.split('|')
+    p = multiprocessing.Process(target=_analyze_selection, args=(trackfiles,))
     p.start()
 
 
@@ -102,8 +108,12 @@ def post_compare():
     g2 = analyze.Grapher(track2)
     g1.plot_leftright()
     g2.plot_leftright(addplot=True)
-    name1 = track1.split('/')[-1]
-    name2 = track2.split('/')[-1]
+    # XXX: Note that this ignores directory names...
+    # *May* inadvertently overwrite an existing plot if, e.g.,
+    # We have box1/test-track.csv and box2/test-track.csv,
+    # and both are just seen as "test-track.csv" here...
+    name1 = os.path.basename(track1)
+    name2 = os.path.basename(track2)
     # XXX: bit of a hack doing pyplot stuff outside of Grapher...
     matplotlib.pyplot.legend([name1 + " Left", name2 + " Left", name1 + " Right", name2 + " Right"], fontsize=8, loc=2)
 

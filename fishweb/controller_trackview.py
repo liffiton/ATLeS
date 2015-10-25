@@ -1,4 +1,5 @@
 import collections
+import fnmatch
 import glob
 import math
 import os
@@ -12,11 +13,16 @@ from fishweb import conf
 
 
 def _tracks():
-    return sorted(glob.glob(conf.TRACKDIR + "*-track.csv"))
+    # match in all subdirs - thanks: http://stackoverflow.com/a/2186565
+    tracks = []
+    for root, dirnames, filenames in os.walk(conf.TRACKDIR):
+        for filename in fnmatch.filter(filenames, "*-track.csv"):
+            tracks.append(os.path.join(root, filename))
+    return sorted(tracks)
 
 
-def _imgs(name):
-    return sorted(glob.glob(conf.PLOTDIR + "%s*" % name))
+def _imgs(trackrel):
+    return sorted(glob.glob(os.path.join(conf.PLOTDIR, "%s*" % trackrel)))
 
 
 def _get_track_data(track):
@@ -65,24 +71,24 @@ track_data_cache = {}
 def index():
     global track_data_cache
     tracks = []
-    for index, track in enumerate(_tracks()):
-        mtime = os.stat(track).st_mtime
-        key = "%f|%s" % (mtime, track)
+    for index, trackfile in enumerate(_tracks()):
+        mtime = os.stat(trackfile).st_mtime
+        trackrel = os.path.relpath(trackfile, conf.TRACKDIR)
+        key = "%f|%s" % (mtime, trackrel)
         if key in track_data_cache:
             lines, aml, heat = track_data_cache[key]
         else:
-            lines, aml, heat = _get_track_data(track)
+            lines, aml, heat = _get_track_data(trackfile)
             track_data_cache[key] = (lines, aml, heat)
-        name = track.split('/')[-1]
-        tracks.append( (index, track, lines, aml, heat, _imgs(name)) )
+        tracks.append( (index, trackfile, trackrel, lines, aml, heat, _imgs(trackrel)) )
     return dict(tracks=tracks, hostname=platform.node())
 
 
-@route('/view/<trackname:path>')
+@route('/view/<trackfile:path>')
 @view('view')
-def view_track(trackname):
-    name = trackname.split('/')[-1]
-    return dict(imgs=_imgs(name), trackname=trackname)
+def view_track(trackfile):
+    trackrel = os.path.relpath(trackfile, conf.TRACKDIR)
+    return dict(imgs=_imgs(trackrel), trackfile=trackfile, trackrel=trackrel)
 
 
 @post('/download/')

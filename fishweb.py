@@ -1,4 +1,3 @@
-import errno
 import os
 import sys
 
@@ -15,19 +14,9 @@ from fishweb import (  # noqa -- flake8 doesn't like importing things we're not 
     controller_archive,
     controller_experiments,
     controller_analyze,
-    controller_trackview
+    controller_trackview,
+    utils
 )
-
-
-def _mkdir(path):
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno == errno.EEXIST and os.path.isdir(path):
-            # exists already, fine.
-            pass
-        else:
-            raise
 
 
 if __name__ == '__main__':
@@ -43,8 +32,8 @@ if __name__ == '__main__':
     host = 'localhost' if testing else '0.0.0.0'
 
     # Create needed directories if not already there
-    _mkdir(conf.PLOTDIR)
-    _mkdir(conf.ARCHIVEDIR)
+    utils.mkdir(conf.PLOTDIR)
+    utils.mkdir(conf.ARCHIVEDIR)
 
     # let bottle know where to find our templates
     bottle.TEMPLATE_PATH.insert(0, conf.TEMPLATEDIR)
