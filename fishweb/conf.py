@@ -1,0 +1,10 @@
+LOGDIR = "logs/"
+LOCKFILE = LOGDIR + "current_experiment.lock"
+INIDIR = "ini/"
+IMGDIR = LOGDIR + "img/"
+ARCHIVEDIR = LOGDIR + "archive/"
+EXPSCRIPT = "python fishbox.py"
+
+APPDIR = "fishweb/"
+TEMPLATEDIR = APPDIR + "views/"
+STATICDIR = APPDIR + "static/"
