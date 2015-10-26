@@ -1,4 +1,4 @@
-% rebase('base.tpl', title='Error')
+% rebase('base.tpl', hostname='', title='Error')
 
 <div class="container">
   <h1>Fishybox: Error</h1>
