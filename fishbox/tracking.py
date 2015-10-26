@@ -296,6 +296,8 @@ class Stream(object):
         if not cap.isOpened():
             return None
 
+        atexit.register(cap.release)
+
         # Try setting width/height this way, too, in case we don't have modified OpenCV but this still works.
         cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, w)
         cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, h)
@@ -307,22 +309,26 @@ class Stream(object):
             return None
 
         # Hacks using v4l2-ctl to set capture parameters we can't control through OpenCV
+        v4l2args = []
 
         # Set FPS (OpenCV requests 30, hardcoded)
-        self._v4l2_call("-p %d" % fps)
+        v4l2args.append("-p %d" % fps)
 
-        # Turn off white balance (seems to need to be reset to non-zero first, then zero)
-        self._v4l2_call("--set-ctrl=white_balance_auto_preset=1")
-        self._v4l2_call("--set-ctrl=white_balance_auto_preset=0")
-
-        # Set shutter speed
+        # Set exposure (shutter speed/ISO)
         # exposure_time_absolute is given in multiples of 0.1ms.
         # Make sure fps above is not set too high (exposure time
         # will be adjusted automatically to allow higher frame rate)
-        self._v4l2_call("--set-ctrl=auto_exposure=1")
-        self._v4l2_call("--set-ctrl=exposure_time_absolute=%d" % exposure)
+        v4l2args.append("--set-ctrl auto_exposure=1")  # 0=auto, 1=manual
+        v4l2args.append("--set-ctrl exposure_time_absolute=%d" % exposure)
+        v4l2args.append("--set-ctrl iso_sensitivity=1")  # 1=ISO100 -- not sure this has an effect
 
-        atexit.register(cap.release)
+        v4l2args.append("--set-ctrl white_balance_auto_preset=0")
+
+        self._v4l2_call(" ".join(v4l2args))
+
+        logging.info("Set exposure via v4l2-ctl.  Capturing/dumping frames so settings take effect before tracking starts.")
+        for _ in range(5):
+            cap.read()
 
         return cap
 
