@@ -27,7 +27,13 @@ def post_stats():
     for track in tracks:
         curstats = {}
         curstats['Track file'] = track
-        g = analyze.Grapher(track)
+
+        try:
+            g = analyze.Grapher(track)
+        except ValueError:
+            # often 'wrong number of columns' due to truncated file from killed experiment
+            return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % track)
+
         curstats.update(g.read_setup(['experiment', 'at_runtime']))
         curstats.update(g.get_stats())
         for i in range(g.len_minutes):
@@ -85,13 +91,21 @@ def _do_analyze(trackfile):
 @post('/analyze/')
 def post_analyze():
     trackfile = request.query.path
-    _do_analyze(trackfile)
+    try:
+        _do_analyze(trackfile)
+    except ValueError:
+        # often 'wrong number of columns' due to truncated file from killed experiment
+        return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackfile)
     redirect("/view/%s" % trackfile)
 
 
 def _analyze_selection(trackfiles):
-    for track in trackfiles:
-        _do_analyze(track)
+    for trackfile in trackfiles:
+        try:
+            _do_analyze(trackfile)
+        except ValueError:
+            # often 'wrong number of columns' due to truncated file from killed experiment
+            return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackfile)
 
 
 @post('/analyze_selection/')
