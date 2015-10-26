@@ -48,6 +48,9 @@ def main():
         if key % 256 == 27:  # exit on ESC
             break
         elif key % 256 == ord(' '):
+            cv2.imwrite("camtestout.png", frame)
+            print "Saved image to camtestout.png"
+        elif key % 256 == ord('c'):
             channel = [1,2,-1,0][channel]
             print "New channel: %d" % channel
         elif key % 256 == ord('i'):
