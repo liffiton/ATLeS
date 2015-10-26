@@ -109,23 +109,9 @@ class Watcher(object):
 
 class Experiment(object):
 
-    def __init__(self, conf, args, stream):
+    def __init__(self, conf, args):
         self._conf = conf
         self._args = args
-        self._stream = stream
-
-        # Tank bounds in pixel coordinates
-        # NOTE: tank Y coordinate is inverted w.r.t. pixel coordinates, hence (1.0 - ...).
-        self._tx1 = int(self._stream.width * self._conf['camera']['tank_min_x'])
-        self._tx2 = int(self._stream.width * self._conf['camera']['tank_max_x'])
-        self._ty1 = int(self._stream.height * (1.0 - self._conf['camera']['tank_max_y']))
-        self._ty2 = int(self._stream.height * (1.0 - self._conf['camera']['tank_min_y']))
-
-        # Vidfile stats, if relevant
-        if self._stream.sourcetype == 'file':
-            # Get frame count, fps for calculating frame times
-            self._framecount, self._fps = self._stream.get_video_stats()
-            logging.info("Video file: %d frames, %d fps", self._framecount, self._fps)
 
         # Create Sensors
         if sensors is not None:
@@ -146,6 +132,28 @@ class Experiment(object):
             xpos, ypos = pos_tank
             return eval(trigger_code)
         self._trigger = _trigger_func
+
+        # setup Stream (*after* starting stimulus and visible light bar)
+        if args.vidfile:
+            self._stream = tracking.Stream(args.vidfile)
+            args.width = self._stream.width
+            args.height = self._stream.height
+        else:
+            params = {}
+            self._stream = tracking.Stream(0, conf=conf['camera'], params=params)
+
+        # Tank bounds in pixel coordinates
+        # NOTE: tank Y coordinate is inverted w.r.t. pixel coordinates, hence (1.0 - ...).
+        self._tx1 = int(self._stream.width * self._conf['camera']['tank_min_x'])
+        self._tx2 = int(self._stream.width * self._conf['camera']['tank_max_x'])
+        self._ty1 = int(self._stream.height * (1.0 - self._conf['camera']['tank_max_y']))
+        self._ty2 = int(self._stream.height * (1.0 - self._conf['camera']['tank_min_y']))
+
+        # Vidfile stats, if relevant
+        if self._stream.sourcetype == 'file':
+            # Get frame count, fps for calculating frame times
+            self._framecount, self._fps = self._stream.get_video_stats()
+            logging.info("Video file: %d frames, %d fps", self._framecount, self._fps)
 
         # Frame processor
         self._proc = tracking.FrameProcessor()
@@ -194,10 +202,11 @@ class Experiment(object):
 
     def _save_debug_frame(self, frame, subframe, frame_num, status):
         ''' Save a copy of the current frame for debugging. '''
-        imgfile = "%s/frame_%d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
+        imgfile = "%s/frame_%04d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
         cv2.imwrite(imgfile, frame)
-        subimgfile = "%s/subframe_%d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
+        subimgfile = "%s/subframe_%04d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
         cv2.imwrite(subimgfile, subframe)
+        logging.info("Saved frame %d." % frame_num)
 
     def _do_tracking(self, frame, frame_num):
         # Process the frame (finds contours, centroids, and updates background subtractor)

@@ -206,17 +206,8 @@ def main():
         logging.error("It appears an experiment is already running (%s exists).  Please wait or end that experiment before starting another." % config.LOCKFILE)
         sys.exit(1)
 
-    # setup Stream
-    if args.vidfile:
-        stream = tracking.Stream(args.vidfile)
-        args.width = stream.width
-        args.height = stream.height
-    else:
-        params = {}
-        stream = tracking.Stream(0, conf=conf['camera'], params=params)
-
     # create Experiment object
-    exp = experiment.Experiment(conf, args, stream)
+    exp = experiment.Experiment(conf, args)
 
     # setup timeout alarm if needed
     # NOTE: not cross-platform (SIGALRM not available on Windows)
