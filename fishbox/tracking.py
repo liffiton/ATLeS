@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 
-class FrameProcessor(object):
+class FrameProcessorBGSub(object):
     def __init__(self):
         # background subtractor
         #self._bgs = cv2.BackgroundSubtractorMOG()
@@ -80,6 +80,41 @@ class FrameProcessor(object):
             self._get_contours()
 
         return self._contours
+
+    @property
+    def centroids(self):
+        if not self._centroids:
+            self._get_centroids()
+
+        return self._centroids
+
+
+class FrameProcessorBrightness(object):
+    def __init__(self):
+        # contours and centroids for the most recent frame
+        self._contours = None
+        self._centroids = None
+
+    def process_frame(self, frame):
+        ''' Process a single frame. '''
+        # reset contours and centroids
+        self._contours = None
+        self._centroids = None
+
+        # grayscale copy
+        self._frame = frame
+
+        # blur to reduce noise
+        self._frame = cv2.GaussianBlur(self._frame, (3, 3), 0, borderType=cv2.BORDER_REPLICATE)
+
+    def _get_centroids(self):
+        (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(self._frame)
+        self._centroids = [maxLoc]
+
+    @property
+    def contours(self):
+        # No contours for this type of frame processing
+        return []
 
     @property
     def centroids(self):
