@@ -12,12 +12,10 @@ import sys
 import threading
 import time
 
+import config
 from fishbox import experiment, tracking
 
 
-_TRACKDIR = "data/tracks/"
-_IMGDIR = "data/debug_frames"
-_LOCKFILE = _TRACKDIR + "current_experiment.lock"
 _expargs = []  # track which arguments are related to the experiment
 
 
@@ -117,15 +115,15 @@ def init_logging(args, conf):
     conf['name'] = name
 
     # ensure log and image directories exist
-    if not os.path.exists(_TRACKDIR):
-        os.makedirs(_TRACKDIR)
-    debugframe_dir = "%s/%s" % (_IMGDIR, name)
+    if not os.path.exists(config.TRACKDIR):
+        os.makedirs(config.TRACKDIR)
+    debugframe_dir = "%s/%s" % (config.DBGFRAMEDIR, name)
     if not os.path.exists(debugframe_dir):
         os.makedirs(debugframe_dir)
     conf['debugframe_dir'] = debugframe_dir
 
-    trackfilename = "%s/%s-track.csv" % (_TRACKDIR, name)
-    logfilename = "%s/%s.log" % (_TRACKDIR, name)
+    trackfilename = "%s/%s-track.csv" % (config.TRACKDIR, name)
+    logfilename = "%s/%s.log" % (config.TRACKDIR, name)
 
     # Setup the ROOT level logger to send to a log file and console both
     logger = logging.getLogger()
@@ -157,7 +155,7 @@ def write_setup(conf):
         for key in conf[section]:
             parser.set(section, key, conf[section][key])
 
-    setupfilename = "%s/%s-setup.txt" % (_TRACKDIR, conf['name'])
+    setupfilename = "%s/%s-setup.txt" % (config.TRACKDIR, conf['name'])
     with open(setupfilename, 'w') as setupfile:
         setupfile.write("; Command line:\n;    %s\n;\n" % (' '.join(sys.argv)))
         setupfile.write("; Configuration:\n")
@@ -198,15 +196,15 @@ def main():
     try:
         # O_CREAT | O_EXCL ensure that this call creates the file,
         # raises OSError if file exists
-        lockfd = os.open(_LOCKFILE, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        lockfd = os.open(config.LOCKFILE, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         lockfile = os.fdopen(lockfd, 'w')
         # store PID, start time (in UTC), and experiment runtime
         lockfile.write("%d\n%d\n%d\n" % (os.getpid(), int(time.time()), args.time*60 if args.time else 0))
         lockfile.close()
         # remove lockfile at exit
-        atexit.register(os.unlink, _LOCKFILE)
+        atexit.register(os.unlink, config.LOCKFILE)
     except ValueError:
-        logging.error("It appears an experiment is already running (%s exists).  Please wait or end that experiment before starting another." % _LOCKFILE)
+        logging.error("It appears an experiment is already running (%s exists).  Please wait or end that experiment before starting another." % config.LOCKFILE)
         sys.exit(1)
 
     # setup Stream

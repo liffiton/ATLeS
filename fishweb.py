@@ -8,14 +8,14 @@ import sys
 
 import bottle
 
+import config
+import utils
 from fishweb import (  # noqa -- flake8 doesn't like importing things we're not *explicitly* using
-    conf,
     controller_static,
     controller_archive,
     controller_experiments,
     controller_analyze,
     controller_trackview,
-    utils
 )
 
 
@@ -32,11 +32,11 @@ if __name__ == '__main__':
     host = 'localhost' if testing else '0.0.0.0'
 
     # Create needed directories if not already there
-    utils.mkdir(conf.PLOTDIR)
-    utils.mkdir(conf.ARCHIVEDIR)
+    utils.mkdir(config.PLOTDIR)
+    utils.mkdir(config.ARCHIVEDIR)
 
     # let bottle know where to find our templates
-    bottle.TEMPLATE_PATH.insert(0, conf.TEMPLATEDIR)
+    bottle.TEMPLATE_PATH.insert(0, config.TEMPLATEDIR)
 
     if daemonize:
         import daemon

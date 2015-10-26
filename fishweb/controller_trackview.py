@@ -9,20 +9,20 @@ import zipfile
 
 from bottle import post, request, response, route, static_file, view
 
-from fishweb import conf
+import config
 
 
 def _tracks():
     # match in all subdirs - thanks: http://stackoverflow.com/a/2186565
     tracks = []
-    for root, dirnames, filenames in os.walk(conf.TRACKDIR):
+    for root, dirnames, filenames in os.walk(config.TRACKDIR):
         for filename in fnmatch.filter(filenames, "*-track.csv"):
             tracks.append(os.path.join(root, filename))
     return sorted(tracks)
 
 
 def _imgs(trackrel):
-    return sorted(glob.glob(os.path.join(conf.PLOTDIR, "%s*" % trackrel)))
+    return sorted(glob.glob(os.path.join(config.PLOTDIR, "%s*" % trackrel)))
 
 
 def _get_track_data(track):
@@ -73,7 +73,7 @@ def index():
     tracks = []
     for index, trackfile in enumerate(_tracks()):
         mtime = os.stat(trackfile).st_mtime
-        trackrel = os.path.relpath(trackfile, conf.TRACKDIR)
+        trackrel = os.path.relpath(trackfile, config.TRACKDIR)
         key = "%f|%s" % (mtime, trackrel)
         if key in track_data_cache:
             lines, aml, heat = track_data_cache[key]
@@ -87,7 +87,7 @@ def index():
 @route('/view/<trackfile:path>')
 @view('view')
 def view_track(trackfile):
-    trackrel = os.path.relpath(trackfile, conf.TRACKDIR)
+    trackrel = os.path.relpath(trackfile, config.TRACKDIR)
     return dict(imgs=_imgs(trackrel), trackfile=trackfile, trackrel=trackrel)
 
 
@@ -114,6 +114,6 @@ def post_download():
 @route('/data/<filename:path>')
 def static_data(filename):
     if filename.endswith('.csv'):
-        return static_file(filename, root=conf.DATADIR, mimetype='text/plain')
+        return static_file(filename, root=config.DATADIR, mimetype='text/plain')
     else:
-        return static_file(filename, root=conf.DATADIR)
+        return static_file(filename, root=config.DATADIR)

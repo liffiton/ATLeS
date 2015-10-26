@@ -9,7 +9,7 @@ import time
 from bottle import post, redirect, request, route, template
 from wtforms import Form, BooleanField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
-from fishweb import conf
+import config
 
 # crude detection of whether we're on a Pi / have to run fishbox as root.
 try:
@@ -20,11 +20,11 @@ except ImportError:
 
 
 def _inis():
-    return sorted(glob.glob(conf.INIDIR + "*.ini"))
+    return sorted(glob.glob(config.INIDIR + "*.ini"))
 
 
 def _lock_exists():
-    return os.path.isfile(conf.LOCKFILE)
+    return os.path.isfile(config.LOCKFILE)
 
 
 @route('/lock_data/')
@@ -32,7 +32,7 @@ def lock_data():
     if not _lock_exists():
         return None
 
-    with open(conf.LOCKFILE, 'r') as f:
+    with open(config.LOCKFILE, 'r') as f:
         pid, starttime, runtime = (int(line) for line in f)
         return {'pid': pid,
                 'starttimestr': time.strftime("%X", time.localtime(starttime)),
@@ -50,7 +50,7 @@ def new_experiment():
 @post('/clear_experiment/')
 def post_clear_experiment():
     # kill process
-    with open(conf.LOCKFILE, 'r') as f:
+    with open(config.LOCKFILE, 'r') as f:
         pid, starttime, runtime = (int(line) for line in f)
         print("Killing PID %d" % pid)
         try:
@@ -68,7 +68,7 @@ def post_clear_experiment():
             pass
     # remove existing lockfile
     try:
-        os.unlink(conf.LOCKFILE)
+        os.unlink(config.LOCKFILE)
     except:
         # might not exist anymore
         pass
@@ -108,7 +108,7 @@ def post_create():
         cmdparts = ['sudo']  # fishbox.py must be run as root!
     else:
         cmdparts = []
-    cmdparts.append(conf.EXPSCRIPT)
+    cmdparts.append(config.EXPSCRIPT)
     cmdparts.append("-t %d" % timelimit)
     if startfromtrig:
         cmdparts.append("--time-from-trigger")

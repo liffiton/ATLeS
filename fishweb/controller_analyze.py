@@ -14,7 +14,8 @@ import analyze
 
 from bottle import post, redirect, request, response, template
 
-from fishweb import conf, utils
+import config
+import utils
 
 
 @post('/stats/')
@@ -64,21 +65,21 @@ def post_stats():
 
 
 def _do_analyze(trackfile):
-    trackrel = os.path.relpath(trackfile, conf.TRACKDIR)
+    trackrel = os.path.relpath(trackfile, config.TRACKDIR)
 
     # ensure directories exist for plot creation
     trackreldir = os.path.dirname(trackrel)
-    utils.mkdir(os.path.join(conf.PLOTDIR, trackreldir))
+    utils.mkdir(os.path.join(config.PLOTDIR, trackreldir))
 
     g = analyze.Grapher(trackfile)
     g.plot()
-    g.savefig(conf.PLOTDIR + "%s.plot.png" % trackrel)
+    g.savefig(config.PLOTDIR + "%s.plot.png" % trackrel)
     g.plot_heatmap()
-    g.savefig(conf.PLOTDIR + "%s.heat.png" % trackrel)
+    g.savefig(config.PLOTDIR + "%s.heat.png" % trackrel)
     g.plot_heatmap(10)
-    g.savefig(conf.PLOTDIR + "%s.heat.10.png" % trackrel)
+    g.savefig(config.PLOTDIR + "%s.heat.10.png" % trackrel)
     g.plot_leftright()
-    g.savefig(conf.PLOTDIR + "%s.leftright.png" % trackrel)
+    g.savefig(config.PLOTDIR + "%s.leftright.png" % trackrel)
 
 
 @post('/analyze/')
@@ -117,6 +118,6 @@ def post_compare():
     # XXX: bit of a hack doing pyplot stuff outside of Grapher...
     matplotlib.pyplot.legend([name1 + " Left", name2 + " Left", name1 + " Right", name2 + " Right"], fontsize=8, loc=2)
 
-    imgname = conf.PLOTDIR + "%s_%s_leftrights.png" % (name1, name2)
+    imgname = config.PLOTDIR + "%s_%s_leftrights.png" % (name1, name2)
     g1.savefig(imgname)
     redirect("/" + imgname)

@@ -2,11 +2,13 @@ import glob
 import os
 import shutil
 from bottle import post, request
-from fishweb import conf, utils
+
+import config
+import utils
 
 
 def _get_prefix(trackfile):
-    trackrel = os.path.relpath(trackfile, conf.TRACKDIR)
+    trackrel = os.path.relpath(trackfile, config.TRACKDIR)
     prefix = trackrel.split('-track')[0]
     assert(prefix != '')
     return prefix
@@ -29,17 +31,17 @@ def _relative_move(srcroot, srcrel, destroot):
 def post_archive():
     trackfile = request.query.path
     prefix = _get_prefix(trackfile)
-    allfiles = glob.glob(conf.TRACKDIR + "%s[.-]*" % prefix)
+    allfiles = glob.glob(config.TRACKDIR + "%s[.-]*" % prefix)
     for f in allfiles:
-        relpath = os.path.relpath(f, conf.TRACKDIR)
-        _relative_move(conf.TRACKDIR, relpath, conf.ARCHIVEDIR)
+        relpath = os.path.relpath(f, config.TRACKDIR)
+        _relative_move(config.TRACKDIR, relpath, config.ARCHIVEDIR)
 
 
 @post('/unarchive/')
 def post_unarchive():
     trackfile = request.query.path
     prefix = _get_prefix(trackfile)
-    allfiles = glob.glob(conf.ARCHIVEDIR + "%s[.-]*" % prefix)
+    allfiles = glob.glob(config.ARCHIVEDIR + "%s[.-]*" % prefix)
     for f in allfiles:
-        relpath = os.path.relpath(f, conf.ARCHIVEDIR)
-        _relative_move(conf.ARCHIVEDIR, relpath, conf.TRACKDIR)
+        relpath = os.path.relpath(f, config.ARCHIVEDIR)
+        _relative_move(config.ARCHIVEDIR, relpath, config.TRACKDIR)
