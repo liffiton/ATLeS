@@ -13,6 +13,7 @@ import threading
 import time
 
 import config
+import utils
 from fishbox import experiment, tracking
 
 
@@ -115,11 +116,9 @@ def init_logging(args, conf):
     conf['name'] = name
 
     # ensure log and image directories exist
-    if not os.path.exists(config.TRACKDIR):
-        os.makedirs(config.TRACKDIR)
+    utils.mkdir(config.TRACKDIR)
     debugframe_dir = "%s/%s" % (config.DBGFRAMEDIR, name)
-    if not os.path.exists(debugframe_dir):
-        os.makedirs(debugframe_dir)
+    utils.mkdir(debugframe_dir)
     conf['debugframe_dir'] = debugframe_dir
 
     trackfilename = "%s/%s-track.csv" % (config.TRACKDIR, name)
