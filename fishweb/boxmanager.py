@@ -1,25 +1,43 @@
 import collections
 import copy
 import inspect
+import socket
 import threading
-import time
+from zeroconf import ServiceBrowser, Zeroconf
+
+import utils
+
 
 BoxSpec = collections.namedtuple('BoxSpec', 'ip, port, name, up')
 
 
-class _BoxManager(threading.Thread):
+class _BoxManager(object):
     def __init__(self):
         super(_BoxManager, self).__init__()
-        self._boxes = {
-            # dummy data for now
-            'box1': BoxSpec(ip="10.0.0.1", port=4444, name='box1', up=True),
-            'box2': BoxSpec(ip="10.0.0.2", port=4444, name='box2', up=False),
-            'box3': BoxSpec(ip="10.0.0.3", port=4444, name='box3', up=True),
-        }
+        self._boxes = dict()
+        # e.g.
+        #{
+        #
+        #    'box1': BoxSpec(ip="10.0.0.1", port=4444, name='box1', up=True),
+        #    'box2': BoxSpec(ip="10.0.0.2", port=4444, name='box2', up=False),
+        #    'box3': BoxSpec(ip="10.0.0.3", port=4444, name='box3', up=True),
+        #}
         self._boxlock = threading.Lock()
 
-    def run(self):
-        time.sleep(10000)
+        zeroconf = Zeroconf([utils.get_routed_ip()])
+        self._browser = ServiceBrowser(zeroconf, "_fishbox._tcp.local.", self)  # starts its own daemon thread
+
+    def add_service(self, zeroconf, type, name):
+        info = zeroconf.get_service_info(type, name)
+        print("Service %s added, service info: %s" % (name, info))
+        boxname = info.properties['name']
+        with self._boxlock:
+            self._boxes[name] = BoxSpec(ip=socket.inet_ntoa(info.address), port=info.port, name=boxname, up=True)
+
+    def remove_service(self, zeroconf, type, name):
+        print("Service %s removed" % name)
+        with self._boxlock:
+            del self._boxes[name]
 
     def get_boxes(self):
         with self._boxlock:
@@ -36,8 +54,6 @@ class BoxManagerPlugin(object):
 
     def __init__(self, kw="boxes"):
         self._boxmanager = _BoxManager()
-        self._boxmanager.daemon = True
-        self._boxmanager.start()
         self._keyword = kw
 
     def setup(self, app):
