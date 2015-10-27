@@ -24,7 +24,7 @@
         </div>
       </div>
       <span class="h1">
-        Fishybox Track Analyzer/Viewer: <span class="hostname">{{hostname}}</span>
+        Track Analyzer/Viewer on <span class="hostname">{{hostname}}</span>
       </span>
     </div>
   </div>
