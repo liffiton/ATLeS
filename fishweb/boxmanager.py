@@ -30,14 +30,15 @@ class _BoxManager(object):
     def add_service(self, zeroconf, type, name):
         info = zeroconf.get_service_info(type, name)
         print("Service %s added, service info: %s" % (name, info))
-        boxname = info.properties['name']
+        boxname = name.split('.')[0]
         with self._boxlock:
-            self._boxes[name] = BoxSpec(ip=socket.inet_ntoa(info.address), port=info.port, name=boxname, up=True)
+            self._boxes[boxname] = BoxSpec(ip=socket.inet_ntoa(info.address), port=info.port, name=boxname, up=True)
 
     def remove_service(self, zeroconf, type, name):
         print("Service %s removed" % name)
+        boxname = name.split('.')[0]
         with self._boxlock:
-            del self._boxes[name]
+            del self._boxes[boxname]
 
     def get_boxes(self):
         with self._boxlock:

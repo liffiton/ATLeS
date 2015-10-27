@@ -59,8 +59,8 @@ def post_create(boxes):
 
     # add a dynamic validator for form.box based on the boxes list
     def boxvalidator(form, field):
-        if not boxes[field.data].up:
-            raise ValidationError("%s is not currently available.  Please choose another." % field.data)
+        if field.data not in boxes or not boxes[field.data].up:
+            raise ValidationError("'%s' is not currently available.  Please choose another." % field.data)
     form.box.validators.append(boxvalidator)
 
     if not form.validate():
