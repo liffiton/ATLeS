@@ -10,13 +10,7 @@ import bottle
 
 import config
 import utils
-from fishweb import (  # noqa -- flake8 doesn't like importing things we're not *explicitly* using
-    controller_static,
-    controller_archive,
-    controller_experiments,
-    controller_analyze,
-    controller_trackview,
-)
+from fishweb import boxmanager
 
 
 if __name__ == '__main__':
@@ -37,6 +31,17 @@ if __name__ == '__main__':
 
     # let bottle know where to find our templates
     bottle.TEMPLATE_PATH.insert(0, config.TEMPLATEDIR)
+
+    # add our boxmanager plugin
+    boxmanager = boxmanager.BoxManagerPlugin()
+    bottle.install(boxmanager)
+
+    # load modules with controllers / routes
+    bottle.load("fishweb.controller_static")
+    bottle.load("fishweb.controller_archive")
+    bottle.load("fishweb.controller_experiments")
+    bottle.load("fishweb.controller_analyze")
+    bottle.load("fishweb.controller_trackview")
 
     if daemonize:
         import daemon

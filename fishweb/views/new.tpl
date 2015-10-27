@@ -35,6 +35,12 @@
           </div>
           <div class="panel-body">
             <div class="form-group">
+              {{!form.box.label(class_="col-sm-4 control-label")}}
+              <div class="col-sm-4">
+                {{!form.box(class_="form-control")}}
+              </div>
+            </div>
+            <div class="form-group">
               {{!form.expname.label(class_="col-sm-4 control-label")}}
               <div class="col-sm-8">
                 {{!form.expname(class_="form-control")}}

@@ -1,7 +1,7 @@
 import glob
 import platform
 import re
-from bottle import post, redirect, request, route, template, view
+from bottle import post, redirect, request, route, template
 from wtforms import Form, BooleanField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 import config
@@ -20,18 +20,6 @@ def get_lock_data():
     return expmanage.lock_data()
 
 
-@route('/new/')
-@view('new')
-def new_experiment():
-    form = CreateExperimentForm()
-    return dict(form=form, lock_exists=expmanage.lock_exists(), hostname=platform.node())
-
-
-@post('/clear_experiment/')
-def post_clear_experiment():
-    expmanage.kill_experiment()
-
-
 def _name_is_sane(form, field):
     if re.search('\W', field.data):
         raise ValidationError("Experiment name must be alphanumeric characters only.")
@@ -39,6 +27,7 @@ def _name_is_sane(form, field):
 
 class CreateExperimentForm(Form):
     ''' Form for creating a new experiment. '''
+    box = SelectField("Box", choices=[])
     expname = StringField("Experiment Name", [validators.Length(max=32), _name_is_sane])
     timelimit = IntegerField("Time Limit", [validators.NumberRange(min=1, max=24*60)])
     startfromtrig = BooleanField("startFromTrigger")
@@ -46,13 +35,34 @@ class CreateExperimentForm(Form):
     inifile = SelectField(".ini File", choices=zip(_inis(), _inis()))
 
 
+@route('/new/')
+# @view('new')  # plugin keyword matching doesn't work if the @view decorator is applied
+def new_experiment(boxes):
+    form = CreateExperimentForm()
+    form.box.choices = [(box.name, box.name) for box in sorted(boxes.values())]
+    return template('new', dict(form=form, lock_exists=expmanage.lock_exists(), hostname=platform.node()))
+
+
+@post('/clear_experiment/')
+def post_clear_experiment():
+    expmanage.kill_experiment()
+
+
 @post('/create/')
-def post_create():
+def post_create(boxes):
     if expmanage.lock_exists():
         return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
 
     # validate form data
     form = CreateExperimentForm(request.forms)
+    form.box.choices = [(box.name, box.name) for box in sorted(boxes.values())]
+
+    # add a dynamic validator for form.box based on the boxes list
+    def boxvalidator(form, field):
+        if not boxes[field.data].up:
+            raise ValidationError("%s is not currently available.  Please choose another." % field.data)
+    form.box.validators.append(boxvalidator)
+
     if not form.validate():
         return template('new', form=form, lock_exists=expmanage.lock_exists(), hostname=platform.node())
 
