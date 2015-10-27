@@ -20,9 +20,13 @@ Installing FishyCam from Scratch
 Python Package Dependencies
 ---------------------------
 
-Before installing the python modules themselves, install the required libraries:
+Before installing the python modules themselves, install the required tools:
 
-  $ sudo apt-get install python-dev
+  $ sudo apt-get install build-essential pkg-config
+
+... and libraries:
+
+  $ sudo apt-get install python-dev libpng-dev libfreetype6-dev
 
 Many python packages are most easily installed via pip.  To install pip,
 follow the instructions here: https://pip.pypa.io/en/latest/installing.html
