@@ -46,12 +46,6 @@
             </div>
             %end
             <div class="form-group">
-              {{!form.box.label(class_="col-sm-4 control-label")}}
-              <div class="col-sm-4">
-                {{!form.box(class_="form-control")}}
-              </div>
-            </div>
-            <div class="form-group">
               {{!form.expname.label(class_="col-sm-4 control-label")}}
               <div class="col-sm-8">
                 {{!form.expname(class_="form-control")}}
@@ -79,8 +73,8 @@
               <div class="col-sm-8">
                 %for value, label, _ in form.stimulus.iter_choices():
                 <div class="radio">
-                  <label for="stimulus">
-                    <input type="radio" name="stimulus" id="stimulus" value="{{value}}">
+                  <label for="stimulus:{{value}}">
+                    <input type="radio" name="stimulus" id="stimulus:{{value}}" value="{{value}}">
                     {{label}}
                   </label>
                 </div>
