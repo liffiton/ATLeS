@@ -19,8 +19,16 @@ port = 4158
 
 
 def module2service(module):
+    ''' Create a class containing an exposed_[method]() method
+    for every public method (callable object not named with a '_')
+    in the given module.  This can be passed to RPyC to expose
+    all of the modules methods via RPC.
+    '''
+
+    # methods is a list of public method *names* (strings)
     methods = [method for method in dir(module) if callable(getattr(module, method)) and not method.startswith('_')]
 
+    # an empty rpyc.Service class to be filled with new methods
     class _serviceclass(rpyc.Service):
         pass
 
