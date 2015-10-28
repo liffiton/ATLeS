@@ -38,6 +38,10 @@ class Box(object):
     @property
     def rpc_root(self):
         if self._rpc:
+            # check for closed connection
+            if self._rpc.closed:
+                self.down()
+                return None
             return self._rpc.root
         else:
             return None

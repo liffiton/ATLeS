@@ -64,7 +64,7 @@ function checkProgress(boxname, progress_id, new_id) {
   if (typeof(boxname)==='undefined') boxname = ""
   if (typeof(progress_id)==='undefined') progress_id = "#exp_progress"
   if (typeof(new_id)==='undefined') new_id = "#exp_new"
-  $.get('/lock_data/' + boxname).success(function(data) {
+  $.get('/lock_data/' + boxname).done(function(data) {
     if ($.isEmptyObject(data)) {
       $(progress_id).hide();
       $(new_id).show();
@@ -74,8 +74,9 @@ function checkProgress(boxname, progress_id, new_id) {
       $(progress_id).show();
       $(new_id).hide();
     }
+  }).always(function() {
+    window.setTimeout(checkProgress, 2000, boxname, progress_id, new_id);
   });
-  window.setTimeout(checkProgress, 2000, boxname, progress_id, new_id);
 }
 
 function makeChart() {
