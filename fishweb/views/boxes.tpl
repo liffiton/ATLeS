@@ -10,7 +10,7 @@
   %end
   <div class="row">
     <div class="col-lg-4 col-lg-offset-1 col-md-5 col-md-offset-1 col-sm-6 col-sm-offset-2">
-      %for box, info in boxes.items():
+      %for box, info in sorted(boxes.items()):
         %if info.up:
         <div class="panel panel-success">
         %else:

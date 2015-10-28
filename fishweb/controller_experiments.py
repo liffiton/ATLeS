@@ -41,14 +41,6 @@ def new_experiment(boxes=None):
         # no need to choose a box, just give them the new exp. form
         return new_experiment_box(tgtbox=platform.node(), boxes=boxes)
 
-    #form.box.choices = [(box.name, box.name) for box in sorted(boxes.values())]
-#    form.box.choices = [(box.name, box.name) for box in sorted(boxes.values())]
-#
-#    # add a dynamic validator for form.box based on the boxes list
-#    def boxvalidator(form, field):
-#        if field.data not in boxes or not boxes[field.data].up:
-#            raise ValidationError("'%s' is not currently available.  Please choose another." % field.data)
-#    form.box.validators.append(boxvalidator)
     return template('boxes', dict(boxes=boxes))
 
 
@@ -70,12 +62,12 @@ def post_clear_experiment():
 @post('/create/')
 @post('/create/<tgtbox>')
 def post_create(tgtbox=None, boxes=None):
-    if expmanage.lock_exists():
-        return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
-
     local = request.app.config['fishweb.local']
     if not local and (tgtbox not in boxes or not boxes[tgtbox].up):
         return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
+
+    if expmanage.lock_exists():
+        return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
 
     # validate form data
     form = CreateExperimentForm(request.forms)
