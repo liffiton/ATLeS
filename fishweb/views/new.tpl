@@ -1,7 +1,7 @@
 % rebase('base.tpl', title='New Experiment')
 
 <div class="container">
-  <h1>New Experiment on <span class="hostname">{{hostname}}</span></h1>
+  <h1>New Experiment on <span class="hostname">{{box}}</span></h1>
 
   <div class="row" id="exp_progress">
     <div class="col-sm-6 col-sm-offset-1 alert alert-info">
@@ -28,7 +28,7 @@
 
   <div class="row" id="exp_new">
     <div class="col-lg-6 col-md-8 col-sm-10">
-      <form class="form-horizontal" action="/create/" method="post">
+      <form class="form-horizontal" action="/create/{{box}}" method="post">
         <div class="panel panel-default" id="experiment_form">
           <div class="panel-heading">
             <h3 class="panel-title">Experiment Setup</h3>
@@ -123,9 +123,8 @@ $(function() {
   $("#clear_exp_button").click(function(e) {
     var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
     if (! go) return;
-    $.post("/clear_experiment/")
-      .always(checkProgress);
+    $.post("/clear_experiment/");
   });
-  checkProgress();
+  checkProgress("{{box}}");
 });
 </script>

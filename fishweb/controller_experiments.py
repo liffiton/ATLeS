@@ -1,7 +1,7 @@
 import glob
 import platform
 import re
-from bottle import post, redirect, request, route, template
+from bottle import post, redirect, request, route, template, HTTPError
 from wtforms import Form, BooleanField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 import config
@@ -12,12 +12,37 @@ def _inis():
     return sorted(glob.glob(config.INIDIR + "*.ini"))
 
 
-@route('/lock_data/')
-def get_lock_data():
-    if not expmanage.lock_exists():
-        return None
+class ManagerError(Exception):
+    pass
 
-    return expmanage.lock_data()
+
+def _get_box_manager(tgtbox, boxes):
+    local = request.app.config['fishweb.local']
+
+    if local:
+        # use the module directly
+        return expmanage
+    else:
+        # use the module via RPC
+        if tgtbox not in boxes:
+            raise ManagerError("Box %s not registered." % tgtbox)
+        if boxes[tgtbox].status != "connected":
+            raise ManagerError("Box %s not connected." % tgtbox)
+
+        return boxes[tgtbox].rpc_root
+
+
+@route('/lock_data/')
+@route('/lock_data/<tgtbox>')
+def get_lock_data(tgtbox=None, boxes=None):
+    try:
+        manager = _get_box_manager(tgtbox, boxes)
+    except ManagerError as e:
+        raise HTTPError(status=404, body=e.message)
+
+    # RPyC doesn't return a real dict, and JSON won't serialize it,
+    # so we make it a real dict.
+    return dict(manager.lock_data())
 
 
 def _name_is_sane(form, field):
@@ -46,33 +71,41 @@ def new_experiment(boxes=None):
 
 @route('/new/<tgtbox>')
 def new_experiment_box(tgtbox, boxes=None):
-    local = request.app.config['fishweb.local']
-    if not local and (tgtbox not in boxes or not boxes[tgtbox].up):
+    try:
+        manager = _get_box_manager(tgtbox, boxes)
+    except ManagerError:
         return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
 
     form = CreateExperimentForm()
-    return template('new', dict(form=form, lock_exists=expmanage.lock_exists(), hostname=tgtbox))
+    return template('new', dict(form=form, lock_exists=manager.lock_exists(), box=tgtbox))
 
 
 @post('/clear_experiment/')
-def post_clear_experiment():
-    expmanage.kill_experiment()
+@post('/clear_experiment/<tgtbox>')
+def post_clear_experiment(tgtbox=None, boxes=None):
+    try:
+        manager = _get_box_manager(tgtbox, boxes)
+    except ManagerError:
+        return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
+
+    manager.kill_experiment()
 
 
 @post('/create/')
 @post('/create/<tgtbox>')
 def post_create(tgtbox=None, boxes=None):
-    local = request.app.config['fishweb.local']
-    if not local and (tgtbox not in boxes or not boxes[tgtbox].up):
+    try:
+        manager = _get_box_manager(tgtbox, boxes)
+    except ManagerError:
         return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
 
-    if expmanage.lock_exists():
+    if manager.lock_exists():
         return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
 
     # validate form data
     form = CreateExperimentForm(request.forms)
     if not form.validate():
-        return template('new', form=form, lock_exists=expmanage.lock_exists(), hostname=platform.node())
+        return template('new', form=form, lock_exists=manager.lock_exists(), box=platform.node())
 
     expname = request.forms.expname
     timelimit = int(request.forms.timelimit)
@@ -80,6 +113,6 @@ def post_create(tgtbox=None, boxes=None):
     stimulus = request.forms.stimulus
     inifile = request.forms.inifile
 
-    expmanage.start_experiment(expname, timelimit, startfromtrig, stimulus, inifile)
+    manager.start_experiment(expname, timelimit, startfromtrig, stimulus, inifile)
 
     redirect("/new/")

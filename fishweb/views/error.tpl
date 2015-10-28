@@ -1,4 +1,4 @@
-%rebase('base.tpl', hostname=None, title='Error')
+%rebase('base.tpl', box=None, title='Error')
 
 <div class="container">
   <h1>Error</h1>

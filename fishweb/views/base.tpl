@@ -2,8 +2,8 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-%if hostname:
-  <title>{{hostname}}: {{title}}</title>
+%if box:
+  <title>{{box}}: {{title}}</title>
 %else:
   <title>{{title}}</title>
 %end

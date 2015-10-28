@@ -1,28 +1,55 @@
-import collections
 import copy
 import inspect
 import socket
 import threading
+
+import plumbum
+import rpyc
 from zeroconf import ServiceBrowser, Zeroconf
 
 import utils
 
 
-BoxSpec = collections.namedtuple('BoxSpec', 'ip, port, name, up')
+class Box(object):
+    def __init__(self, name, ip, port, status="initializing"):
+        self.name = name
+        self.ip = ip
+        self.port = port
+        self.status = status
+        self._tunnel = None
+        self._rpc = None
+
+    def connect(self):
+        if self.ip != utils.get_routed_ip():
+            # only connect if it's a separate machine
+            self._tunnel = plumbum.SshMachine(self.ip)
+            self._rpc = rpyc.ssh_connect(self._tunnel, self.port)
+        else:
+            self._rpc = rpyc.connect("localhost", self.port)
+        self.status = "connected"
+
+    def down(self):
+        self.status = "down"
+        if self._rpc:
+            self._rpc.close()
+        if self._tunnel:
+            self._tunnel.close()
+
+    @property
+    def rpc_root(self):
+        if self._rpc:
+            return self._rpc.root
+        else:
+            return None
 
 
-class _BoxManager(object):
+class BoxManager(object):
     def __init__(self):
-        super(_BoxManager, self).__init__()
+        super(BoxManager, self).__init__()
         self._boxes = dict()
-        # e.g.
-        #{
-        #    'box1': BoxSpec(ip="10.0.0.1", port=4444, name='box1', up=True),
-        #    'box2': BoxSpec(ip="10.0.0.2", port=4444, name='box2', up=False),
-        #    'box3': BoxSpec(ip="10.0.0.3", port=4444, name='box3', up=True),
-        #}
         self._boxlock = threading.Lock()
 
+        # TODO: make listening interface configurable
         zeroconf = Zeroconf([utils.get_routed_ip()])
         self._browser = ServiceBrowser(zeroconf, "_fishbox._tcp.local.", self)  # starts its own daemon thread
 
@@ -31,14 +58,16 @@ class _BoxManager(object):
         print("Service %s added, service info: %s" % (name, info))
         boxname = name.split('.')[0]
         with self._boxlock:
-            self._boxes[boxname] = BoxSpec(ip=socket.inet_ntoa(info.address), port=info.port, name=boxname, up=True)
+            newbox = Box(name=boxname, ip=socket.inet_ntoa(info.address), port=info.port)
+            newbox.connect()
+            self._boxes[boxname] = newbox
 
     def remove_service(self, zeroconf, type, name):
         print("Service %s removed" % name)
         boxname = name.split('.')[0]
         with self._boxlock:
             #del self._boxes[boxname]
-            self._boxes[boxname] = BoxSpec(ip=None, port=None, name=boxname, up=False)
+            self._boxes[boxname].down()
 
     def get_boxes(self):
         with self._boxlock:
@@ -56,7 +85,7 @@ class BoxManagerPlugin(object):
     api = 2
 
     def __init__(self, kw="boxes"):
-        self._boxmanager = _BoxManager()
+        self._boxmanager = BoxManager()
         self._keyword = kw
 
     def setup(self, app):

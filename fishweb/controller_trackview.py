@@ -81,7 +81,7 @@ def index():
             lines, aml, heat = _get_track_data(trackfile)
             track_data_cache[key] = (lines, aml, heat)
         tracks.append( (index, trackfile, trackrel, lines, aml, heat, _imgs(trackrel)) )
-    return dict(tracks=tracks, hostname=platform.node())
+    return dict(tracks=tracks, box=platform.node())
 
 
 @route('/view/<trackfile:path>')

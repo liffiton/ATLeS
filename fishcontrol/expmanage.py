@@ -19,6 +19,9 @@ def lock_exists():
 
 
 def lock_data():
+    if not lock_exists():
+        return {}
+
     with open(config.LOCKFILE, 'r') as f:
         pid, starttime, runtime = (int(line) for line in f)
         return {'pid': pid,

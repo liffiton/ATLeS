@@ -24,7 +24,7 @@
         </div>
       </div>
       <span class="h1">
-        Track Analyzer/Viewer on <span class="hostname">{{hostname}}</span>
+        Track Analyzer/Viewer on <span class="hostname">{{box}}</span>
       </span>
     </div>
   </div>
@@ -154,8 +154,7 @@ $(function() {
   $("#clear_exp_button").click(function(e) {
     var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
     if (! go) return;
-    $.post("/clear_experiment/")
-      .always(checkProgress);
+    $.post("/clear_experiment/");
   });
   // create all valid/missing/lost charts by default
   $("svg.aml_chart").each(makeChart);

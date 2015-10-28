@@ -34,14 +34,9 @@ def module2service(module):
 
     for method in methods:
         newname = "exposed_%s" % method
-
-        # Make a new method to be assigned an exposed_* name.
-        # Using default value for __oldname param binds method
-        # in a way that just putting method into getattr() doesn't.
-        def newmethod(self, __oldname=method, *args, **kwargs):
-            return getattr(module, __oldname)(*args, **kwargs)
-
-        setattr(_serviceclass, newname, newmethod)
+        # make it a static method so no one tries to pass it self
+        oldmethod = staticmethod(getattr(module, method))
+        setattr(_serviceclass, newname, oldmethod)
 
     return _serviceclass
 
@@ -50,7 +45,7 @@ if __name__ == '__main__':
     # make expmanage RPyC-able
     service = module2service(expmanage)
     # and RPyC it
-    server = ThreadedServer(service, hostname='localhost', port=port)
+    server = ThreadedServer(service, hostname='localhost', port=port, protocol_config={"allow_public_attrs":True})
     # ThreadedServer launches threads for incoming connections, but its main accept() loop is blocking,
     # so we put it in a separate thread.
     serverthread = threading.Thread(target=server.start)
