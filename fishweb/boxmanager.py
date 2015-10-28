@@ -17,7 +17,6 @@ class _BoxManager(object):
         self._boxes = dict()
         # e.g.
         #{
-        #
         #    'box1': BoxSpec(ip="10.0.0.1", port=4444, name='box1', up=True),
         #    'box2': BoxSpec(ip="10.0.0.2", port=4444, name='box2', up=False),
         #    'box3': BoxSpec(ip="10.0.0.3", port=4444, name='box3', up=True),
@@ -38,15 +37,18 @@ class _BoxManager(object):
         print("Service %s removed" % name)
         boxname = name.split('.')[0]
         with self._boxlock:
-            del self._boxes[boxname]
+            #del self._boxes[boxname]
+            self._boxes[boxname] = BoxSpec(ip=None, port=None, name=boxname, up=False)
 
     def get_boxes(self):
         with self._boxlock:
+            # NamedTuple is immutable, but make a copy in case
+            # we switch to a mutable structure at some point -- it's cheap.
             return copy.copy(self._boxes)
 
 
 class BoxManagerPlugin(object):
-    ''' A plugin to inject a box list from a  global BoxManager into any Bottle
+    ''' A plugin to inject a box list from a global BoxManager into any Bottle
     routes that need it (indicated via a "boxes" keyword (customizable)).
     '''
 
