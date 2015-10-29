@@ -1,5 +1,4 @@
 %rebase('base.tpl', box=None, title='Box List')
-%import utils
 
 <div class="container">
   <h1>Boxes</h1>
@@ -40,7 +39,7 @@
                   <span class="glyphicon glyphicon-plus-sign"></span>
                   New Experiment
                 </a>
-                %if info.ip != utils.get_routed_ip():
+                %if not info.local:
                   <form class="form-inline" role="form" method="post" action="/sync/{{box}}">
                     <button type="submit" class="btn btn-primary" role="button">
                       <span class="glyphicon glyphicon-download-alt"></span>

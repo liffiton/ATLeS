@@ -2,6 +2,7 @@ import copy
 import inspect
 import os
 import socket
+import subprocess
 import threading
 
 import plumbum
@@ -14,20 +15,23 @@ import utils
 
 class Box(object):
     def __init__(self, name, ip, port, path, user="pi", status="initializing"):
-        self.name = name  # name of remote box
-        self.ip = ip      # IP address
-        self.port = port  # port on which fishremote.py is accepting connections
-        self.path = path  # path to data directory on remote box
-        self.user = user  # username for SSH login to remote box
+        self.name = name   # name of remote box
+        self.ip = ip       # IP address
+        self.port = port   # port on which fishremote.py is accepting connections
+        self.path = path   # path to data directory on remote box
+        self.user = user   # username for SSH login to remote box
 
         self.status = status
+        self.local = None  # True if box is actually the local machine
+
         self._tunnel = None  # SSH tunnel instance
         self._rpc = None     # RPC connection instance
 
     def connect(self):
-        if self.ip != utils.get_routed_ip():
+        self.local = (self.ip == utils.get_routed_ip())
+        if not self.local:
             # only connect if it's a separate machine
-            self._tunnel = plumbum.SshMachine(self.ip)
+            self._tunnel = plumbum.SshMachine(self.ip, user=self.user)
             self._rpc = rpyc.ssh_connect(self._tunnel, self.port)
         else:
             self._rpc = rpyc.connect("localhost", self.port)
@@ -41,16 +45,17 @@ class Box(object):
             self._tunnel.close()
 
     def sync_data(self):
-        ''' Copy/sync data from this box to the local data directory.'''
+        ''' Copy/sync track data from this box to the local track directory.'''
         if self.status != "connected":
             return
 
-        if self.ip == utils.get_routed_ip():
+        if self.local:
             # data is already local; no need to sync
             return
 
-        cmd = ['rsync', '%s@%s:%s' % (self.user, self.ip, self.path), os.path.join(config.DATADIR, self.name)]
-        print cmd
+        cmd = ['rsync', '-rt', '--info=STATS2', '%s@%s:%s' % (self.user, self.ip, self.path), os.path.join(config.TRACKDIR, self.name)]
+        result = subprocess.check_output(cmd)
+        return result
 
     @property
     def rpc(self):
