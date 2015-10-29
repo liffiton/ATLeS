@@ -34,6 +34,7 @@ if __name__ == '__main__':
 
     # Create needed directories if not already there
     utils.mkdir(config.PLOTDIR)
+    utils.mkdir(config.TRACKDIR)
     utils.mkdir(config.ARCHIVEDIR)
 
     # let bottle know where to find our templates

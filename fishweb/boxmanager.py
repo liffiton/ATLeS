@@ -53,7 +53,7 @@ class Box(object):
             # data is already local; no need to sync
             return
 
-        cmd = ['rsync', '-rt', '--info=STATS2', '%s@%s:%s' % (self.user, self.ip, self.path), os.path.join(config.TRACKDIR, self.name)]
+        cmd = ['rsync', '-rvt', '%s@%s:%s' % (self.user, self.ip, self.path), os.path.join(config.TRACKDIR, self.name)]
         result = subprocess.check_output(cmd)
         return result
 
@@ -85,8 +85,7 @@ class BoxManager(object):
         self._boxes = dict()
         self._boxlock = threading.Lock()
 
-        # TODO: make listening interface configurable
-        zeroconf = Zeroconf([utils.get_routed_ip()])
+        zeroconf = Zeroconf()
         self._browser = ServiceBrowser(zeroconf, "_fishbox._tcp.local.", self)  # starts its own daemon thread
 
     def add_service(self, zeroconf, type, name):

@@ -70,6 +70,8 @@ track_data_cache = {}
 @view('index')
 def index():
     global track_data_cache
+    local = request.app.config['fishweb.local']
+
     tracks = []
     for index, trackfile in enumerate(_tracks()):
         mtime = os.stat(trackfile).st_mtime
@@ -81,7 +83,7 @@ def index():
             lines, aml, heat = _get_track_data(trackfile)
             track_data_cache[key] = (lines, aml, heat)
         tracks.append( (index, trackfile, trackrel, lines, aml, heat, _imgs(trackrel)) )
-    return dict(tracks=tracks, box=platform.node())
+    return dict(tracks=tracks, box=platform.node(), local=local)
 
 
 @route('/view/<trackfile:path>')
