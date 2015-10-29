@@ -1,4 +1,5 @@
 %rebase('base.tpl', box=None, title='Box List')
+%import utils
 
 <div class="container">
   <h1>Boxes</h1>
@@ -34,11 +35,19 @@
                   <span class="pull-right" id="rem_out"></span>
                 </div>
               </div>
-              <div id="exp_new_{{box}}">
+              <div id="actions_{{box}}">
                 <a href="/new/{{box}}" class="btn btn-primary" role="button">
                   <span class="glyphicon glyphicon-plus-sign"></span>
                   New Experiment
                 </a>
+                %if info.ip != utils.get_routed_ip():
+                  <form class="form-inline" role="form" method="post" action="/sync/{{box}}">
+                    <button type="submit" class="btn btn-primary" role="button">
+                      <span class="glyphicon glyphicon-download-alt"></span>
+                      Sync Data
+                    </button>
+                  </form>
+                %end
               </div>
             %end
           </div>
@@ -57,7 +66,7 @@ $(function() {
       if (! go) return;
       $.post("/clear_experiment/{{box}}");
     });
-    checkProgress("{{box}}", "#exp_progress_{{box}}", "#exp_new_{{box}}");
+    checkProgress("{{box}}", "#exp_progress_{{box}}", "#actions_{{box}}");
   %end
 });
 </script>

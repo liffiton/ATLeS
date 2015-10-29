@@ -1,4 +1,6 @@
 import atexit
+import getpass
+import os
 import platform
 import socket
 import sys
@@ -9,7 +11,8 @@ import zeroconf
 
 from rpyc.utils.server import ThreadedServer
 
-from fishcontrol import expmanage
+from fishweb import expmanage
+import config
 import utils
 
 
@@ -60,7 +63,11 @@ if __name__ == '__main__':
         "_fishbox._tcp.local.",
         "%s._fishbox._tcp.local." % boxname,
         socket.inet_aton(ip), port, 0, 0,
-        {'name': boxname}
+        {
+            'name': boxname,
+            'path': os.path.abspath(config.DATADIR),
+            'user': getpass.getuser()
+        }
     )
     zeroconf = zeroconf.Zeroconf([ip])
     zeroconf.register_service(info)

@@ -1,5 +1,6 @@
 import copy
 import inspect
+import os
 import socket
 import threading
 
@@ -7,17 +8,21 @@ import plumbum
 import rpyc
 from zeroconf import ServiceBrowser, Zeroconf
 
+import config
 import utils
 
 
 class Box(object):
-    def __init__(self, name, ip, port, status="initializing"):
-        self.name = name
-        self.ip = ip
-        self.port = port
+    def __init__(self, name, ip, port, path, user="pi", status="initializing"):
+        self.name = name  # name of remote box
+        self.ip = ip      # IP address
+        self.port = port  # port on which fishremote.py is accepting connections
+        self.path = path  # path to data directory on remote box
+        self.user = user  # username for SSH login to remote box
+
         self.status = status
-        self._tunnel = None
-        self._rpc = None
+        self._tunnel = None  # SSH tunnel instance
+        self._rpc = None     # RPC connection instance
 
     def connect(self):
         if self.ip != utils.get_routed_ip():
@@ -35,8 +40,20 @@ class Box(object):
         if self._tunnel:
             self._tunnel.close()
 
+    def sync_data(self):
+        ''' Copy/sync data from this box to the local data directory.'''
+        if self.status != "connected":
+            return
+
+        if self.ip == utils.get_routed_ip():
+            # data is already local; no need to sync
+            return
+
+        cmd = ['rsync', '%s@%s:%s' % (self.user, self.ip, self.path), os.path.join(config.DATADIR, self.name)]
+        print cmd
+
     @property
-    def rpc_root(self):
+    def rpc(self):
         if self._rpc:
             # check for closed connection
             if self._rpc.closed:
@@ -45,6 +62,16 @@ class Box(object):
             return self._rpc.root
         else:
             return None
+
+    def __getattr__(self, name):
+        '''Return something from self._rpc.root if it wasn't found in this
+        object directly.  Lets use use one object namespace to access both
+        "local" methods like sync_data() and remote RPC methods.'''
+        if hasattr(self._rpc.root, name):
+            return getattr(self._rpc.root, name)
+        else:
+            # default behavior
+            raise AttributeError
 
 
 class BoxManager(object):
@@ -62,7 +89,11 @@ class BoxManager(object):
         print("Service %s added, service info: %s" % (name, info))
         boxname = name.split('.')[0]
         with self._boxlock:
-            newbox = Box(name=boxname, ip=socket.inet_ntoa(info.address), port=info.port)
+            newbox = Box(name=boxname,
+                         ip=socket.inet_ntoa(info.address),
+                         port=info.port,
+                         path=info.properties['path'],
+                         user=info.properties['user'])
             newbox.connect()
             self._boxes[boxname] = newbox
 
