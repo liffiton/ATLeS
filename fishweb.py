@@ -45,9 +45,10 @@ if __name__ == '__main__':
     # set app config
     app.config['fishweb.local'] = args.local
 
-    # add our boxmanager plugin
-    boxmanager = boxmanager.BoxManagerPlugin(args.local)
-    app.install(boxmanager)
+    # add our boxmanager plugin if not running locally
+    if not args.local:
+        boxmanager = boxmanager.BoxManagerPlugin()
+        app.install(boxmanager)
 
     # load modules with controllers / routes
     bottle.load("fishweb.controller_static")
