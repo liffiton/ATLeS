@@ -117,7 +117,7 @@ def post_new(tgtbox=None, boxes=None):
     # validate form data
     form = NewExperimentForm(request.forms)
     if not form.validate():
-        return template('new', form=form, lock_exists=box.lock_exists(), box=platform.node())
+        return template('new', form=form, lock_exists=box.lock_exists(), box=tgtbox)
 
     expname = request.forms.expname
     timelimit = int(request.forms.timelimit)
