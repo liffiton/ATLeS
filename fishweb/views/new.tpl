@@ -1,4 +1,4 @@
-% rebase('base.tpl', title='New Experiment')
+%rebase('base.tpl', title='New Experiment on %s' % box)
 
 <div class="container">
   <h1>New Experiment on <span class="hostname">{{box}}</span></h1>

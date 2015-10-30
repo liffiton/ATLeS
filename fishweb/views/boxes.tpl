@@ -1,4 +1,4 @@
-%rebase('base.tpl', box=None, title='Box List')
+%rebase('base.tpl', title='Boxes')
 
 <div class="container">
   <h1>Boxes</h1>
@@ -9,8 +9,8 @@
   </div>
   %end
   <div class="row">
-    <div class="col-lg-4 col-lg-offset-1 col-md-5 col-md-offset-1 col-sm-6 col-sm-offset-2">
-      %for box, info in sorted(boxes.items()):
+    %for box, info in sorted(boxes.items()):
+      <div class="col-lg-4 col-sm-6">
         %if info.status == "connected":
         <div class="panel panel-success">
         %else:
@@ -34,25 +34,29 @@
                   <span class="pull-right" id="rem_out"></span>
                 </div>
               </div>
-              <div id="actions_{{box}}">
-                <a href="/new/{{box}}" class="btn btn-primary" role="button">
-                  <span class="glyphicon glyphicon-plus-sign"></span>
-                  New Experiment
-                </a>
+              <div id="actions_{{box}}" class="row">
+                <div class="col-sm-6">
+                  <a href="/new/{{box}}" class="btn btn-primary" role="button">
+                    <span class="glyphicon glyphicon-plus-sign"></span>
+                    New Experiment
+                  </a>
+                </div>
                 %if not info.local:
-                  <form class="form-inline" role="form" method="post" action="/sync/{{box}}">
-                    <button type="submit" class="btn btn-primary" role="button">
-                      <span class="glyphicon glyphicon-download-alt"></span>
-                      Sync Data
-                    </button>
-                  </form>
+                  <div class="col-sm-6">
+                    <form class="form-inline" role="form" method="post" action="/sync/{{box}}">
+                      <button type="submit" class="btn btn-primary" role="button">
+                        <span class="glyphicon glyphicon-download-alt"></span>
+                        Sync Data
+                      </button>
+                    </form>
+                  </div>
                 %end
               </div>
             %end
           </div>
         </div>
-      %end
-    </div>
+      </div>
+    %end
   </div>
 </div>
 

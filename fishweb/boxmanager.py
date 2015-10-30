@@ -85,7 +85,11 @@ class BoxManager(object):
         self._boxes = dict()
         self._boxlock = threading.Lock()
 
-        zeroconf = Zeroconf()
+        # work around a bug in zeroconf on Cygwin
+        try:
+            zeroconf = Zeroconf()
+        except socket.error:
+            zeroconf = Zeroconf([utils.get_routed_ip()])
         self._browser = ServiceBrowser(zeroconf, "_fishbox._tcp.local.", self)  # starts its own daemon thread
 
     def add_service(self, zeroconf, type, name):

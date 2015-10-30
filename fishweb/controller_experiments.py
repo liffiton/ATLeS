@@ -20,6 +20,7 @@ def _get_box(tgtbox, boxes):
     local = request.app.config['fishweb.local']
 
     if local:
+        assert tgtbox == platform.node()
         # use the module directly
         return expmanage
     else:
@@ -59,14 +60,14 @@ class CreateExperimentForm(Form):
     inifile = SelectField(".ini File", choices=zip(_inis(), _inis()))
 
 
-@route('/new/')
-def new_experiment(boxes=None):
+@route('/')
+def index(boxes=None):
     local = request.app.config['fishweb.local']
     if local:
         # no need to choose a box, just give them the new exp. form
         return new_experiment_box(tgtbox=platform.node(), boxes=boxes)
 
-    return template('boxes', dict(boxes=boxes))
+    return template('boxes', dict(boxes=boxes, name='boxes'))
 
 
 @route('/new/<tgtbox>')

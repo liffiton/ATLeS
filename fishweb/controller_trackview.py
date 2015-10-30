@@ -3,7 +3,6 @@ import fnmatch
 import glob
 import math
 import os
-import platform
 import tempfile
 import zipfile
 
@@ -66,9 +65,9 @@ def _get_track_data(track):
 track_data_cache = {}
 
 
-@route('/')
-@view('index')
-def index():
+@route('/tracks/')
+@view('tracks')
+def tracks():
     global track_data_cache
     local = request.app.config['fishweb.local']
 
@@ -83,7 +82,7 @@ def index():
             lines, aml, heat = _get_track_data(trackfile)
             track_data_cache[key] = (lines, aml, heat)
         tracks.append( (index, trackfile, trackrel, lines, aml, heat, _imgs(trackrel)) )
-    return dict(tracks=tracks, box=platform.node(), local=local)
+    return dict(tracks=tracks, local=local, name='tracks')
 
 
 @route('/view/<trackfile:path>')
