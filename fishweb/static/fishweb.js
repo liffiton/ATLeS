@@ -226,3 +226,28 @@ function update_ini(iniFile) {
     $("#inidisplay").show();
   });
 }
+
+/*******************************************************************
+ * Form caching
+ */
+
+function save_form_data() {
+    // enumerate and save all fields in localstorage
+    var form = this;
+    var fields = $(form).serializeArray();
+    $.each(fields, function(i, field) {
+        localStorage.setItem(window.location.pathname + "|" + field.name, field.value);
+    });
+}
+
+function load_form_data() {
+    var form = this
+    var fields = $(form).serializeArray();
+    $.each(fields, function(i, field) {
+        var oldval = localStorage.getItem(window.location.pathname + "|" + field.name);
+        if (!field.value && oldval) {
+            // only update if it's not already filled and we do have something
+            $("input[name=" + field.name + "]", form).val(oldval);
+        }
+    });
+}

@@ -28,7 +28,7 @@
 
   <div class="row" id="exp_new">
     <div class="col-lg-6 col-md-8 col-sm-10">
-      <form class="form-horizontal" action="/create/{{box}}" method="post">
+      <form id="new_exp_form" class="form-horizontal" action="/new/{{box}}" method="post">
         <div class="panel panel-default" id="experiment_form">
           <div class="panel-heading">
             <h3 class="panel-title">Experiment Setup</h3>
@@ -126,5 +126,9 @@ $(function() {
     $.post("/clear_experiment/");
   });
   checkProgress("{{box}}");
+
+  // store and load values used in forms
+  $.each($("form"), load_form_data);
+  $("form").submit(save_form_data);
 });
 </script>

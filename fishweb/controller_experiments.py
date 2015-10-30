@@ -21,6 +21,7 @@ def _get_box(tgtbox, boxes):
 
     if local:
         assert tgtbox == platform.node()
+        assert boxes is None
         # use the module directly
         return expmanage
     else:
@@ -39,6 +40,7 @@ def get_lock_data(tgtbox=None, boxes=None):
     try:
         box = _get_box(tgtbox, boxes)
     except ManagerError as e:
+        # invalid box - report it as a 404
         raise HTTPError(status=404, body=e.message)
 
     # RPyC doesn't return a real dict, and JSON won't serialize it,
@@ -51,7 +53,7 @@ def _name_is_sane(form, field):
         raise ValidationError("Experiment name must be alphanumeric characters only.")
 
 
-class CreateExperimentForm(Form):
+class NewExperimentForm(Form):
     ''' Form for creating a new experiment. '''
     expname = StringField("Experiment Name", [validators.Length(max=32), _name_is_sane])
     timelimit = IntegerField("Time Limit", [validators.NumberRange(min=1, max=24*60)])
@@ -77,7 +79,7 @@ def new_experiment_box(tgtbox, boxes=None):
     except ManagerError:
         return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
 
-    form = CreateExperimentForm()
+    form = NewExperimentForm()
     return template('new', dict(form=form, lock_exists=box.lock_exists(), box=tgtbox))
 
 
@@ -102,9 +104,8 @@ def post_clear_experiment(tgtbox=None, boxes=None):
     box.kill_experiment()
 
 
-@post('/create/')
-@post('/create/<tgtbox>')
-def post_create(tgtbox=None, boxes=None):
+@post('/new/<tgtbox>')
+def post_new(tgtbox=None, boxes=None):
     try:
         box = _get_box(tgtbox, boxes)
     except ManagerError:
@@ -114,7 +115,7 @@ def post_create(tgtbox=None, boxes=None):
         return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
 
     # validate form data
-    form = CreateExperimentForm(request.forms)
+    form = NewExperimentForm(request.forms)
     if not form.validate():
         return template('new', form=form, lock_exists=box.lock_exists(), box=platform.node())
 
@@ -126,4 +127,4 @@ def post_create(tgtbox=None, boxes=None):
 
     box.start_experiment(expname, timelimit, startfromtrig, stimulus, inifile)
 
-    redirect("/new/")
+    redirect("/")

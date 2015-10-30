@@ -114,8 +114,6 @@ class BoxManager(object):
 
     def get_boxes(self):
         with self._boxlock:
-            # NamedTuple is immutable, but make a copy in case
-            # we switch to a mutable structure at some point -- it's cheap.
             return copy.copy(self._boxes)
 
 
