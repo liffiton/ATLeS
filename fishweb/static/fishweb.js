@@ -230,24 +230,47 @@ function update_ini(iniFile) {
 /*******************************************************************
  * Form caching
  */
+function iterate_fields(form, func) {
+    var fields = $('*', form).filter(':input');
+    $.each(fields, func);
+}
+
+function clear_form_data() {
+    // enumerate and save all fields in localstorage
+    iterate_fields($(this).closest('form'), function(i, field) {
+        localStorage.removeItem(window.location.pathname + "|" + field.name);
+    });
+}
 
 function save_form_data() {
     // enumerate and save all fields in localstorage
-    var form = this;
-    var fields = $(form).serializeArray();
-    $.each(fields, function(i, field) {
-        localStorage.setItem(window.location.pathname + "|" + field.name, field.value);
+    iterate_fields(this, function(i, field) {
+        var storename = window.location.pathname + "|" + field.name;
+        if (field.type == 'radio' || field.type == 'checkbox') {
+            if (field.checked) {
+                localStorage.setItem(storename, field.value);
+            }
+        }
+        else {
+            if (field.value) {
+                localStorage.setItem(window.location.pathname + "|" + field.name, field.value);
+            }
+        }
     });
 }
 
 function load_form_data() {
-    var form = this
-    var fields = $(form).serializeArray();
-    $.each(fields, function(i, field) {
-        var oldval = localStorage.getItem(window.location.pathname + "|" + field.name);
-        if (!field.value && oldval) {
-            // only update if it's not already filled and we do have something
-            $("input[name=" + field.name + "]", form).val(oldval);
+    iterate_fields(this, function(i, field) {
+        var storename = window.location.pathname + "|" + field.name;
+        var oldval = localStorage.getItem(storename);
+        if (!oldval) return;
+
+        if (field.type == 'radio' || field.type == 'checkbox') {
+            if (field.value == oldval) { $(field).prop("checked", true); }
+        }
+        else if (!field.value || field.type == 'select-one') {
+            // only update if it's not already filled (except for selects, which are always filled, so...) and we do have something
+            $(field).val(oldval);
         }
     });
 }

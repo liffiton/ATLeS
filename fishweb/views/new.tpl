@@ -90,6 +90,7 @@
             <div class="form-group">
               <div class="col-sm-8 col-sm-offset-4">
                 <button type="submit" class="btn btn-primary">Start</button>
+                <button type="reset" class="btn">Reset Form</button>
               </div>
             </div>
           </div>
@@ -114,7 +115,7 @@
 
 <script type="text/javascript">
 $(function() {
-  $("#inifile").change(function(e) {
+  $("#inifile").on("change reset", function(e) {
     var iniFile = this.value;
     update_ini(iniFile);
   });
@@ -130,5 +131,7 @@ $(function() {
   // store and load values used in forms
   $.each($("form"), load_form_data);
   $("form").submit(save_form_data);
+  // and clear anything we've saved if the user resets the form
+  $("form *").filter(":reset").click(clear_form_data);
 });
 </script>
