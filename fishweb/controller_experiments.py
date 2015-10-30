@@ -90,7 +90,7 @@ def post_sync_data(tgtbox=None, boxes=None):
     except ManagerError:
         return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
 
-    return box.sync_data()
+    box.sync_data()
 
 
 @post('/clear_experiment/')

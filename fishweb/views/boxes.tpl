@@ -43,12 +43,12 @@
                 </div>
                 %if not info.local:
                   <div class="col-sm-6">
-                    <form class="form-inline" role="form" method="post" action="/sync/{{box}}">
-                      <button type="submit" class="btn btn-primary" role="button">
-                        <span class="glyphicon glyphicon-download-alt"></span>
+                    <button id="sync_button_{{box}}" type="button" class="btn btn-primary" role="button">
+                      <span class="glyphicon glyphicon-refresh"></span>
+                      <span class="btntxt">
                         Sync Data
-                      </button>
-                    </form>
+                      </span>
+                    </button>
                   </div>
                 %end
               </div>
@@ -68,6 +68,20 @@ $(function() {
       var go = confirm("Are you sure?  (The running experiment will be terminated.)");
       if (! go) return;
       $.post("/clear_experiment/{{box}}");
+    });
+    $("#sync_button_{{box}}").click(function(e) {
+      var btn = $(this);
+      var txt = $(".btntxt", this)
+      var icon = $(".glyphicon-refresh", this);
+      btn.attr("disabled", true);
+      txt.text("Syncing...")
+      icon.addClass("rotatey");
+      
+      $.post("/sync/{{box}}").always(function() {
+        btn.attr("disabled", false);
+        txt.text("Sync Data");
+        icon.removeClass("rotatey");
+      });
     });
     checkProgress("{{box}}", "#exp_progress_{{box}}", "#actions_{{box}}");
   %end
