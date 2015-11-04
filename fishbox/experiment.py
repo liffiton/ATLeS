@@ -156,7 +156,7 @@ class Experiment(object):
             logging.info("Video file: %d frames, %d fps", self._framecount, self._fps)
 
         # Frame processor
-        self._proc = tracking.FrameProcessorBrightness()
+        self._proc = tracking.FrameProcessorBrightnessBetter()
 
         # Tracking: Simple
         tank_width = self._tx2 - self._tx1

@@ -7,55 +7,12 @@ import subprocess
 import sys
 
 
-class FrameProcessorBGSub(object):
+class FrameProcessorBase(object):
     def __init__(self):
-        # background subtractor
-        #self._bgs = cv2.BackgroundSubtractorMOG()
-        #self._bgs = cv2.BackgroundSubtractorMOG2()  # not great defaults, and need bShadowDetection to be False
-        #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
-
-        # varThreshold: higher values detect fewer/smaller changed regions
-        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=12, bShadowDetection=False)
-
-        # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
-
-        # Learning rate for background subtractor.
-        # 0 = never adapts after initial background creation.
-        # A bit above 0 looks good.
-        # Lower values are better for detecting slower movement, though it
-        # takes a bit of time to learn the background initially.
-        self._learning_rate = 0.001  # for 10ish fps video?
-
-        # element to reuse in erode/dilate
-        # RECT is more robust at removing noise in the erode
-        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-        self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
-
-        # contours and centroids for the most recent frame
+        # most recent frame and its contours and centroids
+        self._frame = None
         self._contours = None
         self._centroids = None
-
-    def process_frame(self, frame):
-        ''' Process a single frame. '''
-        # reset contours and centroids
-        self._contours = None
-        self._centroids = None
-
-        # grayscale copy
-        self._frame = frame
-
-        # subtract background, clean up image
-        self._sub_bg()
-
-    def _sub_bg(self):
-        mask = self._bgs.apply(self._frame, learningRate=self._learning_rate)
-        self._frame = self._frame & mask
-
-        # filter out single pixels
-        self._frame = cv2.erode(self._frame, self._element_shrink)
-
-        # restore and join nearby regions (in case one fish has a skinny middle...)
-        self._frame = cv2.dilate(self._frame, self._element_grow)
 
     def _get_contours(self):
         # find contours
@@ -89,6 +46,54 @@ class FrameProcessorBGSub(object):
         return self._centroids
 
 
+class FrameProcessorBGSub(FrameProcessorBase):
+    def __init__(self):
+        super(FrameProcessorBGSub, self).__init__()
+
+        # background subtractor
+        #self._bgs = cv2.BackgroundSubtractorMOG()
+        #self._bgs = cv2.BackgroundSubtractorMOG2()  # not great defaults, and need bShadowDetection to be False
+        #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
+
+        # varThreshold: higher values detect fewer/smaller changed regions
+        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=12, bShadowDetection=False)
+
+        # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
+
+        # Learning rate for background subtractor.
+        # 0 = never adapts after initial background creation.
+        # A bit above 0 looks good.
+        # Lower values are better for detecting slower movement, though it
+        # takes a bit of time to learn the background initially.
+        self._learning_rate = 0.001  # for 10ish fps video?
+
+        # element to reuse in erode/dilate
+        # RECT is more robust at removing noise in the erode
+        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+        self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+
+    def process_frame(self, frame):
+        ''' Process a single frame. '''
+        self._frame = frame
+
+        # reset contours and centroids
+        self._contours = None
+        self._centroids = None
+
+        # subtract background, clean up image
+        self._sub_bg()
+
+    def _sub_bg(self):
+        mask = self._bgs.apply(self._frame, learningRate=self._learning_rate)
+        self._frame = self._frame & mask
+
+        # filter out single pixels
+        self._frame = cv2.erode(self._frame, self._element_shrink)
+
+        # restore and join nearby regions (in case one fish has a skinny middle...)
+        self._frame = cv2.dilate(self._frame, self._element_grow)
+
+
 class FrameProcessorBrightness(object):
     def __init__(self):
         # contours and centroids for the most recent frame
@@ -97,12 +102,11 @@ class FrameProcessorBrightness(object):
 
     def process_frame(self, frame):
         ''' Process a single frame. '''
+        self._frame = frame
+
         # reset contours and centroids
         self._contours = None
         self._centroids = None
-
-        # grayscale copy
-        self._frame = frame
 
         # blur to reduce noise
         self._frame = cv2.GaussianBlur(self._frame, (3, 3), 0, borderType=cv2.BORDER_REPLICATE)
@@ -122,6 +126,37 @@ class FrameProcessorBrightness(object):
             self._get_centroids()
 
         return self._centroids
+
+
+class FrameProcessorBrightnessBetter(FrameProcessorBase):
+    def __init__(self):
+        super(FrameProcessorBrightnessBetter, self).__init__()
+
+        # element to reuse in erode/dilate
+        # RECT is more robust at removing noise in the erode
+        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+        self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+
+    def process_frame(self, frame):
+        ''' Process a single frame. '''
+        self._frame = frame
+
+        # reset contours and centroids
+        self._contours = None
+        self._centroids = None
+
+        # blur to reduce noise
+        self._frame = cv2.GaussianBlur(self._frame, (5, 5), 0, borderType=cv2.BORDER_CONSTANT)
+
+        # threshold to only see top 10% bright pixels
+        threshold = numpy.percentile(self._frame, 90)
+        _, self._frame = cv2.threshold(self._frame, threshold, 255, cv2.THRESH_BINARY)
+
+        # filter out single pixels
+        self._frame = cv2.erode(self._frame, self._element_shrink)
+
+        # restore and join nearby regions (in case one fish has a skinny middle...)
+        self._frame = cv2.dilate(self._frame, self._element_grow)
 
 
 class SimpleTracker(object):
