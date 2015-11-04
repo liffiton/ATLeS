@@ -1,30 +1,14 @@
-% rebase('base.tpl', title='Track Analyzer/Viewer')
+%import platform
+%rebase('base.tpl', title='Track Analyzer/Viewer')
 
 <div class="container">
   <div class="row">
     <div class="my-header col-lg-12 col-md-12 col-sm-12">
-      <div id="header_right" class="col-sm-6 col-md-5 col-lg-4 pull-right">
-        <div id="exp_progress" class="alert alert-info small">
-          <button id="clear_exp_button" type="button" class="btn btn-danger btn-xs pull-right" title="Kill experiment">
-            <span class="glyphicon glyphicon-remove"></span>
-          </button>
-          <strong>Experiment running</strong> since <span id="exp_run_since"></span>.
-          <div class="progress" style="width: 90%;">
-            <div id="exp_progressbar" class="progress-bar progress-bar-striped" role="progressbar" style="width: 0%;">
-              <span class="pull-right" id="rem_in"></span>
-            </div>
-            <span class="pull-right" id="rem_out"></span>
-          </div>
-        </div>
-        <div id="exp_new" class="pull-right">
-          <a class="btn btn-primary" href="/new/">
-            <span class="glyphicon glyphicon-plus-sign"></span>
-            Start New Experiment
-          </a>
-        </div>
-      </div>
       <span class="h1">
-        Track Analyzer/Viewer on <span class="hostname">{{hostname}}</span>
+        Track Analyzer/Viewer
+        %if local:
+          on <span class="hostname">{{platform.node()}}</span>
+        %end
       </span>
     </div>
   </div>
@@ -151,16 +135,9 @@ $(function() {
     var row = $(this).closest("tr");
     togglesel(row);
   });
-  $("#clear_exp_button").click(function(e) {
-    var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
-    if (! go) return;
-    $.post("/clear_experiment/")
-      .always(checkProgress);
-  });
   // create all valid/missing/lost charts by default
   $("svg.aml_chart").each(makeChart);
   // create heatmaps only on mouseover (and only once for each element) to save memory/CPU time
   $("svg.heatmap").one('mouseenter', makeHeatMap);
-  checkProgress();
 });
 </script>

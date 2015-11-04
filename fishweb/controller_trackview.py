@@ -3,7 +3,6 @@ import fnmatch
 import glob
 import math
 import os
-import platform
 import tempfile
 import zipfile
 
@@ -66,10 +65,12 @@ def _get_track_data(track):
 track_data_cache = {}
 
 
-@route('/')
-@view('index')
-def index():
+@route('/tracks/')
+@view('tracks')
+def tracks():
     global track_data_cache
+    local = request.app.config['fishweb.local']
+
     tracks = []
     for index, trackfile in enumerate(_tracks()):
         mtime = os.stat(trackfile).st_mtime
@@ -81,7 +82,7 @@ def index():
             lines, aml, heat = _get_track_data(trackfile)
             track_data_cache[key] = (lines, aml, heat)
         tracks.append( (index, trackfile, trackrel, lines, aml, heat, _imgs(trackrel)) )
-    return dict(tracks=tracks, hostname=platform.node())
+    return dict(tracks=tracks, local=local, name='tracks')
 
 
 @route('/view/<trackfile:path>')

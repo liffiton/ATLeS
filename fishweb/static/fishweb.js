@@ -28,8 +28,9 @@ function filter_rows(value) {
   update_selection();
 }
 
-function updateProgress(data) {
-  $("#exp_run_since").text(data["starttimestr"]);
+function updateProgress(data, progress_id) {
+  progdiv = $(progress_id)
+  $("#exp_run_since", progdiv).text(data["starttimestr"]);
 
   var start = parseInt(data["starttime"])*1000;
   var runtime = parseInt(data["runtime"])*1000;
@@ -39,7 +40,7 @@ function updateProgress(data) {
   var millis_remaining = (startdate.getTime() + runtime) - curdate.getTime();
 
   var barwidth = Math.min(100, 100 * millis_gone / runtime);
-  $("#exp_progressbar").width(barwidth + "%");
+  $("#exp_progressbar", progdiv).width(barwidth + "%");
 
   if (millis_remaining < 60*1000) {
     var sec_remaining = Math.round(millis_remaining / 1000);
@@ -50,28 +51,32 @@ function updateProgress(data) {
     var remtext = min_remaining + " min remaining";
   }
   if (barwidth < 50) {
-    $("#rem_in").html("");
-    $("#rem_out").html(remtext);
+    $("#rem_in", progdiv).html("");
+    $("#rem_out", progdiv).html(remtext);
   }
   else {
-    $("#rem_in").html(remtext);
-    $("#rem_out").html("");
+    $("#rem_in", progdiv).html(remtext);
+    $("#rem_out", progdiv).html("");
   }
 }
 
-function checkProgress() {
-  $.get('/lock_data/').success(function(data) {
-    if (data == '') {
-      $("#exp_progress").hide();
-      $("#exp_new").show();
+function checkProgress(boxname, progress_id, new_id) {
+  if (typeof(boxname)==='undefined') boxname = ""
+  if (typeof(progress_id)==='undefined') progress_id = "#exp_progress"
+  if (typeof(new_id)==='undefined') new_id = "#exp_new"
+  $.get('/lock_data/' + boxname).done(function(data) {
+    if ($.isEmptyObject(data)) {
+      $(progress_id).hide();
+      $(new_id).show();
     }
     else {
-      updateProgress(data);
-      $("#exp_progress").show();
-      $("#exp_new").hide();
+      updateProgress(data, progress_id);
+      $(progress_id).show();
+      $(new_id).hide();
     }
+  }).always(function() {
+    window.setTimeout(checkProgress, 2000, boxname, progress_id, new_id);
   });
-  window.setTimeout(checkProgress, 2000);
 }
 
 function makeChart() {
@@ -220,4 +225,52 @@ function update_ini(iniFile) {
     $("#inidisplay_contents").text(contents);
     $("#inidisplay").show();
   });
+}
+
+/*******************************************************************
+ * Form caching
+ */
+function iterate_fields(form, func) {
+    var fields = $('*', form).filter(':input');
+    $.each(fields, func);
+}
+
+function clear_form_data() {
+    // enumerate and save all fields in localstorage
+    iterate_fields($(this).closest('form'), function(i, field) {
+        localStorage.removeItem(window.location.pathname + "|" + field.name);
+    });
+}
+
+function save_form_data() {
+    // enumerate and save all fields in localstorage
+    iterate_fields(this, function(i, field) {
+        var storename = window.location.pathname + "|" + field.name;
+        if (field.type == 'radio' || field.type == 'checkbox') {
+            if (field.checked) {
+                localStorage.setItem(storename, field.value);
+            }
+        }
+        else {
+            if (field.value) {
+                localStorage.setItem(window.location.pathname + "|" + field.name, field.value);
+            }
+        }
+    });
+}
+
+function load_form_data() {
+    iterate_fields(this, function(i, field) {
+        var storename = window.location.pathname + "|" + field.name;
+        var oldval = localStorage.getItem(storename);
+        if (!oldval) return;
+
+        if (field.type == 'radio' || field.type == 'checkbox') {
+            if (field.value == oldval) { $(field).prop("checked", true); }
+        }
+        else if (!field.value || field.type == 'select-one') {
+            // only update if it's not already filled (except for selects, which are always filled, so...) and we do have something
+            $(field).val(oldval);
+        }
+    });
 }

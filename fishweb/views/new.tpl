@@ -1,7 +1,7 @@
-% rebase('base.tpl', title='New Experiment')
+%rebase('base.tpl', title='New Experiment on %s' % box)
 
 <div class="container">
-  <h1>New Experiment on <span class="hostname">{{hostname}}</span></h1>
+  <h1>New Experiment on <span class="hostname">{{box}}</span></h1>
 
   <div class="row" id="exp_progress">
     <div class="col-sm-6 col-sm-offset-1 alert alert-info">
@@ -28,12 +28,23 @@
 
   <div class="row" id="exp_new">
     <div class="col-lg-6 col-md-8 col-sm-10">
-      <form class="form-horizontal" action="/create/" method="post">
+      <form id="new_exp_form" class="form-horizontal" action="/new/{{box}}" method="post">
         <div class="panel panel-default" id="experiment_form">
           <div class="panel-heading">
             <h3 class="panel-title">Experiment Setup</h3>
           </div>
           <div class="panel-body">
+            %if form.errors:
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="alert alert-danger">
+                  %for field, errors in form.errors.iteritems():
+                    <p><strong>{{!form[field].label}}:</strong> {{' - '.join(errors)}}</p>
+                  %end
+                </div>
+              </div>
+            </div>
+            %end
             <div class="form-group">
               {{!form.expname.label(class_="col-sm-4 control-label")}}
               <div class="col-sm-8">
@@ -62,8 +73,8 @@
               <div class="col-sm-8">
                 %for value, label, _ in form.stimulus.iter_choices():
                 <div class="radio">
-                  <label for="stimulus">
-                    <input type="radio" name="stimulus" id="stimulus" value="{{value}}">
+                  <label for="stimulus:{{value}}">
+                    <input type="radio" name="stimulus" id="stimulus:{{value}}" value="{{value}}">
                     {{label}}
                   </label>
                 </div>
@@ -76,20 +87,10 @@
                 {{!form.inifile(class_="form-control")}}
               </div>
             </div>
-            %if form.errors:
-            <div class="row">
-              <div class="col-sm-12">
-                <div class="alert alert-danger">
-                  %for field, errors in form.errors.iteritems():
-                    <p><strong>{{!form[field].label}}:</strong> {{' - '.join(errors)}}</p>
-                  %end
-                </div>
-              </div>
-            </div>
-            %end
             <div class="form-group">
               <div class="col-sm-8 col-sm-offset-4">
                 <button type="submit" class="btn btn-primary">Start</button>
+                <button type="reset" class="btn">Reset Form</button>
               </div>
             </div>
           </div>
@@ -114,7 +115,7 @@
 
 <script type="text/javascript">
 $(function() {
-  $("#inifile").change(function(e) {
+  $("#inifile").on("change reset", function(e) {
     var iniFile = this.value;
     update_ini(iniFile);
   });
@@ -123,9 +124,14 @@ $(function() {
   $("#clear_exp_button").click(function(e) {
     var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
     if (! go) return;
-    $.post("/clear_experiment/")
-      .always(checkProgress);
+    $.post("/clear_experiment/");
   });
-  checkProgress();
+  checkProgress("{{box}}");
+
+  // store and load values used in forms
+  $.each($("form"), load_form_data);
+  $("form").submit(save_form_data);
+  // and clear anything we've saved if the user resets the form
+  $("form *").filter(":reset").click(clear_form_data);
 });
 </script>
