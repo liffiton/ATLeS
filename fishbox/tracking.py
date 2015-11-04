@@ -190,7 +190,7 @@ class SimpleTracker(object):
         Both x- and y-coordinates are scaled to 0.0-1.0 relative to the view of the tank.
         NOTE: y-axis is inverted from pixel coordinates, so y=0.0 is the **bottom** of the tank.
         '''
-        if self._have_pos:
+        if self._have_pos():
             return self._pixel_to_tank(self._pos)
         else:
             return self._pos
@@ -198,7 +198,7 @@ class SimpleTracker(object):
     @property
     def status(self):
         # is anything currently being tracked
-        if not self._have_pos:
+        if not self._have_pos():
             return 'init'
         if self._missing_count == 0:
             return 'acquired'
@@ -209,7 +209,7 @@ class SimpleTracker(object):
 
     def _score_point(self, pt):
         '''Score a given detection point by its distance from the expected position of the fish.'''
-        if self._have_pos:
+        if self._have_pos():
             expected = self._expected_loc()
             delta = numpy.linalg.norm(expected - pt)
             return delta
@@ -225,11 +225,16 @@ class SimpleTracker(object):
             else:
                 closest = min(obs, key=self._score_point)
 
-            # If we think we have a decent fix, but closest is more than (XXX: magic number!) away,
+            # If we think we have a decent fix, but closest is farther away than we estimate
+            # the fish could be (based on fish's max velocity and number of tracking-missing frames)
             # then consider this a bad detection.
-            if self.status != 'lost' and self.status != 'init' \
-                    and numpy.linalg.norm(closest - self._pos) > (max(self._w, self._h) / 4.0):
-                closest = None
+            # NOTE: based on a semi-magic number: max_dist_per_frame...
+            if self._have_pos():
+                max_dist_per_frame = 0.2 * self._w  # assume fish can't move more than 20% of tank in one frame time
+                dist = numpy.linalg.norm(closest - self._pos)
+                max_est_dist = (self._missing_count + 1) * max_dist_per_frame
+                if dist > max_est_dist:
+                    closest = None
 
         return closest
 
@@ -260,10 +265,9 @@ class SimpleTracker(object):
 
         self._update_estimates(prevpos)
 
-        if self._have_pos:
+        if self._have_pos():
             self._positions.append(tuple(int(x) for x in self.position_pixel))
 
-    @property
     def _have_pos(self):
         return not any(x is None for x in self._pos)
 
