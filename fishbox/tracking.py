@@ -134,8 +134,8 @@ class FrameProcessorBrightnessBetter(FrameProcessorBase):
 
         # element to reuse in erode/dilate
         # RECT is more robust at removing noise in the erode
-        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-        self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_RECT,(4,4))
+        self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(7,7))
 
     def process_frame(self, frame):
         ''' Process a single frame. '''
@@ -146,10 +146,10 @@ class FrameProcessorBrightnessBetter(FrameProcessorBase):
         self._centroids = None
 
         # blur to reduce noise
-        self._frame = cv2.GaussianBlur(self._frame, (5, 5), 0, borderType=cv2.BORDER_CONSTANT)
+        self._frame = cv2.GaussianBlur(self._frame, (9, 9), 0, borderType=cv2.BORDER_CONSTANT)
 
-        # threshold to only see top 10% bright pixels
-        threshold = numpy.percentile(self._frame, 90)
+        # threshold to only see top 0.5% bright pixels
+        threshold = numpy.percentile(self._frame, 99.5)
         _, self._frame = cv2.threshold(self._frame, threshold, 255, cv2.THRESH_BINARY)
 
         # filter out single pixels

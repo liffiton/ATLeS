@@ -191,12 +191,13 @@ class Experiment(object):
             frametime = time.time() - self._starttime
         self._conf['trackfile'].write("%0.4f,%s" % (frametime, str(data)))
 
-    def _extract_subframe(self, frame, channel=2):
+    def _extract_subframe(self, frame, channel=1):
         ''' Extract the relevant portion of a frame,
         using the configuration's tank bounds and just the given channel.
 
-        Channels:  BGR -> Blue = 0, Green = 1, Red = 2 (default)
-        For fishybox: use the red channel (most IR, least visible light)
+        Channels:  BGR -> Blue = 0, Green = 1 (default), Red = 2
+        For fishybox: use the green channel (all are sensitive to IR, but the
+	green appears to be most sensitive channel in general)
         '''
         return frame[self._ty1:self._ty2, self._tx1:self._tx2, channel]
 
