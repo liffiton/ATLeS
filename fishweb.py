@@ -45,11 +45,6 @@ if __name__ == '__main__':
     # set app config
     app.config['fishweb.local'] = args.local
 
-    # add our boxmanager plugin if not running locally
-    if not args.local:
-        boxmanager = boxmanager.BoxManagerPlugin()
-        app.install(boxmanager)
-
     # load modules with controllers / routes
     bottle.load("fishweb.controller_static")
     bottle.load("fishweb.controller_archive")
@@ -73,6 +68,12 @@ if __name__ == '__main__':
             with context:
                 # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
                 #app.run(host=host, port=8080, server='gevent', debug=False, reloader=False)
+                # add our boxmanager plugin if not running locally
+                # must be done after forking
+                if not args.local:
+                    boxmanager = boxmanager.BoxManagerPlugin()
+                    app.install(boxmanager)
+
                 app.run(host=host, port=8080, debug=False, reloader=False)
 
     else:
