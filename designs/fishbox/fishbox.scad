@@ -110,7 +110,7 @@ else {
 
 module mask(x) {
     difference() {
-        vert_face_base(x, top_offset=outset, bottom_offset=base_height+thickness);
+        vert_face_base(x, top_offset=thickness, bottom_offset=base_height-thickness);
         side(y=0);
         side(y=depth);
         translate([x-thickness/2, -overhang, 0]) {
@@ -126,6 +126,8 @@ module mask(x) {
         translate([0, thickness, base_height+thickness])
         rotate(a=[0,90,0])
             cylinder(r=10, h=width);
+        // tabs for rigidity w/ bottom panel
+        cutouts(4,depth-thickness,outset*2,rot=[-90,0,90],trans=[x+thickness/2,(depth-thickness)/2,base_height+thickness/2]);
     }
 }
 
@@ -270,11 +272,14 @@ module top_cover() {
 }
 
 module tank_base() {
-    translate([-outset,thickness/2,base_height])
     difference() {
-        cube([width+outset*2, depth-thickness, thickness]);
-        cutouts(5,depth,outset,rot=-90,trans=[0,(depth-thickness)/2,0]);
-        cutouts(5,depth,outset,rot=90,trans=[width+outset*2,(depth-thickness)/2,0]);
+        translate([-outset,thickness/2,base_height])
+            difference() {
+                cube([width+outset*2, depth-thickness, thickness]);
+                cutouts(5,depth,outset,rot=-90,trans=[0,(depth-thickness)/2,0]);
+                cutouts(5,depth,outset,rot=90,trans=[width+outset*2,(depth-thickness)/2,0]);
+            }
+        mask(x=mask_loc);
     }
 }
 
