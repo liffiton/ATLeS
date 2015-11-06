@@ -49,9 +49,14 @@ height = i_height + base_height;
 support_w = 10;
 support_drop = support_w/2;
 
+// useful tank measurements
+tank_width = 70;
+tank_foot_offset_left = 105;
+tank_foot_offset_right = 101;
+
 // x-position of mask piece inside box
-mask_offset = 74;
-mask_loc = width - mask_offset - thickness/2;  // accounting for thickness of panel
+mask_offset = tank_width + thickness;  // center-to-center
+mask_loc = width - mask_offset;
 // dimensions for mask view opening
 view_opening_right = 80;
 view_opening_bottom = 28;
@@ -82,26 +87,29 @@ if (DXF_TOP) {
     projection() rotate(a=[0,90,0]) vert_face(x=width);
 } else if (DXF_MASK) {
     projection() rotate(a=[0,90,0]) mask(x=mask_loc);
+} else if (DXF_TANK_SUPPORT) {
+    projection() tank_support_layer1();
+    projection() translate([tank_width+thickness,0,0]) tank_support_layer2();
+    projection() translate([(tank_width+thickness)*2,0,0]) tank_support_layer3();
 } else if (DXF_CAMERA_SUPPORT) {
-    projection() rotate(a=[90,0,0]) camera_supports(justone=true);
+    projection() rotate(a=[90,0,0]) camera_support(justone=true);
 } else if (DXF_RPI_SUPPORT) {
     projection() rotate(a=[90,0,0]) rpi_support();
 }
 else {
     // 3D model
     // components to include (comment out unwanted)
-    //vert_face(x=0);      // "near face, transparent for monitor
-    //vert_face(x=width);  // "far" face, with camera, rpi, etc.
+    vert_face(x=0);      // "near face, transparent for monitor
+    vert_face(x=width);  // "far" face, with camera, rpi, etc.
     mask(x=mask_loc);
-    //side(y=0);
+    side(y=0);
     side(y=depth);
     tank_base();
-/*
-    camera_supports(x=width, y=depth/2, z=height/2);
+    tank_support();
+    camera_support(x=width, y=depth/2, z=height/2);
     rpi_support(x=width, y=rpi_ypos-10, z=height/2);
     mock_rpi(x=width, y=rpi_ypos, z=height/2);
     top_cover();
-*/
 }
 
 //////////////////////////////////////////////////////////////////
@@ -141,7 +149,7 @@ module vert_face(x=0) {
         }
         camera_opening();
         // round=false so we get the full width of the piece in the cutout, not reduced because we hit the rounded corner
-        camera_supports(x=width+thickness*2, y=depth/2, z=height/2+support_drop, round=false);
+        camera_support(x=width+thickness*2, y=depth/2, z=height/2+support_drop, round=false);
         rpi_support(x=width+thickness*2, y=rpi_ypos-10, z=height/2+support_drop, round=false);
         wire_opening();
         // CAUTION: OpenSCAD won't let me make a projection of vert_face(x=0)
@@ -188,7 +196,7 @@ module camera_opening() {
         cube([thickness*2,10,10], center=true);
 }
 
-module camera_supports(x, y, z, justone=false, round=true) {
+module camera_support(x, y, z, justone=false, round=true) {
     spacing = 20;
     out = 11;
     up = 36;
@@ -281,6 +289,38 @@ module tank_base() {
             }
         mask(x=mask_loc);
     }
+}
+
+module tank_support() {
+    translate([mask_loc+thickness/2, thickness/2, base_height+thickness])
+    union() {
+        tank_support_layer1();
+        color("Grey", alpha=0.5)
+            tank_support_layer2();
+        color("Grey", alpha=0.5)
+            tank_support_layer3();
+    }
+}
+// Two strips of hardboard on either side of LED strip
+module tank_support_layer1() {
+    // front bottom strip, w/ space for wires
+    translate([0, 20, 0])
+        cube([tank_width/3, depth-thickness-20, thickness]);
+    // back bottom strip, full-depth
+    translate([2*tank_width/3, 0, 0])
+        cube([tank_width/3, depth-thickness, thickness]);
+}
+// Clear acrylic over LED strip
+module tank_support_layer2() {
+    translate([0, 0, thickness])
+        cube([tank_width, depth-thickness, thickness]);
+}
+// Clear acrylic end blocks to prevent tank shifting / seat it in correct location
+module tank_support_layer3() {
+    translate([0, 0, thickness*2])
+        cube([tank_width, tank_foot_offset_right, thickness]);
+    translate([0, depth-thickness-tank_foot_offset_left, thickness*2])
+        cube([tank_width, tank_foot_offset_left, thickness]);
 }
 
 module cutouts(num, width, outset, rot, trans) {
