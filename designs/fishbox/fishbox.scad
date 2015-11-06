@@ -2,7 +2,7 @@
 //  - Enclosure design for zebrafish Skinner box
 //  
 //  Author: Mark Liffiton
-//  Date: Oct, 2014 - Jan, 2015
+//  Date: Oct, 2014 - Nov, 2015
 //
 //  Units are mm
 
@@ -20,9 +20,9 @@ hardboard_thickness = 3.1;
     //   * 2015-03-06: Hanging supports didn't fit into cutouts (or did only with lots of force)
     // 3.1mm for some breathing room
 
-// Assign materials
-window_thickness = acrylic_thickness;
-//window_thickness = hardboard_thickness;
+// Assign materials: window/back wall and everything else
+//window_thickness = acrylic_thickness;
+window_thickness = hardboard_thickness;
 thickness = hardboard_thickness;
 
 // Interior box dimensions
@@ -30,7 +30,7 @@ thickness = hardboard_thickness;
 // so material thickness is added to account for that.
 width = 290 + thickness;    // x = 29cm wall-to-wall
 depth = 348 + thickness;    // y = 34.8cm to accomodate 34.8cm tank length
-i_height = 190 + thickness; // z = 19cm to accomodate 16cm tank height plus light holder, plus cover
+i_height = 190 + thickness; // z = 19cm to accomodate 16cm tank height plus cover
                             // (i_height because 'height' is used for height of entire box)
 
 // amount faces extend past each other at corners
@@ -45,14 +45,18 @@ base_height = overhang/2;
 // create height var to account for raised base
 height = i_height + base_height;
 
-// light bar
-light_bar_width = 30;
-light_pos_x = 50;
-light_height = height-thickness*2-8;
-
 // hanging support thickness and drop (distance it "sits down" after in place)
 support_w = 10;
 support_drop = support_w/2;
+
+// x-position of mask piece inside box
+mask_offset = 74;
+mask_loc = width - mask_offset - thickness/2;  // accounting for thickness of panel
+// dimensions for mask view opening
+view_opening_right = 80;
+view_opening_bottom = 28;
+view_opening_width = 190;
+view_opening_height = 91;
 
 // position of rpi and related parts
 rpi_ypos = depth/2 + 60;
@@ -76,8 +80,8 @@ if (DXF_TOP) {
     projection() rotate(a=[0,90,0]) vert_face(x=0);
 } else if (DXF_END2) {
     projection() rotate(a=[0,90,0]) vert_face(x=width);
-} else if (DXF_LIGHT_BAR) {
-    projection() light_bar();
+} else if (DXF_MASK) {
+    projection() rotate(a=[0,90,0]) mask(x=mask_loc);
 } else if (DXF_CAMERA_SUPPORT) {
     projection() rotate(a=[90,0,0]) camera_supports(justone=true);
 } else if (DXF_RPI_SUPPORT) {
@@ -86,21 +90,44 @@ if (DXF_TOP) {
 else {
     // 3D model
     // components to include (comment out unwanted)
-    vert_face(x=0);      // "near face, transparent for monitor
-    vert_face(x=width);  // "far" face, with camera, rpi, etc.
-    side(y=0);
+    //vert_face(x=0);      // "near face, transparent for monitor
+    //vert_face(x=width);  // "far" face, with camera, rpi, etc.
+    mask(x=mask_loc);
+    //side(y=0);
     side(y=depth);
     tank_base();
-    light_bar();
+/*
     camera_supports(x=width, y=depth/2, z=height/2);
     rpi_support(x=width, y=rpi_ypos-10, z=height/2);
     mock_rpi(x=width, y=rpi_ypos, z=height/2);
     top_cover();
+*/
 }
 
 //////////////////////////////////////////////////////////////////
 // Module definitions
 //
+
+module mask(x) {
+    difference() {
+        vert_face_base(x, top_offset=outset, bottom_offset=base_height+thickness);
+        side(y=0);
+        side(y=depth);
+        translate([x-thickness/2, -overhang, 0]) {
+            translate([0, 0, 0])
+                rounded_truncation(width=overhang-thickness/2, up=false);
+            translate([0, depth+overhang+thickness/2, 0])
+                rounded_truncation(width=overhang-thickness/2, up=false);
+        }
+        // opening for tank view
+        translate([0,view_opening_right+thickness/2, view_opening_bottom+base_height+thickness/2])
+            cube([width, view_opening_width, view_opening_height]);
+        // opening for wires
+        translate([0, thickness, base_height+thickness])
+        rotate(a=[0,90,0])
+            cylinder(r=10, h=width);
+    }
+}
 
 module vert_face(x=0) {
     difference() {
@@ -130,9 +157,9 @@ module vert_face(x=0) {
     }
 }
 
-module vert_face_base(x, face_thickness=thickness) {
-    translate([x-face_thickness/2, -overhang, 0])
-        cube([face_thickness,depth+overhang*2,height]);
+module vert_face_base(x, face_thickness=thickness, top_offset=0, bottom_offset=0) {
+    translate([x-face_thickness/2, -overhang, bottom_offset])
+        cube([face_thickness,depth+overhang*2,height-top_offset-bottom_offset]);
 }
 
 module rounded_truncation(width, up, rot=[0,0,0]) {
@@ -251,21 +278,6 @@ module tank_base() {
     }
 }
 
-module light_bar_opening() {
-    // A wider opening, so the bar can slide out of the way of placing or removing the fish tank
-    translate([light_pos_x-light_bar_width/4, -outset, light_height])
-        cube([light_bar_width*2, depth+outset*2, thickness]);
-}
-
-module light_bar() {
-    translate([light_pos_x-light_bar_width/2, -outset, light_height])
-    difference() {
-        cube([light_bar_width, depth+outset*2, thickness]);
-        cutouts(2,light_bar_width,outset,rot=0,trans=[light_bar_width/2,0,0]);
-        cutouts(2,light_bar_width,outset,rot=180,trans=[light_bar_width/2,depth+outset*2,0]);
-    }
-}
-
 module cutouts(num, width, outset, rot, trans) {
     w = width / ((num-1) * 2);
     translate(trans)
@@ -286,11 +298,13 @@ module wire_opening() {
 module side(y=0) {
     difference() {
         side_base(y);
+        translate([0,0,height/2])
+        scale([1,1,0.5])
+            vert_face_base(x=mask_loc);
         scale([1,1,0.5])
             vert_face_base(0, window_thickness);
         scale([1,1,0.5])
             vert_face_base(width);
-        light_bar_opening();
         top_cover();
     }
 }
