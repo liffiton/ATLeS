@@ -67,7 +67,7 @@ class FrameProcessorBGSub(FrameProcessorBase):
         # takes a bit of time to learn the background initially.
         self._learning_rate = 0.001  # for 10ish fps video?
 
-        # element to reuse in erode/dilate
+        # elements to reuse in erode/dilate
         # RECT is more robust at removing noise in the erode
         self._element_shrink = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
         self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
@@ -94,47 +94,14 @@ class FrameProcessorBGSub(FrameProcessorBase):
         self._frame = cv2.dilate(self._frame, self._element_grow)
 
 
-class FrameProcessorBrightness(object):
+class FrameProcessorBrightness(FrameProcessorBase):
     def __init__(self):
-        # contours and centroids for the most recent frame
-        self._contours = None
-        self._centroids = None
+        super(FrameProcessorBrightness, self).__init__()
 
-    def process_frame(self, frame):
-        ''' Process a single frame. '''
-        self._frame = frame
-
-        # reset contours and centroids
-        self._contours = None
-        self._centroids = None
-
-        # blur to reduce noise
-        self._frame = cv2.GaussianBlur(self._frame, (3, 3), 0, borderType=cv2.BORDER_REPLICATE)
-
-    def _get_centroids(self):
-        (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(self._frame)
-        self._centroids = [maxLoc]
-
-    @property
-    def contours(self):
-        # No contours for this type of frame processing
-        return []
-
-    @property
-    def centroids(self):
-        if not self._centroids:
-            self._get_centroids()
-
-        return self._centroids
-
-
-class FrameProcessorBrightnessBetter(FrameProcessorBase):
-    def __init__(self):
-        super(FrameProcessorBrightnessBetter, self).__init__()
-
-        # element to reuse in erode/dilate
-        # RECT is more robust at removing noise in the erode
-        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_RECT,(4,4))
+        # elements to reuse in erode/dilate
+        # CROSS elimates more horizontal/vertical lines and leaves more
+        # blobs with extent in both axes [than RECT].
+        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
         self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(7,7))
 
     def process_frame(self, frame):
@@ -152,7 +119,7 @@ class FrameProcessorBrightnessBetter(FrameProcessorBase):
         threshold = numpy.percentile(self._frame, 99.5)
         _, self._frame = cv2.threshold(self._frame, threshold, 255, cv2.THRESH_BINARY)
 
-        # filter out single pixels
+        # filter out single pixels and other noise
         self._frame = cv2.erode(self._frame, self._element_shrink)
 
         # restore and join nearby regions (in case one fish has a skinny middle...)

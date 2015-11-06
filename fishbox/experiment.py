@@ -156,7 +156,7 @@ class Experiment(object):
             logging.info("Video file: %d frames, %d fps", self._framecount, self._fps)
 
         # Frame processor
-        self._proc = tracking.FrameProcessorBrightnessBetter()
+        self._proc = tracking.FrameProcessorBrightness()
 
         # Tracking: Simple
         tank_width = self._tx2 - self._tx1
@@ -197,7 +197,7 @@ class Experiment(object):
 
         Channels:  BGR -> Blue = 0, Green = 1 (default), Red = 2
         For fishybox: use the green channel (all are sensitive to IR, but the
-	green appears to be most sensitive channel in general)
+        green appears to be most sensitive channel in general)
         '''
         return frame[self._ty1:self._ty2, self._tx1:self._tx2, channel]
 
