@@ -115,8 +115,11 @@ class FrameProcessorBrightness(FrameProcessorBase):
         # blur to reduce noise
         self._frame = cv2.GaussianBlur(self._frame, (9, 9), 0, borderType=cv2.BORDER_CONSTANT)
 
-        # threshold to only see top 0.5% bright pixels
-        threshold = numpy.percentile(self._frame, 99.5)
+        # threshold to find contiguous regions of "bright" pixels
+        # goal: ignore all "dark" (<1/8 max) pixels so size of capture has
+        # limited/no effect; take brightest 50% of remaining pixels.
+	max = numpy.max(self._frame)
+        threshold = numpy.percentile(self._frame[self._frame > max / 8], 50)
         _, self._frame = cv2.threshold(self._frame, threshold, 255, cv2.THRESH_BINARY)
 
         # filter out single pixels and other noise
