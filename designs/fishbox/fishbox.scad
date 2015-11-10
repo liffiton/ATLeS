@@ -55,10 +55,9 @@ tank_foot_offset_left = 105;
 tank_foot_offset_right = 101;
 
 // x-position of mask piece inside box
-mask_offset = tank_width + thickness;  // center-to-center
-mask_loc = width - mask_offset;
+mask_loc = tank_width + thickness;  // center-to-center
 // dimensions for mask view opening
-view_opening_right = 80;
+view_opening_left = 78;
 view_opening_bottom = 28;
 view_opening_width = 190;
 view_opening_height = 91;
@@ -128,10 +127,10 @@ module mask(x) {
                 rounded_truncation(width=overhang-thickness/2, up=false);
         }
         // opening for tank view
-        translate([0,view_opening_right+thickness/2, view_opening_bottom+base_height+thickness/2])
+        translate([0,view_opening_left+thickness/2, view_opening_bottom+base_height+thickness/2])
             cube([width, view_opening_width, view_opening_height]);
         // opening for wires
-        translate([0, thickness, base_height+thickness])
+        translate([0, depth-thickness/2, base_height+thickness])
         rotate(a=[0,90,0])
             cylinder(r=10, h=width);
         // tabs for rigidity w/ bottom panel
@@ -292,7 +291,7 @@ module tank_base() {
 }
 
 module tank_support() {
-    translate([mask_loc+thickness/2, thickness/2, base_height+thickness])
+    translate([thickness/2, thickness/2, base_height+thickness])
     union() {
         tank_support_layer1();
         color("Grey", alpha=0.5)
@@ -304,11 +303,11 @@ module tank_support() {
 // Two strips of hardboard on either side of LED strip
 module tank_support_layer1() {
     // front bottom strip, w/ space for wires
-    translate([0, 20, 0])
-        cube([tank_width/3, depth-thickness-20, thickness]);
+    translate([0, 0, 0])
+        cube([tank_width/3, depth-thickness, thickness]);
     // back bottom strip, full-depth
     translate([2*tank_width/3, 0, 0])
-        cube([tank_width/3, depth-thickness, thickness]);
+        cube([tank_width/3, depth-thickness-20, thickness]);
 }
 // Clear acrylic over LED strip
 module tank_support_layer2() {
