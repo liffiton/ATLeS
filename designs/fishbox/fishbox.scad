@@ -60,7 +60,7 @@ mask_loc = tank_width + thickness;  // center-to-center
 view_opening_left = 75;
 view_opening_right = 85;
 view_opening_width = depth-thickness - view_opening_left - view_opening_right;
-view_opening_bottom = 30;
+view_opening_bottom = 29;
 view_opening_height = 90;
 
 // position of rpi and related parts
