@@ -57,10 +57,11 @@ tank_foot_offset_right = 101;
 // x-position of mask piece inside box
 mask_loc = tank_width + thickness;  // center-to-center
 // dimensions for mask view opening
-view_opening_left = 78;
-view_opening_bottom = 28;
-view_opening_width = 190;
-view_opening_height = 91;
+view_opening_left = 75;
+view_opening_right = 85;
+view_opening_width = depth-thickness - view_opening_left - view_opening_right;
+view_opening_bottom = 30;
+view_opening_height = 90;
 
 // position of rpi and related parts
 rpi_ypos = depth/2 + 60;
