@@ -333,7 +333,7 @@ module cutouts(num, width, outset, rot, trans) {
 }
 
 module wire_opening() {
-    translate([width, rpi_ypos-35, overhang+20])
+    translate([width, rpi_ypos+20, overhang+20])
     scale([1,2,1])
     rotate(a=[0,90,0])
         cylinder(d=12, h=thickness+epsilon, center=true);
