@@ -9,10 +9,10 @@ if [ $# -lt 1 ] ; then
     exit
 fi
 
-w=192
-h=144
+w=240
+h=180
 fps=10
-shutter=20000   # take v4l2 exposure setting, multiply by 100 (from units of 0.1ms to us)
+shutter=50000   # take v4l2 exposure setting, multiply by 100 (from units of 0.1ms to us)
 l_sec=$1
 length=$((l_sec * 1000))
 

@@ -119,7 +119,7 @@ class FrameProcessorBrightness(FrameProcessorBase):
         # goal: ignore all "dark" (<1/8 max) pixels so size of capture has
         # limited/no effect; take brightest 50% of remaining pixels.
 	max = numpy.max(self._frame)
-        threshold = numpy.percentile(self._frame[self._frame > max / 8], 50)
+        threshold = numpy.percentile(self._frame[self._frame > max / 4], 60)
         _, self._frame = cv2.threshold(self._frame, threshold, 255, cv2.THRESH_BINARY)
 
         # filter out single pixels and other noise
