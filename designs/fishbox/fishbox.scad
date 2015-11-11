@@ -135,7 +135,7 @@ module mask(x) {
         rotate(a=[0,90,0])
             cylinder(r=10, h=width);
         // tabs for rigidity w/ bottom panel
-        cutouts(4,depth-thickness,outset*2,rot=[-90,0,90],trans=[x+thickness/2,(depth-thickness)/2,base_height+thickness/2]);
+        cutouts(4,depth-thickness,outset*2,rot=[-90,0,90],trans=[x+thickness/2,depth/2,base_height+thickness/2]);
     }
 }
 
@@ -367,7 +367,7 @@ module side_base(y) {
 
 module mock_rpi(x, y, z) {
     color("Blue", alpha=0.5)
-    translate([x+thickness, y, z])
+    translate([x+thickness/2, y, z])
         rotate(a=[0,-90,180])
             translate([-85/2, -56/2, 0])
                 union() {
