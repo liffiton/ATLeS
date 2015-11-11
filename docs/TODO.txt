@@ -4,7 +4,6 @@ TODOs and Plans
 
 Enclosure
 ---------
- - Baffle for blocking direct IR light onto the camera/filter
  - Holes for tank feet for set, consistent tank location
  - Secure, wiggleless mount for camera
  - Slide-in tank from side
@@ -22,11 +21,6 @@ Circuits
    * Other ways of making connections to the 0.1" spaced holes?
 
 
-Software (overall)
-------------------
- - Determine simple process for imaging new Pis
-
-
 FishWeb / Analyze
 -----------------
  - :?: When does the data output/recording start?  How is that indicated?
@@ -42,6 +36,7 @@ FishBox [.py]
 Big / Important:
  - Switch to pigpio library for PWM -- runs separate daemon as root, all rest
    as unprivileged user.
+   - OR switch to latest kernel w/ /dev/gpiomem access... see if wiringpi will use it.
  - Make background subtractor adaptive, modifying sensitivity to hit 1
    detection exactly. (See babyfish code.)
 
@@ -49,15 +44,11 @@ Medium:
  - Utility to create an .ini file interactively (w/ camera view, clicking,
    etc.)
  - Save video (if possible)
- - Save frame (and result of background subtraction) when status first becomes
-   "missing" for troubleshooting
  - Report m/s velocities in analyze.py (requires figuring out best way to get
    different position data (frame- and tank-coords and tank phys size) into
    analyze.py...)
 
 Testing/validation:
- - Record a few real-world videos of fish w/ new setup and correct .ini files
-   to match
  - Check carefully how invalid entries ['lost'] will affect collected metrics
 
 BUGS:
