@@ -32,11 +32,13 @@ def lock_data():
                 }
 
 def get_image():
-    with tempfile.NamedTemporaryFile(suffix="png") as tempfile:
-        cmdargs = ['raspistill', '-o', tempfile.name()]
-        subprocess.call(cmdargs)
-        tempfile.seek(0)
-        return tempfile.read()
+    temp = tempfile.NamedTemporaryFile(suffix="jpg")
+    cmdargs = ['raspistill', '-t', '1', '-o', temp.name]
+    subprocess.call(cmdargs)
+    with open(temp.name, 'rb') as f:
+        data = f.read()
+    temp.close()
+    return data
 
 
 def start_experiment(expname, timelimit, startfromtrig, stimulus, inifile):
