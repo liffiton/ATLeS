@@ -24,6 +24,11 @@ def _imgs(trackrel):
     return sorted(glob.glob(os.path.join(config.PLOTDIR, "%s*" % trackrel)))
 
 
+def _dbgframes(trackrel):
+    expname = trackrel[:trackrel.find("-track.csv")]
+    return sorted(glob.glob(os.path.join(config.DBGFRAMEDIR, expname, "*")))
+
+
 def _get_track_data(track):
     states = collections.Counter()
     heatmap = collections.Counter()
@@ -81,7 +86,7 @@ def tracks():
         else:
             lines, aml, heat = _get_track_data(trackfile)
             track_data_cache[key] = (lines, aml, heat)
-        tracks.append( (index, trackfile, trackrel, lines, aml, heat, _imgs(trackrel)) )
+        tracks.append( (index, trackfile, trackrel, lines, aml, heat, _imgs(trackrel), _dbgframes(trackrel)) )
     return dict(tracks=tracks, local=local, name='tracks')
 
 
@@ -90,6 +95,13 @@ def tracks():
 def view_track(trackfile):
     trackrel = os.path.relpath(trackfile, config.TRACKDIR)
     return dict(imgs=_imgs(trackrel), trackfile=trackfile, trackrel=trackrel)
+
+
+@route('/dbgframes/<trackfile:path>')
+@view('view')
+def debug_frames(trackfile):
+    trackrel = os.path.relpath(trackfile, config.TRACKDIR)
+    return dict(imgs=_dbgframes(trackrel), trackfile=trackfile, trackrel=trackrel)
 
 
 @post('/download/')

@@ -54,10 +54,14 @@ class Box(object):
             # data is already local; no need to sync
             return
 
-        cmd = ['rsync', '-rvt', '%s@%s:%s' % (self.user, self.ip, self.trackdir), os.path.join(config.TRACKDIR, self.name)]
+        # Both source and dest must end with / to copy contents of one folder
+        # into another, isntead of copying the source folder into the
+        # destination as a new folder there.
+        # In os.path.join, the '' ensures a trailing /
+        cmd = ['rsync', '-rvt', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), os.path.join(config.TRACKDIR, self.name, '')]
         out1 = subprocess.check_output(cmd)
 
-        cmd = ['rsync', '-rvt', '%s@%s:%s' % (self.user, self.ip, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name)]
+        cmd = ['rsync', '-rvt', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name, '')]  # '' to ensure trailing /
         out2 = subprocess.check_output(cmd)
 
         return "%s\n%s" % (out1, out2)

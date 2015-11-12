@@ -27,10 +27,11 @@
             <th class="svg_cell"><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
             <th class="svg_cell">Position heatmap</th>
             <th>Plots</th>
+            <th>Frames</th>
             <th>Actions</th>
           </tr>
         </thead>
-        %for index, path, relpath, points, aml, heat, img_count in tracks:
+        %for index, path, relpath, points, aml, heat, imgs, dbgframes in tracks:
         <tr class="undo_row" id="row_{{index}}_undo">
           <td></td>
           <td>{{relpath}}</td>
@@ -59,14 +60,19 @@
             %end
           </td>
           <td>
-            %if img_count:
+            %if imgs:
             <a href="/view/{{path}}">View</a>
+            %end
+          </td>
+          <td>
+            %if dbgframes:
+            <a href="/dbgframes/{{path}}">Debug</a>
             %end
           </td>
           <td class="actionbuttons">
             %if points > 0:
             <button type="button" class="btn btn-default btn-xs" onclick="do_post('/analyze/', 'path={{path}}');">
-              %if img_count:
+              %if imgs:
               <span class="glyphicon glyphicon-refresh"></span>
               Re-plot
               %else:
