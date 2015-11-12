@@ -32,8 +32,8 @@ def lock_data():
                 }
 
 def get_image():
-    temp = tempfile.NamedTemporaryFile(suffix="jpg")
-    cmdargs = ['raspistill', '-t', '1', '-o', temp.name]
+    temp = tempfile.NamedTemporaryFile(suffix=".jpg")
+    cmdargs = ['raspistill', '-t', '1', '-awb', 'off', '-ex', 'off', '-ss', '100000', '-o', temp.name]
     subprocess.call(cmdargs)
     with open(temp.name, 'rb') as f:
         data = f.read()
