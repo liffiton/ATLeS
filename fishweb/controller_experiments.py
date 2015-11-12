@@ -1,7 +1,7 @@
 import glob
 import platform
 import re
-from bottle import post, redirect, request, route, template, HTTPError
+from bottle import post, redirect, request, response, route, template, HTTPError
 from wtforms import Form, BooleanField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 import config
@@ -101,7 +101,7 @@ def get_image(tgtbox=None, boxes=None):
         return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
 
     imgdata = box.get_image()
-    response.set_header('Content-type', 'image/png')
+    response.set_header('Content-type', 'image/jpeg')
     return imgdata
 
 
