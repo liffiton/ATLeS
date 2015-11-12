@@ -65,7 +65,8 @@ if __name__ == '__main__':
         socket.inet_aton(ip), port, 0, 0,
         {
             'name': boxname,
-            'path': os.path.abspath(config.TRACKDIR),
+            'trackdir': os.path.abspath(config.TRACKDIR),
+            'dbgframedir': os.path.abspath(config.DBGFRAMEDIR),
             'user': getpass.getuser()
         }
     )

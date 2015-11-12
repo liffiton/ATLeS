@@ -77,6 +77,11 @@ if __name__ == '__main__':
                 app.run(host=host, port=8080, debug=False, reloader=False)
 
     else:
+        # add our boxmanager plugin if not running locally
+        if not args.local:
+            boxmanager = boxmanager.BoxManagerPlugin()
+            app.install(boxmanager)
+
         # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
         #app.run(host=host, port=8080, server='gevent', debug=args.testing, reloader=True)
         app.run(host=host, port=8080, debug=args.testing, reloader=True)

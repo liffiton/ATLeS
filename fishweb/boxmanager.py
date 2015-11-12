@@ -14,11 +14,12 @@ import utils
 
 
 class Box(object):
-    def __init__(self, name, ip, port, path, user="pi", status="initializing"):
+    def __init__(self, name, ip, port, trackdir, dbgframedir, user="pi", status="initializing"):
         self.name = name   # name of remote box
         self.ip = ip       # IP address
         self.port = port   # port on which fishremote.py is accepting connections
-        self.path = path   # path to data directory on remote box
+        self.trackdir = trackdir  # path to track data directory on remote box
+        self.dbgframedir = dbgframedir  # path to debug frame directory on remote box
         self.user = user   # username for SSH login to remote box
 
         self.status = status
@@ -53,9 +54,13 @@ class Box(object):
             # data is already local; no need to sync
             return
 
-        cmd = ['rsync', '-rvt', '%s@%s:%s' % (self.user, self.ip, self.path), os.path.join(config.TRACKDIR, self.name)]
-        result = subprocess.check_output(cmd)
-        return result
+        cmd = ['rsync', '-rvt', '%s@%s:%s' % (self.user, self.ip, self.trackdir), os.path.join(config.TRACKDIR, self.name)]
+        out1 = subprocess.check_output(cmd)
+
+        cmd = ['rsync', '-rvt', '%s@%s:%s' % (self.user, self.ip, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name)]
+        out2 = subprocess.check_output(cmd)
+
+        return "%s\n%s" % (out1, out2)
 
     @property
     def rpc(self):
@@ -100,7 +105,8 @@ class BoxManager(object):
             newbox = Box(name=boxname,
                          ip=socket.inet_ntoa(info.address),
                          port=info.port,
-                         path=info.properties['path'],
+                         trackdir=info.properties['trackdir'],
+                         dbgframedir=info.properties['dbgframedir'],
                          user=info.properties['user'])
             newbox.connect()
             self._boxes[boxname] = newbox
