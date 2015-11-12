@@ -7,10 +7,121 @@ import subprocess
 import sys
 
 
-class FrameProcessorBase(object):
+class TargetFilterBase(object):
+    def __init__(self):
+        self._cache = (None, None)
+
+    def __call__(self, frame):
+        '''Simple caching around a _do_filter method defined in subclasses.'''
+        if frame is self._cache[0]:
+            return self._cache[1]
+
+        # apply filter to a copy of the frame's data, as it may modify it
+        filtered = self._do_filter(frame[:])
+        self._cache = (frame, filtered)
+        return filtered
+
+    def __and__(self, other):
+        '''Return a callable that produces the Boolean AND of the
+        filtered frames produced by calling self and other on the input.'''
+        def filter_frame(frame):
+            return self(frame) & other(frame)
+
+        return filter_frame
+
+    def __or__(self, other):
+        '''Return a callable that produces the Boolean OR of the
+        filtered frames produced by calling self and other on the input.'''
+        def filter_frame(frame):
+            return self(frame) | other(frame)
+
+        return filter_frame
+
+
+class TargetFilterBrightness(TargetFilterBase):
+    def __init__(self):
+        super(TargetFilterBrightness, self).__init__()
+
+        # elements to reuse in erode/dilate
+        # CROSS elimates more horizontal/vertical lines and leaves more
+        # blobs with extent in both axes [than RECT].
+        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
+        self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(7,7))
+
+    def _do_filter(self, frame):
+        ''' Process a single frame. '''
+        # blur to reduce noise
+        frame = cv2.GaussianBlur(frame, (5, 5), 0, borderType=cv2.BORDER_CONSTANT)
+
+        # threshold to find contiguous regions of "bright" pixels
+        # ignore all "dark" (<1/8 max) pixels
+        max = numpy.max(frame)
+        # if the frame is completely dark, then just return it
+        if max == 0:
+            return frame
+        threshold = max / 8
+        _, frame = cv2.threshold(frame, threshold, 255, cv2.THRESH_BINARY)
+
+        # filter out single pixels and other noise
+        frame = cv2.erode(frame, self._element_shrink)
+
+        # restore and join nearby regions (in case one fish has a skinny middle...)
+        frame = cv2.dilate(frame, self._element_grow)
+
+        return frame
+
+
+class TargetFilterBGSub(TargetFilterBase):
+    def __init__(self):
+        super(TargetFilterBGSub, self).__init__()
+
+        # background subtractor
+        #self._bgs = cv2.BackgroundSubtractorMOG()
+        #self._bgs = cv2.BackgroundSubtractorMOG2()  # not great defaults, and need bShadowDetection to be False
+        #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
+
+        # varThreshold: higher values detect fewer/smaller changed regions
+        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=8, bShadowDetection=False)
+
+        # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
+
+        # Learning rate for background subtractor.
+        # 0 = never adapts after initial background creation.
+        # A bit above 0 looks good.
+        # Lower values are better for detecting slower movement, though it
+        # takes a bit of time to learn the background initially.
+        self._learning_rate = 0.001
+
+        # elements to reuse in erode/dilate
+        # CROSS elimates more horizontal/vertical lines and leaves more
+        # blobs with extent in both axes [than RECT].
+        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
+        self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(7,7))
+
+    def _do_filter(self, frame):
+        ''' Process a single frame. '''
+        # subtract background, clean up image
+        mask = self._bgs.apply(frame, learningRate=self._learning_rate)
+
+        # filter out single pixels
+        mask = cv2.erode(mask, self._element_shrink)
+
+        # restore and join nearby regions (in case one fish has a skinny middle...)
+        mask = cv2.dilate(mask, self._element_grow)
+
+        return mask
+
+
+class FrameProcessor(object):
     def __init__(self):
         # most recent frame and its contours and centroids
         self._frame = None
+        self._contours = None
+        self._centroids = None
+
+    def new_frame(self, frame):
+        self._frame = frame
+        # reset contours and centroids
         self._contours = None
         self._centroids = None
 
@@ -46,91 +157,7 @@ class FrameProcessorBase(object):
         return self._centroids
 
 
-class FrameProcessorBGSub(FrameProcessorBase):
-    def __init__(self):
-        super(FrameProcessorBGSub, self).__init__()
-
-        # background subtractor
-        #self._bgs = cv2.BackgroundSubtractorMOG()
-        #self._bgs = cv2.BackgroundSubtractorMOG2()  # not great defaults, and need bShadowDetection to be False
-        #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
-
-        # varThreshold: higher values detect fewer/smaller changed regions
-        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=12, bShadowDetection=False)
-
-        # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
-
-        # Learning rate for background subtractor.
-        # 0 = never adapts after initial background creation.
-        # A bit above 0 looks good.
-        # Lower values are better for detecting slower movement, though it
-        # takes a bit of time to learn the background initially.
-        self._learning_rate = 0.001  # for 10ish fps video?
-
-        # elements to reuse in erode/dilate
-        # RECT is more robust at removing noise in the erode
-        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
-        self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
-
-    def process_frame(self, frame):
-        ''' Process a single frame. '''
-        self._frame = frame
-
-        # reset contours and centroids
-        self._contours = None
-        self._centroids = None
-
-        # subtract background, clean up image
-        self._sub_bg()
-
-    def _sub_bg(self):
-        mask = self._bgs.apply(self._frame, learningRate=self._learning_rate)
-        self._frame = self._frame & mask
-
-        # filter out single pixels
-        self._frame = cv2.erode(self._frame, self._element_shrink)
-
-        # restore and join nearby regions (in case one fish has a skinny middle...)
-        self._frame = cv2.dilate(self._frame, self._element_grow)
-
-
-class FrameProcessorBrightness(FrameProcessorBase):
-    def __init__(self):
-        super(FrameProcessorBrightness, self).__init__()
-
-        # elements to reuse in erode/dilate
-        # CROSS elimates more horizontal/vertical lines and leaves more
-        # blobs with extent in both axes [than RECT].
-        self._element_shrink = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
-        self._element_grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(7,7))
-
-    def process_frame(self, frame):
-        ''' Process a single frame. '''
-        self._frame = frame
-
-        # reset contours and centroids
-        self._contours = None
-        self._centroids = None
-
-        # blur to reduce noise
-        self._frame = cv2.GaussianBlur(self._frame, (9, 9), 0, borderType=cv2.BORDER_CONSTANT)
-
-        # threshold to find contiguous regions of "bright" pixels
-        # goal: ignore all "dark" (<1/8 max) pixels so size of capture has
-        # limited/no effect; take brightest 50% of remaining pixels.
-	max = numpy.max(self._frame)
-        threshold = numpy.percentile(self._frame[self._frame > max / 4], 60)
-        _, self._frame = cv2.threshold(self._frame, threshold, 255, cv2.THRESH_BINARY)
-
-        # filter out single pixels and other noise
-        self._frame = cv2.erode(self._frame, self._element_shrink)
-
-        # restore and join nearby regions (in case one fish has a skinny middle...)
-        self._frame = cv2.dilate(self._frame, self._element_grow)
-
-
-class SimpleTracker(object):
-    '''A simple tracking class.  Only ever reports last-known position.  No estimates/predictions.'''
+class TrackerBase(object):
     def __init__(self, w, h):
         self._w = float(w)  # frame width (for scaling coordinates)
         self._h = float(h)  # frame height
@@ -165,6 +192,25 @@ class SimpleTracker(object):
         else:
             return self._pos
 
+    def _have_pos(self):
+        return not any(x is None for x in self._pos)
+
+    @property
+    def positions(self):
+        return self._positions
+
+    def _get_closest(self, obs):
+        if not obs:
+            return None
+        else:
+            scored = [(self._score_point(pt), pt) for pt in obs]
+            closest = max(scored)
+
+            if closest[0] < 0:
+                return None
+
+            return closest[1]
+
     @property
     def status(self):
         # is anything currently being tracked
@@ -176,45 +222,6 @@ class SimpleTracker(object):
             return 'missing'
         else:
             return 'lost'
-
-    def _score_point(self, pt):
-        '''Score a given detection point by its distance from the expected position of the fish.'''
-        if self._have_pos():
-            expected = self._expected_loc()
-            delta = numpy.linalg.norm(expected - pt)
-            return delta
-        else:
-            return 0
-
-    def _get_closest(self, obs):
-        if not obs:
-            closest = None
-        else:
-            if len(obs) == 1:
-                closest = obs[0]
-            else:
-                closest = min(obs, key=self._score_point)
-
-            # If we think we have a decent fix, but closest is farther away than we estimate
-            # the fish could be (based on fish's max velocity and number of tracking-missing frames)
-            # then consider this a bad detection.
-            # NOTE: based on a semi-magic number: max_dist_per_frame...
-            if self._have_pos():
-                max_dist_per_frame = 0.2 * self._w  # assume fish can't move more than 20% of tank in one frame time
-                dist = numpy.linalg.norm(closest - self._pos)
-                max_est_dist = (self._missing_count + 1) * max_dist_per_frame
-                if dist > max_est_dist:
-                    closest = None
-
-        return closest
-
-    def _expected_loc(self):
-        # Don't assume anything; just use the last-known position
-        return self._pos
-
-    def _update_estimates(self, prevpos):
-        # SimpleTracker has no estimates
-        pass
 
     def update(self, obs):
         closest = self._get_closest(obs)
@@ -238,40 +245,115 @@ class SimpleTracker(object):
         if self._have_pos():
             self._positions.append(tuple(int(x) for x in self.position_pixel))
 
-    def _have_pos(self):
-        return not any(x is None for x in self._pos)
 
-    @property
-    def positions(self):
-        return self._positions
+class SimpleTracker(TrackerBase):
+    '''A simple tracking class.  Only ever reports last-known position.  No
+    estimates/predictions.
+    '''
+    def _score_point(self, pt):
+        '''Score a given detection point by its distance from the last known
+        position of the fish.
 
+        Returns:
+            A floating point value between 0 and 1 indicating a score (1 is
+            highest/best score) or -1 if the point is determined to be invalid.
+        '''
+        if self._have_pos():
+            expected = self._pos
+            dist = numpy.linalg.norm(expected - pt)
 
-class VelocityTracker(SimpleTracker):
-    '''A predictive tracking class.  Estimates position when fish is lost based on recent velocity.'''
-    def __init__(self):
-        self._vel = numpy.zeros(2)
-        super(VelocityTracker, self).__init__()
+            # If closest is farther away than we estimate the fish could be
+            # (based on fish's max velocity and number of tracking-missing
+            # frames) then consider this a bad detection.
+            # NOTE: based on a semi-magic number: max_dist_per_frame...
+            max_dist_per_frame = 0.2 * self._w  # assume fish can't move more than 20% of tank in one frame time
+            max_est_dist = (self._missing_count + 1) * max_dist_per_frame
+            if dist > max_est_dist:
+                # not considered a valid point
+                return -1
 
-    def _expected_loc(self):
-        return self._pos + self._vel
+            # scale (dist==0)->1.0, (dist==inf)->0.0
+            score = 1.0 / (dist+1)
+            return score
+        else:
+            # as good as any other, if we have no idea where the fish is to start
+            return 0
 
     def _update_estimates(self, prevpos):
+        # SimpleTracker has no estimates
+        pass
+
+
+class VelocityTracker(TrackerBase):
+    '''A predictive tracking class.  Estimates position when fish is lost based on recent velocity.'''
+    def __init__(self, w, h):
+        super(VelocityTracker, self).__init__(w, h)
+        self._vel = numpy.zeros(2)
+
+    def _score_point(self, pt):
+        '''Score a given detection point by its distance from the last known
+        position of the fish.
+
+        Returns:
+            A floating point value between 0 and 1 indicating a score (1 is
+            highest/best score) or -1 if the point is determined to be invalid.
+        '''
+        if self._have_pos():
+            # expect it continues moving with some fraction
+            # of its previous velocity
+            expected = self._pos + self._vel * 0.5
+            dist = numpy.linalg.norm(expected - pt)
+
+            # If closest is farther away than we estimate the fish could be
+            # (based on fish's max velocity and number of tracking-missing
+            # frames) then consider this a bad detection.
+            # NOTE: based on a semi-magic number: max_dist_per_frame...
+            max_dist_per_frame = 0.2 * self._w  # assume fish can't move more than 20% of tank in one frame time
+            max_est_dist = (self._missing_count + 1) * max_dist_per_frame
+            if dist > max_est_dist:
+                # not considered a valid point
+                return -1
+
+            # scale (dist==0)->1.0, (dist==inf)->0.0
+            score = 1.0 / (dist+1)
+
+            # Likewise, the new velocity should not be outside of what seems
+            # possible w.r.t. acceleration.
+            new_vel = pt - self._pos
+            accel = numpy.linalg.norm(new_vel - self._vel)
+            max_accel_per_frame = 30 
+            max_accel = (self._missing_count + 1) * max_accel_per_frame
+            if accel > max_accel:
+                print "--------------------"
+                print "REJECTED BY ACCELERATION"
+                print "pos:", self._pos
+                print "tested pt:", pt
+                print "vel:", self._vel
+                print "new_vel:", new_vel
+                print "accel:", accel
+                print "--------------------"
+                return -1
+
+            # consider the acceleration in the score as well
+            score *= 1.0 / (accel+1)
+
+            return score
+        else:
+            # as good as any other, if we have no idea where the fish is to start
+            return 0
+
+    def _update_estimates(self, prevpos):
+        '''Update estimated velocity based on status and previous data.
+        Never estimates position; always just uses last known position.'''
         # self.status is derived from the [just updated] self._missing_count
         if self.status == 'lost':
             # We have no idea where it should be, so no more moving the point.
             self._vel = numpy.zeros(2)
         elif self.status == 'missing':
-            # use the expected location
-            self._pos = self._expected_loc()
-            if numpy.min(self._pos) < 0 or self._pos[0] > self._w or self._pos[1] > self._h:
-                # went past the border, so just reset and stop moving
-                self._pos -= self._vel
-                self._vel = numpy.zeros(2)
-            else:
-                # taper velocity to zero
-                self._vel *= 0.5
+            # taper velocity to zero
+            self._vel *= 0.5
         elif self.status == 'acquired':
-            # current self._pos is fine, just update estimate velocity if appropriate
+            # update estimate velocity if appropriate
             if prevpos is not None:
                 # estimated velocity is a [very quickly] decaying average
                 alpha = 0.75

@@ -84,7 +84,7 @@ class Watcher(object):
             #cv2.circle(tank_overlay, position, 5, self.STATUS_COLORS[track.status])
 
             # draw a trace of the past k positions recorded
-            start = max(0, len(track.positions) - 200)
+            start = max(0, len(track.positions) - 50)
             prevpt = track.positions[start]
             for pt in track.positions[start:]:
                 cv2.line(tank_overlay, prevpt, pt, self.YELLOW)
@@ -155,13 +155,17 @@ class Experiment(object):
             self._framecount, self._fps = self._stream.get_video_stats()
             logging.info("Video file: %d frames, %d fps", self._framecount, self._fps)
 
-        # Frame processor
-        self._proc = tracking.FrameProcessorBrightness()
+        # Frame processing
+        filter1 = tracking.TargetFilterBGSub()
+        filter2 = tracking.TargetFilterBrightness()
+        # First try the AND of both filters' outputs; if nothing found there, try brightness alone
+        self._framefilters = [filter1 & filter2, filter1, filter2]
+        self._proc = tracking.FrameProcessor()
 
         # Tracking: Simple
         tank_width = self._tx2 - self._tx1
         tank_height = self._ty2 - self._ty1
-        self._track = tracking.SimpleTracker(w=tank_width, h=tank_height)
+        self._track = tracking.VelocityTracker(w=tank_width, h=tank_height)
 
         # For measuring status percentages
         self._statuses = collections.defaultdict(int)
@@ -209,10 +213,21 @@ class Experiment(object):
         cv2.imwrite(subimgfile, subframe)
         logging.info("Saved frame %d." % frame_num)
 
+    def _apply_filters(self, frame):
+        '''Apply our stored filters to the frame, one at at time, until one
+        returns a non-empty result.  Return that result.'''
+        for filter in self._framefilters:
+            output = filter(frame)
+            if numpy.any(output):
+                return output
+        # if we get here, they were all empty, so return the last one (which is empty)
+        return output
+
     def _do_tracking(self, frame, frame_num):
         # Process the frame (finds contours, centroids, and updates background subtractor)
         subframe = self._extract_subframe(frame)
-        self._proc.process_frame(subframe)
+        filtered = self._apply_filters(subframe)
+        self._proc.new_frame(filtered)
 
         if frame_num == 1:
             self._save_debug_frame(frame, subframe, frame_num, 'start')
