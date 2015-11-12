@@ -50,6 +50,14 @@
                       </span>
                     </button>
                   </div>
+                  </div class="col-sm-6">
+                    <a href="/image/{{box}}" class="btn btn-primary" role="button">
+                      <span class="glyphicon glyphicon-refresh"></span>
+                      <span class="btntxt">
+                        Get Image
+                      </span>
+                    </a>
+                  </div>
                 %end
               </div>
             %end

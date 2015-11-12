@@ -2,6 +2,7 @@ import os
 import shlex
 import signal
 import subprocess
+import tempfile
 import time
 
 import config
@@ -29,6 +30,13 @@ def lock_data():
                 'starttime': starttime,
                 'runtime': runtime
                 }
+
+def get_image():
+    with tempfile.NamedTemporaryFile(suffix="png") as tempfile:
+        cmdargs = ['raspistill', '-o', tempfile.name()]
+        subprocess.call(cmdargs)
+        tempfile.seek(0)
+        return tempfile.read()
 
 
 def start_experiment(expname, timelimit, startfromtrig, stimulus, inifile):

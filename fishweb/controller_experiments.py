@@ -93,6 +93,18 @@ def post_sync_data(tgtbox=None, boxes=None):
     box.sync_data()
 
 
+@route('/image/<tgtbox>')
+def get_image(tgtbox=None, boxes=None):
+    try:
+        box = _get_box(tgtbox, boxes)
+    except ManagerError:
+        return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
+
+    imgdata = box.get_image()
+    response.set_header('Content-type', 'image/png')
+    return imgdata
+
+
 @post('/clear_experiment/')
 @post('/clear_experiment/<tgtbox>')
 def post_clear_experiment(tgtbox=None, boxes=None):
