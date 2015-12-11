@@ -64,7 +64,7 @@ view_opening_bottom = 29;
 view_opening_height = 90;
 
 // camera mounting measurements
-camera_hole_diameter = 2;
+camera_hole_diameter = 1.7;       // bolts are m2; 2mm nominal, 1.9mm actual, and a bit less for the beam width
 camera_hole_horiz_offset = 21/2;  // 21mm between mounting holes, horizontally (so half that away from the camera center
 camera_hole_vert_offset = 12.5;   // 12.5mm between mounting holes, vertically (one set on the camera center, one set up that much from center)
 
@@ -96,8 +96,6 @@ if (DXF_TOP) {
     projection() tank_support_layer1();
     projection() translate([tank_width+thickness,0,0]) tank_support_layer2();
     projection() translate([(tank_width+thickness)*2,0,0]) tank_support_layer3();
-} else if (DXF_CAMERA_SUPPORT) {
-    projection() rotate(a=[90,0,0]) camera_support(justone=true);
 } else if (DXF_RPI_SUPPORT) {
     projection() rotate(a=[90,0,0]) rpi_support();
 }
@@ -111,7 +109,6 @@ else {
     side(y=depth);
     tank_base();
     tank_support();
-    camera_support(x=width, y=depth/2, z=height/2);
     rpi_support(x=width, y=rpi_ypos-10, z=height/2);
     mock_rpi(x=width, y=rpi_ypos, z=height/2);
     top_cover();
@@ -123,7 +120,7 @@ else {
 
 module mask(x) {
     difference() {
-        vert_face_base(x, top_offset=thickness, bottom_offset=base_height-thickness);
+        vert_face_base(x, top_offset=0, bottom_offset=base_height-thickness);
         side(y=0);
         side(y=depth);
         translate([x-thickness/2, -overhang, 0]) {
@@ -154,7 +151,6 @@ module vert_face(x=0) {
         }
         camera_opening();
         // round=false so we get the full width of the piece in the cutout, not reduced because we hit the rounded corner
-        camera_support(x=width+thickness*2, y=depth/2, z=height/2+support_drop, round=false);
         rpi_support(x=width+thickness*2, y=rpi_ypos-10, z=height/2+support_drop, round=false);
         wire_opening();
         // CAUTION: OpenSCAD won't let me make a projection of vert_face(x=0)
@@ -164,10 +160,10 @@ module vert_face(x=0) {
         side(y=0);
         side(y=depth);
         translate([x-thickness/2, -overhang, 0]) {
-            translate([0, depth+overhang+thickness/2, 3/4*height])
-                rounded_truncation(width=overhang-thickness/2, up=true);
-            translate([0, 0, 3/4*height])
-                rounded_truncation(width=overhang-thickness/2, up=true);
+            translate([0, depth+overhang+thickness/2, 0])
+                rounded_truncation(width=overhang-thickness/2, up=false);
+            translate([0, 0, 0])
+                rounded_truncation(width=overhang-thickness/2, up=false);
         }
     }
 }
@@ -212,16 +208,6 @@ module camera_opening() {
         translate([0, -camera_hole_horiz_offset, camera_hole_vert_offset])
         rotate(a=[0, 90, 0])
             cylinder(d=camera_hole_diameter, h=100, center=true);
-    }
-}
-
-module camera_support(x, y, z, justone=false, round=true) {
-    spacing = 20;
-    out = 11;
-    up = 36;
-    hanging_support(x, y + spacing/2, z, out, up, round=round);
-    if (!justone) {
-        hanging_support(x, y - spacing/2, z, out, up, round=round);
     }
 }
 
@@ -295,6 +281,7 @@ module top_cover() {
         cutouts(5,width-thickness,outset,rot=180,trans=[width/2+outset,depth+outset*2,0]);
         cutouts(5,depth-thickness,outset,rot=-90,trans=[0,depth/2+outset,0]);
         cutouts(5,depth-thickness,outset,rot=90,trans=[width+outset*2,depth/2+outset,0]);
+        vert_face_base(x=mask_loc);
     }
 }
 
@@ -365,8 +352,10 @@ module side(y=0) {
         translate([0,0,height/2])
         scale([1,1,0.5])
             vert_face_base(x=mask_loc);
+        translate([0,0,height/2])
         scale([1,1,0.5])
             vert_face_base(0, window_thickness);
+        translate([0,0,height/2])
         scale([1,1,0.5])
             vert_face_base(width);
         top_cover();
@@ -374,13 +363,13 @@ module side(y=0) {
 }
 
 module side_base(y) {
-    translate([-overhang,y-thickness/2,overhang/2])
+    translate([-overhang,y-thickness/2,0])
     difference() {
-        cube([width+overhang*2, thickness, height-overhang/2]);
-        translate([width+overhang+thickness/2, 0, 0])
-            rounded_truncation(width=overhang-thickness/2, up=false, rot=[0,0,-90]);
-        translate([0, 0, 0])
-            rounded_truncation(width=overhang-window_thickness/2, up=false, rot=[0,0,-90]);
+        cube([width+overhang*2, thickness, height]);
+        translate([width+overhang+thickness/2, 0, 3/4*height])
+            rounded_truncation(width=overhang-thickness/2, up=true, rot=[0,0,-90]);
+        translate([0, 0, 3/4*height])
+            rounded_truncation(width=overhang-window_thickness/2, up=true, rot=[0,0,-90]);
     }
 }
 
