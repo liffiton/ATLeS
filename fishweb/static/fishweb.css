@@ -3,7 +3,7 @@ div.my-header {
   padding-top: 1em;
   border-bottom: 2px solid #ddd;
 }
-div#exp_progress {
+div.exp_progress_box {
   padding: 0.5em;
   margin-bottom: 0.5em;
   display: none;  /* hidden by default */

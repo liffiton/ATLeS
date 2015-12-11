@@ -3,7 +3,7 @@
 <div class="container">
   <h1>New Experiment on <span class="hostname">{{box}}</span></h1>
 
-  <div class="row" id="exp_progress">
+  <div class="exp_progress_box row" id="exp_progress">
     <div class="col-sm-6 col-sm-offset-1 alert alert-info">
       <strong>Experiment running</strong> since <span id="exp_run_since"></span>.
       <div class="progress" style="width: 100%;">

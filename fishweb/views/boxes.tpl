@@ -10,7 +10,7 @@
   %end
   <div class="row">
     %for box, info in sorted(boxes.items()):
-      <div class="col-lg-4 col-sm-6">
+      <div class="col-lg-3 col-sm-4">
         %if info.status == "connected":
         <div class="panel panel-success">
         %else:
@@ -22,7 +22,7 @@
           </div>
           <div class="panel-body">
             %if info.status == "connected":
-              <div id="exp_progress_{{box}}" class="alert alert-info small">
+              <div id="exp_progress_{{box}}" class="exp_progress_box alert alert-info small">
                 <button id="clear_exp_button_{{box}}" type="button" class="btn btn-danger btn-xs pull-right" title="Kill experiment">
                   <span class="glyphicon glyphicon-remove"></span>
                 </button>
@@ -34,32 +34,30 @@
                   <span class="pull-right" id="rem_out"></span>
                 </div>
               </div>
-              <div id="actions_{{box}}" class="row">
-                <div class="col-sm-6">
-                  <a href="/new/{{box}}" class="btn btn-primary" role="button">
-                    <span class="glyphicon glyphicon-plus-sign"></span>
-                    New Experiment
-                  </a>
-                </div>
-                %if not info.local:
-                  <div class="col-sm-6">
-                    <button id="sync_button_{{box}}" type="button" class="btn btn-primary" role="button">
-                      <span class="glyphicon glyphicon-refresh"></span>
-                      <span class="btntxt">
-                        Sync Data
-                      </span>
-                    </button>
-                  </div>
-                  </div class="col-sm-6">
-                    <a href="/image/{{box}}" class="btn btn-primary" role="button">
-                      <span class="glyphicon glyphicon-refresh"></span>
-                      <span class="btntxt">
-                        Get Image
-                      </span>
-                    </a>
-                  </div>
-                %end
-              </div>
+              <p>
+                <a href="/new/{{box}}" class="btn btn-success" role="button">
+                  <span class="glyphicon glyphicon-plus-sign"></span>
+                  New Experiment
+                </a>
+              </p>
+              %if not info.local:
+                <p>
+                  <button id="sync_button_{{box}}" type="button" class="btn btn-default" role="button">
+                    <span class="glyphicon glyphicon-refresh"></span>
+                    <span class="btntxt">
+                      Sync Data
+                    </span>
+                  </button>
+                </p>
+              %end
+              <p>
+                <a href="/image/{{box}}" class="btn btn-default" role="button">
+                  <span class="glyphicon glyphicon-camera"></span>
+                  <span class="btntxt">
+                    Get Image
+                  </span>
+                </a>
+              </p>
             %end
           </div>
         </div>
