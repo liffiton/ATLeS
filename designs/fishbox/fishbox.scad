@@ -63,6 +63,11 @@ view_opening_width = depth-thickness - view_opening_left - view_opening_right;
 view_opening_bottom = 29;
 view_opening_height = 90;
 
+// camera mounting measurements
+camera_hole_diameter = 2;
+camera_hole_horiz_offset = 21/2;  // 21mm between mounting holes, horizontally (so half that away from the camera center
+camera_hole_vert_offset = 12.5;   // 12.5mm between mounting holes, vertically (one set on the camera center, one set up that much from center)
+
 // position of rpi and related parts
 rpi_ypos = depth/2 + 60;
 
@@ -193,7 +198,21 @@ module rounded_truncation(width, up, rot=[0,0,0]) {
 
 module camera_opening() {
     translate([width, depth/2, height/2])
+    union() {
         cube([thickness*2,10,10], center=true);
+        translate([0, camera_hole_horiz_offset, 0])
+        rotate(a=[0, 90, 0])
+            cylinder(d=camera_hole_diameter, h=100, center=true);
+        translate([0, -camera_hole_horiz_offset, 0])
+        rotate(a=[0, 90, 0])
+            cylinder(d=camera_hole_diameter, h=100, center=true);
+        translate([0, camera_hole_horiz_offset, camera_hole_vert_offset])
+        rotate(a=[0, 90, 0])
+            cylinder(d=camera_hole_diameter, h=100, center=true);
+        translate([0, -camera_hole_horiz_offset, camera_hole_vert_offset])
+        rotate(a=[0, 90, 0])
+            cylinder(d=camera_hole_diameter, h=100, center=true);
+    }
 }
 
 module camera_support(x, y, z, justone=false, round=true) {
