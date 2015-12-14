@@ -274,13 +274,15 @@ module rounded_rect(x,y,z, center, radius) {
 
 module top_cover() {
     color("Grey", alpha=0.5)
-    translate([-outset,-outset,height-thickness])
     difference() {
-        cube([width+outset*2,depth+outset*2,thickness]);
-        cutouts(5,width-thickness,outset,rot=0,trans=[width/2+outset,0,0]);
-        cutouts(5,width-thickness,outset,rot=180,trans=[width/2+outset,depth+outset*2,0]);
-        cutouts(5,depth-thickness,outset,rot=-90,trans=[0,depth/2+outset,0]);
-        cutouts(5,depth-thickness,outset,rot=90,trans=[width+outset*2,depth/2+outset,0]);
+        translate([-outset,-outset,height-thickness])
+        difference() {
+            cube([width+outset*2,depth+outset*2,thickness]);
+            cutouts(5,width-thickness,outset,rot=0,trans=[width/2+outset,0,0]);
+            cutouts(5,width-thickness,outset,rot=180,trans=[width/2+outset,depth+outset*2,0]);
+            cutouts(5,depth-thickness,outset,rot=-90,trans=[0,depth/2+outset,0]);
+            cutouts(5,depth-thickness,outset,rot=90,trans=[width+outset*2,depth/2+outset,0]);
+        }
         vert_face_base(x=mask_loc);
     }
 }
