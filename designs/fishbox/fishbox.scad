@@ -273,17 +273,24 @@ module rounded_rect(x,y,z, center, radius) {
 }
 
 module top_cover() {
+    // width1 = main cover ; width2 = tank section cover
+    width1 = width - mask_loc - thickness;
+    width2 = mask_loc - thickness;
     color("Grey", alpha=0.5)
-    difference() {
-        translate([-outset,-outset,height-thickness])
+    union() {
+        translate([0,-outset,height-thickness])
         difference() {
-            cube([width+outset*2,depth+outset*2,thickness]);
-            cutouts(5,width-thickness,outset,rot=0,trans=[width/2+outset,0,0]);
-            cutouts(5,width-thickness,outset,rot=180,trans=[width/2+outset,depth+outset*2,0]);
-            cutouts(5,depth-thickness,outset,rot=-90,trans=[0,depth/2+outset,0]);
+            translate([mask_loc+thickness/2,0,0])
+                cube([width1+thickness+outset,depth+outset*2,thickness]);
+            cutouts(4,width1,outset,rot=0,trans=[width1/2+mask_loc,0,0]);
+            cutouts(4,width1,outset,rot=180,trans=[width1/2+mask_loc,depth+outset*2,0]);
             cutouts(5,depth-thickness,outset,rot=90,trans=[width+outset*2,depth/2+outset,0]);
         }
-        vert_face_base(x=mask_loc);
+        translate([-outset-thickness/2,-overhang,height-thickness])
+        difference() {
+            cube([width2+thickness+outset,depth+overhang*2,thickness]);
+            cutouts(5,depth-thickness,outset,rot=90,trans=[outset+thickness/2,depth/2+overhang,0]);
+        }
     }
 }
 
