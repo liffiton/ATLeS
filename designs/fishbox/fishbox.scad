@@ -30,7 +30,7 @@ thickness = hardboard_thickness;
 // so material thickness is added to account for that.
 width = 290 + thickness;    // x = 29cm wall-to-wall
 depth = 348 + thickness;    // y = 34.8cm to accomodate 34.8cm tank length
-i_height = 190 + thickness; // z = 19cm to accomodate 16cm tank height plus cover
+i_height = 180 + thickness; // z = 18cm to accomodate 16cm tank height plus cover
                             // (i_height because 'height' is used for height of entire box)
 
 // amount faces extend past each other at corners
@@ -284,7 +284,7 @@ module top_cover() {
                 cube([width1+thickness+outset,depth+outset*2,thickness]);
             cutouts(4,width1,outset,rot=0,trans=[width1/2+mask_loc,0,0]);
             cutouts(4,width1,outset,rot=180,trans=[width1/2+mask_loc,depth+outset*2,0]);
-            cutouts(5,depth-thickness,outset,rot=90,trans=[width+outset*2,depth/2+outset,0]);
+            cutouts(5,depth-thickness,outset,rot=90,trans=[width+outset,depth/2+outset,0]);
         }
         translate([-outset-thickness/2,-overhang,height-thickness])
         difference() {
