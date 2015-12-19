@@ -73,9 +73,11 @@ def pid_exists(pid):
         return True
 
 
-def conditional_kill(pid, signal):
+def cond_sudo_kill(pid, signal):
+    # Signal a process, using sudo, if the process exists/is running.
     if pid_exists(pid):
-        os.kill(pid, signal)
+        #os.kill(pid, signal)
+        subprocess.Popen(['sudo', 'kill', '-%d' % signal, '%d' % pid])
 
 
 def kill_experiment():
@@ -84,13 +86,13 @@ def kill_experiment():
         pid, starttime, runtime = (int(line) for line in f)
 
     print("Killing PID %d" % pid)
-    conditional_kill(pid, signal.SIGTERM)
+    cond_sudo_kill(pid, signal.SIGTERM)
     time.sleep(1.0)
-    conditional_kill(pid, signal.SIGTERM)
+    cond_sudo_kill(pid, signal.SIGTERM)
     time.sleep(1.0)
-    conditional_kill(pid, signal.SIGKILL)
+    cond_sudo_kill(pid, signal.SIGKILL)
     time.sleep(0.1)
-    conditional_kill(pid, signal.SIGKILL)
+    cond_sudo_kill(pid, signal.SIGKILL)
     time.sleep(0.1)
 
     assert not pid_exists(pid)
