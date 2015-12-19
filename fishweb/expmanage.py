@@ -31,6 +31,7 @@ def lock_data():
                 'runtime': runtime
                 }
 
+
 def get_image():
     temp = tempfile.NamedTemporaryFile(suffix=".jpg")
     cmdargs = ['raspistill', '-t', '1', '-awb', 'off', '-ex', 'off', '-ss', '100000', '-o', temp.name]
@@ -62,24 +63,38 @@ def start_experiment(expname, timelimit, startfromtrig, stimulus, inifile):
     subprocess.Popen(cmdargs)
 
 
+# http://stackoverflow.com/a/568285
+def pid_exists(pid):
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    else:
+        return True
+
+
+def conditional_kill(pid, signal):
+    if pid_exists(pid):
+        os.kill(pid, signal)
+
+
 def kill_experiment():
     # kill process
     with open(config.LOCKFILE, 'r') as f:
         pid, starttime, runtime = (int(line) for line in f)
-        print("Killing PID %d" % pid)
-        try:
-            os.kill(pid, signal.SIGTERM)
-            time.sleep(1.0)
-            os.kill(pid, signal.SIGTERM)
-            time.sleep(1.0)
-            os.kill(pid, signal.SIGKILL)
-            time.sleep(0.1)
-            os.kill(pid, signal.SIGKILL)
-        except OSError:
-            # at some point, we should get a "No such process error",
-            # whether due to the process not existing in the first place,
-            # or one of the signals succeeding
-            pass
+
+    print("Killing PID %d" % pid)
+    conditional_kill(pid, signal.SIGTERM)
+    time.sleep(1.0)
+    conditional_kill(pid, signal.SIGTERM)
+    time.sleep(1.0)
+    conditional_kill(pid, signal.SIGKILL)
+    time.sleep(0.1)
+    conditional_kill(pid, signal.SIGKILL)
+    time.sleep(0.1)
+
+    assert not pid_exists(pid)
+
     # remove existing lockfile
     try:
         os.unlink(config.LOCKFILE)
