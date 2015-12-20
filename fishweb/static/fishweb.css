@@ -39,11 +39,14 @@ span.hostname {
 body {
   overflow-y: scroll;  /* Scroll bar always present -- avoids bouncing on hide/show of rows */
 }
+table.table-vertmid td, table.table-vertmid th {
+  vertical-align: middle !important;
+}
 .number_cell {
   text-align: right;
 }
 .svg_cell {
-  vertical-align: middle;
+  text-align: center;
   position: relative;
 }
 svg.aml_chart {

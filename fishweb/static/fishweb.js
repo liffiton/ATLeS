@@ -151,10 +151,11 @@ function update_selection() {
   var track_rows = $("tr.track_row").filter(":visible");
   track_rows.each(function() {
     var path = $(this).data('path');
+    var index = $(this).data('index');
     var sel_button = $(this).find(".selectbutton");
     if (sel_button.hasClass('btn-primary')) {
       // add to the set
-      selection[path] = true;
+      selection[path] = index;
     }
   });
   update_buttons();
@@ -173,6 +174,8 @@ function update_buttons() {
   $('#downloadbutton').toggleClass('btn-primary', count > 0);
   $('#replotselbutton').toggleClass('disabled', count == 0);
   $('#replotselbutton').toggleClass('btn-primary', count > 0);
+  $('#archiveselbutton').toggleClass('disabled', count == 0);
+  $('#archiveselbutton').toggleClass('btn-primary', count > 0);
   $('._selectallbutton').toggleClass('btn-default', count < row_count);
   $('._selectallbutton').toggleClass('btn-primary', count == row_count);
 }
@@ -214,6 +217,15 @@ function analyze_selection() {
   if (! go) return;
   var sels = Object.keys(selection).sort();
   async_post('/analyze_selection/', 'selection=' + sels.join('|'));
+}
+
+function archive_selection() {
+  var sels = Object.keys(selection).sort();
+  for (var i = 0 ; i < sels.length ; i++) {
+    var path = sels[i];
+    var index = selection[path];
+    do_archive(path, index);
+  }
 }
 
 function update_ini(iniFile) {

@@ -14,7 +14,7 @@
   </div>
   <div class="row">
     <div class="col-lg-10 col-md-12 col-sm-12">
-      <table class="table table-hover">
+      <table class="table table-hover table-vertmid">
         <thead>
           <tr>
             <th>
@@ -22,12 +22,11 @@
                 <span class="glyphicon glyphicon-ok"></span>
               </button>
             </th>
-            <th width="100%">Track file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
+            <th>Track file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
             <th class="number_cell">Points</th>
             <th class="svg_cell"><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
             <th class="svg_cell">Position heatmap</th>
-            <th>Plots</th>
-            <th>Frames</th>
+            <th>View</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -43,7 +42,7 @@
             </button>
           </td>
         </tr>
-        <tr class="track_row" id="row_{{index}}" data-path='{{path}}'>
+        <tr class="track_row" id="row_{{index}}" data-path='{{path}}' data-index='{{index}}'>
           <td>
             <button type="button" class="btn btn-default btn-xs text-muted selectbutton" title='Select'>
               <span class="glyphicon glyphicon-ok"></span>
@@ -61,12 +60,10 @@
           </td>
           <td>
             %if imgs:
-            <a href="/view/{{path}}">View</a>
+            <a href="/view/{{path}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-stats"></span> Plots</a>
             %end
-          </td>
-          <td>
             %if dbgframes:
-            <a href="/dbgframes/{{path}}">Debug</a>
+            <a href="/dbgframes/{{path}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-camera"></span> Debug</a>
             %end
           </td>
           <td class="actionbuttons">
@@ -118,6 +115,10 @@
         <button type="button" class="btn btn-default disabled" title="Re-plot" id="replotselbutton" onclick="analyze_selection();">
           <span class="glyphicon glyphicon-refresh"></span>
           Re-plot
+        </button>
+        <button type="button" class="btn btn-default disabled" title="Archive" id="archiveselbutton" onclick="archive_selection();">
+          <span class="glyphicon glyphicon-log-out"></span>
+          Archive
         </button>
         </p>
       </div>
