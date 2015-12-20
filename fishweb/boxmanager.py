@@ -124,8 +124,7 @@ class BoxManager(object):
             newbox = Box(name=boxname,
                          ip=socket.inet_ntoa(info.address),
                          port=info.port,
-                         trackdir=info.properties['trackdir'],
-                         dbgframedir=info.properties['dbgframedir'],
+                         appdir=info.properties['appdir'],
                          user=info.properties['user'])
             newbox.connect()
             self._boxes[boxname] = newbox
