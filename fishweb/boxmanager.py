@@ -62,11 +62,11 @@ class Box(object):
 
         # Copy remote files into an archive dir, then have rsync
         # delete the originals after the transfer
-        cmd = ['ssh', '%s@%s' % (self.user, self.ip), 'cp %s/* %s/' % (self.trackdir, self.archivedir)]
+        cmd = ['ssh', '%s@%s' % (self.user, self.ip), 'cp -r %s %s' % (self.trackdir, self.archivedir)]
         out.append(subprocess.check_output(cmd))
         # Currently does *not* copy the debugframes (following 2 lines are
         # commented), so they will be removed from remote entirely.
-        #cmd = ['ssh', '%s@%s' % (self.user, self.ip), 'cp %s/* %s/' % (self.dbgramedir, self.archivedir)]
+        #cmd = ['ssh', '%s@%s' % (self.user, self.ip), 'cp -r %s %s' % (self.dbgramedir, self.archivedir)]
         #out.append(subprocess.check_output(cmd))
 
         # Both source and dest must end with / to copy contents of one folder
