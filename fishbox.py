@@ -118,7 +118,10 @@ def init_logging(args, conf):
     # ensure log and image directories exist
     utils.mkdir(config.TRACKDIR)
     debugframe_dir = "%s/%s" % (config.DBGFRAMEDIR, name)
+    # Make debugframedir world-writable so rsync can delete it.
+    oldmask = os.umask(0)
     utils.mkdir(debugframe_dir)
+    os.umask(oldmask)
     conf['debugframe_dir'] = debugframe_dir
 
     trackfilename = "%s/%s-track.csv" % (config.TRACKDIR, name)
