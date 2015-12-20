@@ -12,7 +12,6 @@ import zeroconf
 from rpyc.utils.server import ThreadedServer
 
 from fishweb import expmanage
-import config
 import utils
 
 
@@ -65,8 +64,7 @@ if __name__ == '__main__':
         socket.inet_aton(ip), port, 0, 0,
         {
             'name': boxname,
-            'trackdir': os.path.abspath(config.TRACKDIR),
-            'dbgframedir': os.path.abspath(config.DBGFRAMEDIR),
+            'appdir': os.getcwd(),
             'user': getpass.getuser()
         }
     )

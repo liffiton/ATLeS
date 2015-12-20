@@ -9,6 +9,6 @@ INIDIR = "ini/"
 
 EXPSCRIPT = "python fishbox.py"
 
-APPDIR = "fishweb/"
-TEMPLATEDIR = APPDIR + "views/"
-STATICDIR = APPDIR + "static/"
+WEBAPPDIR = "fishweb/"
+TEMPLATEDIR = WEBAPPDIR + "views/"
+STATICDIR = WEBAPPDIR + "static/"

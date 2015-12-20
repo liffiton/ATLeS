@@ -14,13 +14,17 @@ import utils
 
 
 class Box(object):
-    def __init__(self, name, ip, port, trackdir, dbgframedir, user="pi", status="initializing"):
+    def __init__(self, name, ip, port, appdir, user="pi", status="initializing"):
         self.name = name   # name of remote box
         self.ip = ip       # IP address
         self.port = port   # port on which fishremote.py is accepting connections
-        self.trackdir = trackdir  # path to track data directory on remote box
-        self.dbgframedir = dbgframedir  # path to debug frame directory on remote box
         self.user = user   # username for SSH login to remote box
+
+        self.appdir = appdir  # path to track data directory on remote box
+        # build useful paths
+        self.trackdir = os.path.join(self.appdir, config.TRACKDIR)
+        self.archivedir = os.path.join(self.appdir, config.ARCHIVEDIR)
+        self.dbgframedir = os.path.join(self.appdir, config.DBGFRAMEDIR)
 
         self.status = status
         self.local = None  # True if box is actually the local machine
@@ -54,17 +58,28 @@ class Box(object):
             # data is already local; no need to sync
             return
 
+        out = []
+
+        # Copy remote files into an archive dir, then have rsync
+        # delete the originals after the transfer
+        cmd = ['ssh', '%s@%s' % (self.user, self.ip), '"cp %s/* %s/"' % (self.trackdir, self.archivedir)]
+        out.append(subprocess.check_output(cmd))
+        # Currently does *not* copy the debugframes (following 2 lines are
+        # commented), so they will be removed from remote entirely.
+        #cmd = ['ssh', '%s@%s' % (self.user, self.ip), '"cp %s/* %s/"' % (self.dbgramedir, self.archivedir)]
+        #out.append(subprocess.check_output(cmd))
+
         # Both source and dest must end with / to copy contents of one folder
         # into another, isntead of copying the source folder into the
         # destination as a new folder there.
         # In os.path.join, the '' ensures a trailing /
-        cmd = ['rsync', '-rvt', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), os.path.join(config.TRACKDIR, self.name, '')]
-        out1 = subprocess.check_output(cmd)
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), os.path.join(config.TRACKDIR, self.name, '')]
+        out.append(subprocess.check_output(cmd))
 
-        cmd = ['rsync', '-rvt', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name, '')]  # '' to ensure trailing /
-        out2 = subprocess.check_output(cmd)
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name, '')]  # '' to ensure trailing /
+        out.append(subprocess.check_output(cmd))
 
-        return "%s\n%s" % (out1, out2)
+        return "\n".join(out)
 
     @property
     def rpc(self):
