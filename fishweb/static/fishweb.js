@@ -104,15 +104,19 @@ function makeChart() {
 }
 
 function makeHeatMap() {
-    // number of buckets we're receiving and plotting
+    // configuration: number of buckets we're receiving and plotting
     var _width = 15;
     var _height = 10;
 
     var data = $(this).data("values").split('|');
 
-    var s = Snap(this);
+    this.width = _width;
+    this.height = _height;
+    var ctx = this.getContext("2d");
+
     // background
-    s.rect(0,0,15,10).attr({fill: Snap.rgb(240,240,240)});
+    ctx.fillStyle = "rgb(240,240,240)";
+    ctx.fillRect(0,0,15,10);
 
     for (var i = 0 ; i < data.length ; i++) {
         point = data[i].split(',');
@@ -120,8 +124,11 @@ function makeHeatMap() {
         var y = parseInt(point[1]) / 1000 * _height;
         var amt = parseInt(point[2]) / 1000;
         amt = Math.sqrt(amt);  // scale so lower values are more intense/visible
-        color = Snap.rgb(240-240*amt, 240-200*amt, 240-120*amt);
-        s.rect(x, _height-1-y, 1, 1).attr({fill: color})
+        var r = Math.floor(240-240*amt);
+        var g = Math.floor(240-200*amt);
+        var b = Math.floor(240-120*amt);
+        ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+        ctx.fillRect(x, _height-1-y, 1, 1);
     }
 }
 

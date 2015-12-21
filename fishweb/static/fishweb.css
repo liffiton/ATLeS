@@ -45,7 +45,7 @@ table.table-vertmid td, table.table-vertmid th {
 .number_cell {
   text-align: right;
 }
-.svg_cell {
+.chart_cell {
   text-align: center;
   position: relative;
 }
@@ -59,7 +59,16 @@ svg.aml_chart {
   margin-left: -2em;  /* half width */
   margin-top: -0.5em;  /* half height */
 }
-svg.heatmap {
+canvas.heatmap {
+  /* do not interpolate the heatmaps when scaling:
+   * http://stackoverflow.com/a/7665647
+   */
+  image-rendering: optimizeSpeed;             /* Older versions of FF          */
+  image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+  image-rendering: -webkit-optimize-contrast; /* Safari                        */
+  image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+  image-rendering: pixelated;                 /* Awesome future-browsers       */
+  -ms-interpolation-mode: nearest-neighbor;   /* IE                            */
   width: 3em;
   height: 2em;
   /* centering */

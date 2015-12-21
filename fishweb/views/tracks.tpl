@@ -24,8 +24,8 @@
             </th>
             <th>Track file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
             <th class="number_cell">Points</th>
-            <th class="svg_cell"><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
-            <th class="svg_cell">Position heatmap</th>
+            <th class="chart_cell"><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
+            <th class="chart_cell">Heatmap</th>
             <th>View</th>
             <th>Actions</th>
           </tr>
@@ -50,12 +50,12 @@
           </td>
           <td class="trackfile_cell"><a href="/{{path}}">{{relpath}}</a></td>
           <td class="number_cell">{{points}}</td>
-          <td class="svg_cell">
+          <td class="chart_cell">
             <svg class="aml_chart" viewbox="0 0 1 0.1" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}" preserveAspectRatio="none"></svg>
           </td>
-          <td class="svg_cell">
+          <td class="chart_cell">
             %if heat:
-            <svg class="heatmap" viewbox="0 0 15 10" data-values="{{'|'.join(','.join(item) for item in heat)}}" title="Position heatmap" preserveAspectRatio="none"></svg>
+            <canvas class="heatmap" data-values="{{'|'.join(','.join(item) for item in heat)}}" title="Position heatmap"></canvas>
             %end
           </td>
           <td>
@@ -142,9 +142,12 @@ $(function() {
     var row = $(this).closest("tr");
     togglesel(row);
   });
-  // create all valid/missing/lost charts by default
+  // create charts/heatmaps
+  console.time('aml_charts');
   $("svg.aml_chart").each(makeChart);
-  // create heatmaps only on mouseover (and only once for each element) to save memory/CPU time
-  $("svg.heatmap").one('mouseenter', makeHeatMap);
+  console.timeEnd('aml_charts');
+  console.time('heatmaps');
+  $("canvas.heatmap").each(makeHeatMap);
+  console.timeEnd('heatmaps');
 });
 </script>
