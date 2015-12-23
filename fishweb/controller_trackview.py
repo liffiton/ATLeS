@@ -30,10 +30,17 @@ def _dbgframes(trackrel):
 
 
 def _get_track_data(track):
+    # configuration: # buckets for x/y in heatmap
+    xbuckets = 30
+    ybuckets = 15
+
     states = collections.Counter()
     heatmap = collections.Counter()
+    velocities = []
     with open(track) as f:
         i = -1  # so lines = 0 if file is empty
+        prev_x = None
+        prev_y = None
         for i, line in enumerate(f):
             vals = line.split(',')
             try:
@@ -46,10 +53,27 @@ def _get_track_data(track):
             states[state] += 1
             try:
                 if state != "lost":
-                    # convert to [typically 3 digit] integer in range 0-1000
-                    x = "%d" % (1000.0 * (float(x) - math.fmod(float(x), 1.0/15)))
-                    y = "%d" % (1000.0 * (float(y) - math.fmod(float(y), 1.0/10)))
-                    heatmap[(x,y)] += 1
+                    x = float(x)
+                    y = float(y)
+                    if prev_x is not None:
+                        dx = x - prev_x
+                        dy = y - prev_y
+                        # convert to [typically 3 digit] integer in range 0-1000
+                        #velocities.append("%d" % (1000.0 * math.sqrt(dx*dx+dy*dy)))
+                        velocities.append(math.sqrt(dx*dx+dy*dy))
+                    else:
+                        velocities.append(0)
+                    prev_x = x
+                    prev_y = y
+
+                    # place this sample in a heatmap bucket
+                    bucket_x = int(x * xbuckets)
+                    bucket_y = int(y * ybuckets)
+                    heatmap[(bucket_x, bucket_y)] += 1
+                else:
+                    velocities.append(0)
+                    prev_x = None
+                    prev_y = None
             except ValueError:
                 pass  # not super important if we can't parse x,y
         lines = i+1
@@ -59,11 +83,17 @@ def _get_track_data(track):
         aml = []
     if heatmap:
         maxheat = max(heatmap.values())
-        heat = [(key[0], key[1], "%d" % (1000 * float(value)/maxheat)) for key, value in heatmap.items()]
+        # convert counts to [typically 3 digit] integer in range 0-1000
+        heat = [["%d" % (1000 * float(heatmap[hx,hy])/maxheat) for hx in range(xbuckets)] for hy in range(ybuckets)]
     else:
         heat = []
+    if velocities:
+        veldata = [sum(velocities) / len(velocities), max(velocities)]
+        veldata = ["%0.3f" % datum for datum in veldata]
+    else:
+        veldata = []
 
-    return lines, aml, heat
+    return lines, aml, heat, veldata
 
 
 # Cache computed a/m/l and heatmap data to avoid recomputation
@@ -82,11 +112,11 @@ def tracks():
         trackrel = os.path.relpath(trackfile, config.TRACKDIR)
         key = "%f|%s" % (mtime, trackrel)
         if key in track_data_cache:
-            lines, aml, heat = track_data_cache[key]
+            lines, aml, heat, vel = track_data_cache[key]
         else:
-            lines, aml, heat = _get_track_data(trackfile)
-            track_data_cache[key] = (lines, aml, heat)
-        tracks.append( (index, trackfile, trackrel, lines, aml, heat, _imgs(trackrel), _dbgframes(trackrel)) )
+            lines, aml, heat, vel = _get_track_data(trackfile)
+            track_data_cache[key] = (lines, aml, heat, vel)
+        tracks.append( (index, trackfile, trackrel, lines, aml, heat, vel, _imgs(trackrel), _dbgframes(trackrel)) )
     return dict(tracks=tracks, local=local, name='tracks')
 
 

@@ -25,16 +25,17 @@
             <th>Track file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
             <th class="number_cell">Points</th>
             <th class="chart_cell"><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
-            <th class="chart_cell">Heatmap</th>
+            <th class="chart_cell">Position</th>
+            <th class="chart_cell">Velocity</th>
             <th>View</th>
             <th>Actions</th>
           </tr>
         </thead>
-        %for index, path, relpath, points, aml, heat, imgs, dbgframes in tracks:
+        %for index, path, relpath, points, aml, heat, vel, imgs, dbgframes in tracks:
         <tr class="undo_row" id="row_{{index}}_undo">
           <td></td>
           <td>{{relpath}}</td>
-          <td colspan=4><i>Archived</i></td>
+          <td colspan=5><i>Archived</i></td>
           <td>
             <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{path}}', {{index}});" title="Unarchive">
               <span class="glyphicon glyphicon-log-in"></span>
@@ -51,11 +52,16 @@
           <td class="trackfile_cell"><a href="/{{path}}">{{relpath}}</a></td>
           <td class="number_cell">{{points}}</td>
           <td class="chart_cell">
-            <svg class="aml_chart" viewbox="0 0 1 0.1" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}" preserveAspectRatio="none"></svg>
+            <canvas class="aml" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}"></canvas>
           </td>
           <td class="chart_cell">
             %if heat:
-            <canvas class="heatmap" data-values="{{'|'.join(','.join(item) for item in heat)}}" title="Position heatmap"></canvas>
+            <canvas class="heatmap" data-values="{{'|'.join(','.join(row) for row in heat)}}" title="Position heatmap"></canvas>
+            %end
+          </td>
+          <td class="chart_cell">
+            %if vel:
+            <canvas class="velocity" data-values="{{','.join(vel)}}" title="Avg: {{vel[0]}}  Max: {{vel[1]}}"></canvas>
             %end
           </td>
           <td>
@@ -85,7 +91,7 @@
         </tr>
         %end
         <tr>
-          <td colspan=7>
+          <td colspan=8>
             <button type="button" class="btn btn-default btn-xs text-muted _selectallbutton" title='Select All'>
               <span class="glyphicon glyphicon-ok"></span> De/Select All
             </button>
@@ -143,11 +149,14 @@ $(function() {
     togglesel(row);
   });
   // create charts/heatmaps
-  console.time('aml_charts');
-  $("svg.aml_chart").each(makeChart);
-  console.timeEnd('aml_charts');
+  console.time('aml');
+  $("canvas.aml").each(makeAML);
+  console.timeEnd('aml');
   console.time('heatmaps');
   $("canvas.heatmap").each(makeHeatMap);
   console.timeEnd('heatmaps');
+  console.time('velocities');
+  $("canvas.velocity").each(makeVelocityPlot);
+  console.timeEnd('velocities');
 });
 </script>

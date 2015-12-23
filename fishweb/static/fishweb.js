@@ -79,36 +79,39 @@ function checkProgress(boxname, progress_id, new_id) {
   });
 }
 
-function makeChart() {
-    var rawdata = $(this).data("values");
-    if (rawdata == "") {
-        return;
-    }
-    var data = rawdata.split('|');
+function makeAML() {
+    // configuration: number of drawing pixels for bar chart
+    var _width = 500;
+
+    var values = $(this).data("values");
+    if (!values) return;
+
+    var data = values.split('|');
     var acquired = parseFloat(data[0]);
     var missing = parseFloat(data[1]);
     var lost = parseFloat(data[2]);
-    var a = acquired;
-    var b = missing;
-    var c = lost;
+    var a = acquired * _width;
+    var b = missing * _width;
+    var c = lost * _width;
 
-    var s = Snap(this);
-    s.group(
-        // Chrome requires the title tag to be in a group with the graphics
-        // elements (not just part of the <svg> itself) to display it as a tooltip.
-        Snap.parse("<title>" + this.getAttribute('title') + "</title>"),
-        s.rect(0,0,a,1).attr({fill: '#0d0'}),
-        s.rect(a,0,b,1).attr({fill: '#fc0'}),
-        s.rect(a+b,0,c,1).attr({fill: '#d00'})
-    );
+    this.width = _width;
+    this.height = 1;
+    var ctx = this.getContext("2d");
+
+    ctx.fillStyle = "#0d0";
+    ctx.fillRect(0,0,a,1);
+    ctx.fillStyle = "#fc0";
+    ctx.fillRect(a,0,b,1);
+    ctx.fillStyle = "#d00";
+    ctx.fillRect(a+b,0,c,1);
 }
 
 function makeHeatMap() {
-    // configuration: number of buckets we're receiving and plotting
-    var _width = 15;
-    var _height = 10;
-
     var data = $(this).data("values").split('|');
+
+    // get number of buckets from received data
+    var _width = data[0].split(',').length;
+    var _height = data.length;
 
     this.width = _width;
     this.height = _height;
@@ -116,20 +119,49 @@ function makeHeatMap() {
 
     // background
     ctx.fillStyle = "rgb(240,240,240)";
-    ctx.fillRect(0,0,15,10);
+    ctx.fillRect(0,0,_width,_height);
 
-    for (var i = 0 ; i < data.length ; i++) {
-        point = data[i].split(',');
-        var x = parseInt(point[0]) / 1000 * _width;
-        var y = parseInt(point[1]) / 1000 * _height;
-        var amt = parseInt(point[2]) / 1000;
-        amt = Math.sqrt(amt);  // scale so lower values are more intense/visible
-        var r = Math.floor(240-240*amt);
-        var g = Math.floor(240-200*amt);
-        var b = Math.floor(240-120*amt);
-        ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-        ctx.fillRect(x, _height-1-y, 1, 1);
+    for (var y = 0 ; y < _height ; y++) {
+        var rowdata = data[y].split(',');
+        for (var x = 0 ; x < _width ; x++) {
+            var amt = parseInt(rowdata[x]) / 1000;
+            amt = Math.sqrt(amt);
+            var r = Math.floor(240-240*amt);
+            var g = Math.floor(240-200*amt);
+            var b = Math.floor(240-120*amt);
+            ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+            ctx.fillRect(x, (_height-1)-y, 1, 1);
+        }
     }
+}
+
+function makeVelocityPlot() {
+    // configuration: number of buckets (x) we'll put velocities into
+    var _width = 100;
+
+    var values = $(this).data("values");
+    if (!values) return;
+    values = values.split(',');
+    var avg = values[0];
+    var max = values[1];
+
+    // scale so small values stand out more
+    avg = Math.sqrt(parseFloat(avg));
+    max = Math.sqrt(parseFloat(max));
+
+    this.width = _width;
+    this.height = 1;
+    var ctx = this.getContext("2d");
+
+    // background
+    ctx.fillStyle = "rgb(240,240,240)";
+    ctx.fillRect(0,0,_width, 1);
+
+    ctx.fillStyle = "rgb(40,240,40)";
+    ctx.fillRect((_width-1) * avg, 0, 1, 1);
+
+    ctx.fillStyle = "rgb(240,120,40)";
+    ctx.fillRect((_width-1) * max, 0, 1, 1);
 }
 
 // keep track of selected tracks
