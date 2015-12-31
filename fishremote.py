@@ -1,4 +1,5 @@
 import atexit
+import daemon
 import getpass
 import os
 import platform
@@ -43,7 +44,7 @@ def module2service(module):
     return _serviceclass
 
 
-if __name__ == '__main__':
+def run_remote():
     # make expmanage RPyC-able
     service = module2service(expmanage)
     # and RPyC it
@@ -74,9 +75,9 @@ if __name__ == '__main__':
             'user': getpass.getuser()
         }
     )
-    zeroconf = zeroconf.Zeroconf([ip])
-    zeroconf.register_service(info)
-    atexit.register(zeroconf.unregister_service, info)
+    zconf = zeroconf.Zeroconf([ip])
+    zconf.register_service(info)
+    atexit.register(zconf.unregister_service, info)
 
     print("Service registered: %s port %d" % (ip, port))
 
@@ -88,3 +89,23 @@ if __name__ == '__main__':
         # call a blocking C function (thus blocking the signal handler).
         # However, infinity works.
         serverthread.join(float('inf'))
+
+
+def main():
+    print("Switching to background daemon.")
+    logfile = os.path.join(
+        os.getcwd(),
+        "remote.log"
+    )
+    with open(logfile, 'w+') as log:
+        context = daemon.DaemonContext(
+            working_directory=os.getcwd(),
+            stdout=log,
+            stderr=log
+        )
+        with context:
+            run_remote()
+
+
+if __name__ == '__main__':
+    main()

@@ -19,11 +19,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-cmd="ssh pi@$hostname cd fishycam \; python fishremote.py \> /dev/null \&"
-$cmd
+remote_cmd="cd fishycam; python fishremote.py"
+cmd="ssh pi@$hostname"
+$cmd $remote_cmd
 
 if [ $? -ne 0 ]; then
-    echo "Error running ${cmd}.  Setup aborted."
+    echo "Error running ${cmd} ${remote_cmd}.  Setup aborted."
     exit 1
 fi
 

@@ -47,6 +47,7 @@ installing these follow):
     numpy
   
   fishremote.py:
+    python-daemon
     rpyc
     zeroconf
 
