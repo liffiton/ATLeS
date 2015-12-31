@@ -31,21 +31,24 @@ Before installing the python modules themselves, install the required tools:
 Many python packages are most easily installed via pip.  To install pip,
 follow the instructions here: https://pip.pypa.io/en/latest/installing.html
 
-fishbox.py:
-  cv2         (for OpenCV)
-  smbus       (for reading sensor values)
-  wiringpi2   (for controlling light bar via PWM)
+The fishbox scripts rely on the following libraries (instructions for
+installing these follow):
 
-fishweb.py:
-  bottle
-  wtforms
-  python-daemon
-  matplotlib
-  numpy
-
-fishremote.py:
-  rpyc
-  zeroconf
+  fishbox.py:
+    cv2         (for OpenCV)
+    smbus       (for reading sensor values)
+    wiringpi2   (for controlling light bar via PWM)
+  
+  fishweb.py:
+    bottle
+    wtforms
+    python-daemon
+    matplotlib
+    numpy
+  
+  fishremote.py:
+    rpyc
+    zeroconf
 
 Note: the matplotlib and numpy packages available via apt-get are too old to use in FishyCam.
 
