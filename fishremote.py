@@ -47,7 +47,13 @@ if __name__ == '__main__':
     # make expmanage RPyC-able
     service = module2service(expmanage)
     # and RPyC it
-    server = ThreadedServer(service, hostname='localhost', port=port, protocol_config={"allow_public_attrs":True})
+    try:
+        server = ThreadedServer(service, hostname='localhost', port=port, protocol_config={"allow_public_attrs":True})
+    except socket.error as e:
+        print("Error opening socket.  fishremote may already be running.")
+        print(e)
+        sys.exit(1)
+
     # ThreadedServer launches threads for incoming connections, but its main accept() loop is blocking,
     # so we put it in a separate thread.
     serverthread = threading.Thread(target=server.start)
