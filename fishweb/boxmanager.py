@@ -51,38 +51,30 @@ class Box(object):
 
     def sync_data(self):
         ''' Copy/sync track data from this box to the local track directory.'''
-        if self.status != "connected":
-            return "Sync failed.\nNot connected."
+        assert self.status == "connected"
 
-        if self.local:
-            # data is already local; no need to sync
-            return "Data is local.\nSync not needed."
+        # If data is already local, no need to sync
+        assert not self.local
 
-        try:
-            # Copy remote files into an archive dir, then have rsync
-            # delete the originals after the transfer
-            self._tunnel["cp -r %s %s" % (self.trackdir, self.archivedir)]
-            #cmd = ['ssh', '%s@%s' % (self.user, self.ip), 'cp -r %s %s' % (self.trackdir, self.archivedir)]
-            #subprocess.check_output(cmd)
-            ## Currently does *not* copy the debugframes (following 2 lines are
-            ## commented), so they will be removed from remote entirely.
-            ##cmd = ['ssh', '%s@%s' % (self.user, self.ip), 'cp -r %s %s' % (self.dbgramedir, self.archivedir)]
-            ##subprocess.check_output(cmd)
+        # Copy remote files into an archive dir, then have rsync
+        # delete the originals after the transfer
+        self._tunnel["cp -r %s %s" % (self.trackdir, self.archivedir)]
+        #cmd = ['ssh', '%s@%s' % (self.user, self.ip), 'cp -r %s %s' % (self.trackdir, self.archivedir)]
+        #subprocess.check_output(cmd)
+        ## Currently does *not* copy the debugframes (following 2 lines are
+        ## commented), so they will be removed from remote entirely.
+        ##cmd = ['ssh', '%s@%s' % (self.user, self.ip), 'cp -r %s %s' % (self.dbgramedir, self.archivedir)]
+        ##subprocess.check_output(cmd)
 
-            # Both source and dest must end with / to copy contents of one folder
-            # into another, isntead of copying the source folder into the
-            # destination as a new folder there.
-            # In os.path.join, the '' ensures a trailing /
-            cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), os.path.join(config.TRACKDIR, self.name, '')]
-            subprocess.check_output(cmd)
+        # Both source and dest must end with / to copy contents of one folder
+        # into another, isntead of copying the source folder into the
+        # destination as a new folder there.
+        # In os.path.join, the '' ensures a trailing /
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), os.path.join(config.TRACKDIR, self.name, '')]
+        subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
-            cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name, '')]  # '' to ensure trailing /
-            subprocess.check_output(cmd)
-
-            return "Sync successful."
-
-        except subprocess.CalledProcessError as e:
-            return "Sync failed.\n%s" % str(e)
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name, '')]  # '' to ensure trailing /
+        subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
     @property
     def rpc(self):
