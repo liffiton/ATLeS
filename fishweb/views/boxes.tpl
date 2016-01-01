@@ -83,7 +83,11 @@ $(function() {
       txt.text("Syncing...")
       icon.addClass("rotatey");
       
-      $.post("/sync/{{box}}").always(function() {
+      $.post("/sync/{{box}}")
+      .fail(function(jqXHR, textStatus, errorThrown) {
+        show_alert('#alertModal', 'Sync Failed', errorThrown);
+      })
+      .always(function() {
         btn.attr("disabled", false);
         txt.text("Sync Data");
         icon.removeClass("rotatey");
