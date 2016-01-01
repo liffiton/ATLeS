@@ -103,6 +103,9 @@ def main():
             stdout=log,
             stderr=log
         )
+        # For python-daemon >= 2.1.0
+        context.initgroups = False
+
         with context:
             run_remote()
 
