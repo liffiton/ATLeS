@@ -85,7 +85,7 @@ $(function() {
       
       $.post("/sync/{{box}}")
       .fail(function(jqXHR, textStatus, errorThrown) {
-        show_alert('#alertModal', 'Sync Failed', errorThrown);
+        show_alert('#alertModal', 'Sync Failed', errorThrown + "\n" + jqXHR.responseText);
       })
       .always(function() {
         btn.attr("disabled", false);

@@ -90,7 +90,13 @@ def post_sync_data(tgtbox=None, boxes=None):
     except ManagerError:
         return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
 
-    return box.sync_data()
+    try:
+        return box.sync_data()
+    except Exception as e:
+        # For this one, pass back the full error to the client.
+        # Not using abort() because we don't want to return a formatted page here.
+        response.status = 500
+        return str(e)
 
 
 @route('/image/<tgtbox>')

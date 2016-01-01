@@ -42,6 +42,8 @@
           <h4 class="modal-title" id="alertModalLabel">Alert</h4>
         </div>
         <div class="modal-body">
+          <pre>
+          </pre>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
