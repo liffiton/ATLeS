@@ -92,6 +92,10 @@ def run_remote():
 
 
 def main():
+    if len(sys.argv) > 1:
+        # run without going to background/daemonizing
+        run_remote()
+
     print("Switching to background daemon.")
     logfile = os.path.join(
         os.getcwd(),
