@@ -46,6 +46,9 @@ if __name__ == '__main__':
     # set app config
     app.config['fishweb.local'] = args.local
 
+    # setup error handlers
+    bottle.load("fishweb.error_handlers")
+
     # load modules with controllers / routes
     bottle.load("fishweb.controller_static")
     bottle.load("fishweb.controller_archive")

@@ -329,7 +329,7 @@ function load_form_data() {
 // alert modal
 function show_alert(modal_id, title, contents) {
     var modal = $(modal_id);
-    modal.find('.modal-title').text('Alert: ' + title);
-    modal.find('.modal-body pre').html(contents);
+    modal.find('.modal-title').text(title);
+    modal.find('.modal-body').html(contents);
     modal.modal();
 }

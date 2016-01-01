@@ -1,7 +1,7 @@
 import glob
 import platform
 import re
-from bottle import post, redirect, request, response, route, template, HTTPError
+from bottle import abort, post, redirect, request, response, route, template
 from wtforms import Form, BooleanField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 import config
@@ -10,10 +10,6 @@ from fishweb import expmanage
 
 def _inis():
     return sorted(glob.glob(config.INIDIR + "*.ini"))
-
-
-class ManagerError(Exception):
-    pass
 
 
 def _get_box(tgtbox, boxes):
@@ -25,23 +21,18 @@ def _get_box(tgtbox, boxes):
         # use the module directly
         return expmanage
     else:
-        # use the module via RPC
         if tgtbox not in boxes:
-            raise ManagerError("Box %s not registered." % tgtbox)
+            abort(400, "Box %s not registered." % tgtbox)
         if boxes[tgtbox].status != "connected":
-            raise ManagerError("Box %s not connected." % tgtbox)
-
+            abort(400, "Box %s not currently connected." % tgtbox)
+        # use the module via RPC
         return boxes[tgtbox]
 
 
 @route('/lock_data/')
 @route('/lock_data/<tgtbox>')
 def get_lock_data(tgtbox=None, boxes=None):
-    try:
-        box = _get_box(tgtbox, boxes)
-    except ManagerError as e:
-        # invalid box - report it as a 404
-        raise HTTPError(status=404, body=e.message)
+    box = _get_box(tgtbox, boxes)
 
     # RPyC doesn't return a real dict, and JSON won't serialize it,
     # so we make it a real dict.
@@ -74,10 +65,7 @@ def index(boxes=None):
 
 @route('/new/<tgtbox>')
 def new_experiment_box(tgtbox, boxes=None):
-    try:
-        box = _get_box(tgtbox, boxes)
-    except ManagerError:
-        return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
+    box = _get_box(tgtbox, boxes)
 
     form = NewExperimentForm()
     return template('new', dict(form=form, lock_exists=box.lock_exists(), box=tgtbox))
@@ -85,26 +73,18 @@ def new_experiment_box(tgtbox, boxes=None):
 
 @post('/sync/<tgtbox>')
 def post_sync_data(tgtbox=None, boxes=None):
-    try:
-        box = _get_box(tgtbox, boxes)
-    except ManagerError:
-        return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
+    box = _get_box(tgtbox, boxes)
 
     try:
         return box.sync_data()
     except Exception as e:
         # For this one, pass back the full error to the client.
-        # Not using abort() because we don't want to return a formatted page here.
-        response.status = 500
-        return str(e)
+        abort(500, str(e))
 
 
 @route('/image/<tgtbox>')
 def get_image(tgtbox=None, boxes=None):
-    try:
-        box = _get_box(tgtbox, boxes)
-    except ManagerError:
-        return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
+    box = _get_box(tgtbox, boxes)
 
     imgdata = box.get_image()
     response.set_header('Content-type', 'image/jpeg')
@@ -114,20 +94,14 @@ def get_image(tgtbox=None, boxes=None):
 @post('/clear_experiment/')
 @post('/clear_experiment/<tgtbox>')
 def post_clear_experiment(tgtbox=None, boxes=None):
-    try:
-        box = _get_box(tgtbox, boxes)
-    except ManagerError:
-        return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
+    box = _get_box(tgtbox, boxes)
 
     box.kill_experiment()
 
 
 @post('/new/<tgtbox>')
 def post_new(tgtbox=None, boxes=None):
-    try:
-        box = _get_box(tgtbox, boxes)
-    except ManagerError:
-        return template('error', errormsg="The specified box (%s) is not a valid choice.  Please go back and choose another." % tgtbox)
+    box = _get_box(tgtbox, boxes)
 
     if box.lock_exists():
         return template('error', errormsg="It looks like an experiment is already running on this box.  Please wait for it to finish before starting another.")
