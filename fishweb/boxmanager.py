@@ -52,11 +52,11 @@ class Box(object):
     def sync_data(self):
         ''' Copy/sync track data from this box to the local track directory.'''
         if self.status != "connected":
-            return
+            return "Sync failed.\nNot connected."
 
         if self.local:
             # data is already local; no need to sync
-            return
+            return "Data is local.\nSync not needed."
 
         try:
             # Copy remote files into an archive dir, then have rsync
