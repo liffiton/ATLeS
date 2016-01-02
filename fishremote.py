@@ -1,8 +1,10 @@
+#!/usr/bin/env python
+
 import atexit
-import daemon
 import getpass
 import os
 import platform
+import signal
 import socket
 import sys
 import threading
@@ -44,12 +46,19 @@ def module2service(module):
     return _serviceclass
 
 
-def run_remote():
+def term_handler():
+    sys.exit(1)
+
+
+def main():
+    # catch SIGTERM (e.g., from start-stop-daemon)
+    signal.signal(signal.SIGTERM, term_handler)
+
     # make expmanage RPyC-able
     service = module2service(expmanage)
     # and RPyC it
     try:
-        server = ThreadedServer(service, hostname='localhost', port=port, protocol_config={"allow_public_attrs":True})
+        server = ThreadedServer(service, hostname='localhost', port=port, protocol_config={"allow_public_attrs": True})
     except socket.error as e:
         print("Error opening socket.  fishremote may already be running.")
         print(e)
@@ -89,29 +98,6 @@ def run_remote():
         # call a blocking C function (thus blocking the signal handler).
         # However, infinity works.
         serverthread.join(float('inf'))
-
-
-def main():
-    if len(sys.argv) > 1:
-        # run without going to background/daemonizing
-        run_remote()
-
-    print("Switching to background daemon.")
-    logfile = os.path.join(
-        os.getcwd(),
-        "remote.log"
-    )
-    with open(logfile, 'w+') as log:
-        context = daemon.DaemonContext(
-            working_directory=os.getcwd(),
-            stdout=log,
-            stderr=log
-        )
-        # For python-daemon >= 2.1.0
-        context.initgroups = False
-
-        with context:
-            run_remote()
 
 
 if __name__ == '__main__':

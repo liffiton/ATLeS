@@ -19,7 +19,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-remote_cmd="cd fishycam; python fishremote.py"
+remote_cmd="sudo ~/fishycam/install/install_fishremote_service.sh ~/fishycam/ && sudo service fishremote start"
 cmd="ssh pi@$hostname"
 $cmd $remote_cmd
 
