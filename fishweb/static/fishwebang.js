@@ -11,11 +11,11 @@ angular.module('boxesApp', ['ngRoute', 'ngResource'])
   function($resource) {
     return $resource('/boxes/', {}, { query: {method: 'GET', params: {}, isArray: false} });
 }])
-.controller('BoxesCtrl', ['$scope', '$interval', 'BoxesService',
-  function($scope, $interval, BoxesService) {
+.controller('BoxesCtrl', ['$scope', '$interval', 'toArrayFilter', 'BoxesService',
+  function($scope, $interval, toArrayFilter, BoxesService) {
     $scope.boxes = true;  // give ng-show something to go on until boxes is an array
     $interval(function() {
-      BoxesService.query({}, function(data) { $scope.boxes = data.toJSON(); });  // toJSON to strip $promise and $resolved so toArray works
+      BoxesService.query({}, function(data) { $scope.boxes = toArrayFilter(data.toJSON()); });  // toJSON to strip $promise and $resolved so toArray works
     }, 2000);
 }])
 .filter('toArray', function () {

@@ -26,7 +26,6 @@ class Box(object):
         self.archivedir = os.path.join(self.appdir, config.ARCHIVEDIR)
         self.dbgframedir = os.path.join(self.appdir, config.DBGFRAMEDIR)
 
-        self.connected = False
         self.local = None  # True if box is actually the local machine
 
         self._tunnel = None  # SSH tunnel instance
@@ -40,7 +39,9 @@ class Box(object):
             'user': self.user,
             'connected': self.connected,
             'local': self.local,
-            'lock_data': dict(self.lock_data())  # called via RPC, doesn't return a real dict, so dict() to make it "real"
+            # called via RPC, lock_data() doesn't return a real dict,
+            # so pass it to dict() to make it "real"
+            'lock_data': dict(self.lock_data()) if self.connected else dict()
         }
 
     def connect(self):
@@ -51,10 +52,8 @@ class Box(object):
             self._rpc = rpyc.ssh_connect(self._tunnel, self.port)
         else:
             self._rpc = rpyc.connect("localhost", self.port)
-        self.connected = True
 
     def down(self):
-        self.connected = False
         if self._rpc:
             self._rpc.close()
         if self._tunnel:
@@ -88,22 +87,22 @@ class Box(object):
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
     @property
+    def connected(self):
+        return self._rpc and not self._rpc.closed
+
+    @property
     def rpc(self):
-        if self._rpc:
-            # check for closed connection
-            if self._rpc.closed:
-                self.down()
-                return None
+        if self.connected:
             return self._rpc.root
         else:
             return None
 
     def __getattr__(self, name):
-        '''Return something from self._rpc.root if it wasn't found in this
-        object directly.  Lets use use one object namespace to access both
-        "local" methods like sync_data() and remote RPC methods.'''
-        if hasattr(self._rpc.root, name):
-            return getattr(self._rpc.root, name)
+        '''Return something from self.rpc if it wasn't found in this object
+        directly.  Lets use use one object namespace to access both "local"
+        methods like sync_data() and remote RPC methods.'''
+        if self.connected and hasattr(self.rpc, name):
+            return getattr(self.rpc, name)
         else:
             # default behavior
             raise AttributeError
@@ -139,7 +138,6 @@ class BoxManager(object):
         print("Service %s removed" % name)
         boxname = name.split('.')[0]
         with self._boxlock:
-            #del self._boxes[boxname]
             self._boxes[boxname].down()
 
     def get_boxes(self):
