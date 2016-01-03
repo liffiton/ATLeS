@@ -1,0 +1,54 @@
+  <h1>Boxes</h1>
+
+  <div class="row">
+    <div class="col-sm-6 col-sm-offset-1 text-muted" ng-show="!boxes">
+      <p>No boxes currently connected.  When <code>fishremote.py</code> is run on a box, it will appear here.</p>
+    </div>
+
+    <div class="col-lg-3 col-sm-4" ng-repeat="box in boxes">
+      <div class="panel" ng-class="{'panel-success': box.connected, 'panel-danger': !box.connected}">
+        <div class="panel-heading">
+          <h2 class="panel-title" style="font-size: x-large">{{box.name}}</h2>
+          {{box.status}}
+        </div>
+        <div class="panel-body" ng-show="box.connected">
+          <div class="exp_progress_box alert alert-info small" ng-show="box.lock_data.running" my-progress-bar>
+            <button type="button" class="btn btn-danger btn-xs pull-right" title="Kill experiment" my-clear-button="{{box.name}}">
+              <span class="glyphicon glyphicon-remove"></span>
+            </button>
+            <strong>Experiment running</strong> since&nbsp;{{box.lock_data.starttimestr}}.
+            <div class="progress" style="width: 90%;">
+              <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{box.lock_data | barwidth}};">
+                <span class="pull-right" id="rem_in">{{box.lock_data | remaining:'in'}}</span>
+              </div>
+              <span class="pull-right" id="rem_out">{{box.lock_data | remaining:'out'}}</span>
+            </div>
+          </div>
+          <div ng-show="!box.lock_data.running">
+            <p>
+              <a href="/new/{{box.name}}" class="btn btn-success" role="button">
+                <span class="glyphicon glyphicon-plus-sign"></span>
+                New Experiment
+              </a>
+            </p>
+            <p ng-show="!box.local">
+              <button type="button" class="btn btn-default" role="button" my-sync-button="{{box.name}}">
+                <span class="glyphicon glyphicon-refresh"></span>
+                <span class="btntxt">
+                  Sync Data
+                </span>
+              </button>
+            </p>
+            <p>
+              <a href="/image/{{box.name}}" class="btn btn-default" role="button">
+                <span class="glyphicon glyphicon-camera"></span>
+                <span class="btntxt">
+                  Get Image
+                </span>
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

@@ -28,9 +28,8 @@ function filter_rows(value) {
   update_selection();
 }
 
-function updateProgress(data, progress_id) {
-  progdiv = $(progress_id)
-  $("#exp_run_since", progdiv).text(data["starttimestr"]);
+function updateProgress(data, progdiv) {
+  progdiv.find("#exp_run_since").text(data.starttimestr);
 
   var start = parseInt(data["starttime"])*1000;
   var runtime = parseInt(data["runtime"])*1000;
@@ -40,7 +39,7 @@ function updateProgress(data, progress_id) {
   var millis_remaining = (startdate.getTime() + runtime) - curdate.getTime();
 
   var barwidth = Math.min(100, 100 * millis_gone / runtime);
-  $("#exp_progressbar", progdiv).width(barwidth + "%");
+  progdiv.find(".progress-bar").width(barwidth + "%");
 
   if (millis_remaining < 60*1000) {
     var sec_remaining = Math.round(millis_remaining / 1000);
@@ -51,12 +50,12 @@ function updateProgress(data, progress_id) {
     var remtext = min_remaining + " min remaining";
   }
   if (barwidth < 50) {
-    $("#rem_in", progdiv).html("");
-    $("#rem_out", progdiv).html(remtext);
+    progdiv.find("#rem_in").html("");
+    progdiv.find("#rem_out").html(remtext);
   }
   else {
-    $("#rem_in", progdiv).html(remtext);
-    $("#rem_out", progdiv).html("");
+    progdiv.find("#rem_in").html(remtext);
+    progdiv.find("#rem_out").html("");
   }
 }
 
@@ -65,14 +64,14 @@ function checkProgress(boxname, progress_id, new_id) {
   if (typeof(progress_id)==='undefined') progress_id = "#exp_progress"
   if (typeof(new_id)==='undefined') new_id = "#exp_new"
   $.get('/lock_data/' + boxname).done(function(data) {
-    if ($.isEmptyObject(data)) {
-      $(progress_id).hide();
-      $(new_id).show();
-    }
-    else {
-      updateProgress(data, progress_id);
+    if (data['running']) {
+      updateProgress(data, $(progress_id));
       $(progress_id).show();
       $(new_id).hide();
+    }
+    else {
+      $(progress_id).hide();
+      $(new_id).show();
     }
   }).always(function() {
     window.setTimeout(checkProgress, 2000, boxname, progress_id, new_id);

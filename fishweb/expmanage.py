@@ -22,11 +22,12 @@ def lock_exists():
 
 def lock_data():
     if not lock_exists():
-        return {}
+        return {'running': False}
 
     with open(config.LOCKFILE, 'r') as f:
         pid, starttime, runtime = (int(line) for line in f)
-        return {'pid': pid,
+        return {'running': True,
+                'pid': pid,
                 'starttimestr': time.strftime("%X", time.localtime(starttime)),
                 'starttime': starttime,
                 'runtime': runtime
@@ -95,10 +96,14 @@ def pid_exists(pid):
 
 
 def cond_sudo_kill(pid, signal):
-    # Signal a process, using sudo, if the process exists/is running.
+    # Signal a process, using sudo if needed, if the process exists/is running.
     if pid_exists(pid):
-        #os.kill(pid, signal)
-        subprocess.Popen(['sudo', 'kill', '-%d' % signal, '%d' % pid])
+        try:
+            os.kill(pid, signal)
+        except OSError:
+            # Likely lacking permission due to process running as root,
+            # so use sudo.
+            subprocess.Popen(['sudo', 'kill', '-%d' % signal, '%d' % pid])
 
 
 def kill_experiment():

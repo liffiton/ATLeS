@@ -14,7 +14,7 @@ import utils
 
 
 class Box(object):
-    def __init__(self, name, ip, port, appdir, user="pi", status="initializing"):
+    def __init__(self, name, ip, port, appdir, user="pi"):
         self.name = name   # name of remote box
         self.ip = ip       # IP address
         self.port = port   # port on which fishremote.py is accepting connections
@@ -26,11 +26,22 @@ class Box(object):
         self.archivedir = os.path.join(self.appdir, config.ARCHIVEDIR)
         self.dbgframedir = os.path.join(self.appdir, config.DBGFRAMEDIR)
 
-        self.status = status
+        self.connected = False
         self.local = None  # True if box is actually the local machine
 
         self._tunnel = None  # SSH tunnel instance
         self._rpc = None     # RPC connection instance
+
+    def as_dict(self):
+        return {
+            'name': self.name,
+            'ip': self.ip,
+            'port': self.port,
+            'user': self.user,
+            'connected': self.connected,
+            'local': self.local,
+            'lock_data': dict(self.lock_data())  # called via RPC, doesn't return a real dict, so dict() to make it "real"
+        }
 
     def connect(self):
         self.local = (self.ip == utils.get_routed_ip())
@@ -40,10 +51,10 @@ class Box(object):
             self._rpc = rpyc.ssh_connect(self._tunnel, self.port)
         else:
             self._rpc = rpyc.connect("localhost", self.port)
-        self.status = "connected"
+        self.connected = True
 
     def down(self):
-        self.status = "down"
+        self.connected = False
         if self._rpc:
             self._rpc.close()
         if self._tunnel:
@@ -51,7 +62,7 @@ class Box(object):
 
     def sync_data(self):
         ''' Copy/sync track data from this box to the local track directory.'''
-        assert self.status == "connected"
+        assert self.connected
 
         # If data is already local, no need to sync
         assert not self.local

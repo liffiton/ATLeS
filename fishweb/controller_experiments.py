@@ -23,10 +23,15 @@ def _get_box(tgtbox, boxes):
     else:
         if tgtbox not in boxes:
             abort(400, "Box %s not registered." % tgtbox)
-        if boxes[tgtbox].status != "connected":
+        if not boxes[tgtbox].connected:
             abort(400, "Box %s not currently connected." % tgtbox)
         # use the module via RPC
         return boxes[tgtbox]
+
+
+@route('/boxes')
+def get_boxes(boxes):
+    return {name: box.as_dict() for name, box in boxes.items()}
 
 
 @route('/lock_data/')

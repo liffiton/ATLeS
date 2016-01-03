@@ -6,7 +6,6 @@ div.my-header {
 div.exp_progress_box {
   padding: 0.5em;
   margin-bottom: 0.5em;
-  display: none;  /* hidden by default */
 }
 tr.undo_row {
   display: none;  /* default, will be overridden to display */
