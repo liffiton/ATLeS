@@ -15,9 +15,18 @@ angular.module('boxesApp', ['ngRoute', 'ngResource'])
   function($scope, $interval, BoxesService) {
     $scope.boxes = true;  // give ng-show something to go on until boxes is an array
     $interval(function() {
-      BoxesService.query({}, function(data) { $scope.boxes = data; });
+      BoxesService.query({}, function(data) { $scope.boxes = data.toJSON(); });  // toJSON to strip $promise and $resolved so toArray works
     }, 2000);
 }])
+.filter('toArray', function () {
+  // based on https://github.com/petebacondarwin/angular-toArrayFilter/
+  return function (obj) {
+    if (!angular.isObject(obj)) return obj;
+    return Object.keys(obj).map(function(key) {
+      return obj[key];
+    });
+  };
+})
 .filter('barwidth', function() {
   return function(lock_data) {
     var start = parseInt(lock_data.starttime)*1000;

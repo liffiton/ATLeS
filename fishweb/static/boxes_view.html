@@ -5,7 +5,7 @@
       <p>No boxes currently connected.  When <code>fishremote.py</code> is run on a box, it will appear here.</p>
     </div>
 
-    <div class="col-lg-3 col-sm-4" ng-repeat="box in boxes">
+    <div class="col-lg-3 col-sm-4" ng-repeat="box in boxes | toArray | orderBy:'name'">
       <div class="panel" ng-class="{'panel-success': box.connected, 'panel-danger': !box.connected}">
         <div class="panel-heading">
           <h2 class="panel-title" style="font-size: x-large">{{box.name}}</h2>
