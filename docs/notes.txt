@@ -1,19 +1,11 @@
-
-"Production" RPi 2 B+ [in lab]:
- - box1: 10.2.53.44
- - box2: 10.2.52.47
-"Dev" RPi 2 B+ (pi3):
- - 10.2.6.248  [in Mark's office]
+"Dev" RPi 2 B+:
+ - 10.2.7.48  [in Mark's office]
 
 fishhead: 10.2.6.44
 
 
 To run main web interface:
   sudo python fishweb.py --daemon
-
-
-fishhead
-boxofish
 
 
 Fish tank measurements:
