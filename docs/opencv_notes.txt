@@ -20,14 +20,12 @@ Packages that need to be installed in addition to the defaults.  [There may be s
   libavcodec-dev
   libavformat-dev
   libswscale-dev
-  libjpeg8-dev
   libpng12-dev
-  libtiff-dev
   libjasper-dev
+  libtiff-dev
 
 To install these:
-  $ sudo apt-get install cmake libgtk2.0-dev python-dev libavcodec-dev libavformat-dev libswscale-dev libjpeg8-dev libpng12-dev libtiff-dev libjasper-dev
-
+  $ sudo apt-get install cmake libgtk2.0-dev python-dev libavcodec-dev libavformat-dev libswscale-dev libpng12-dev libjasper-dev libtiff-dev
 
 Download OpenCV
 ---------------
