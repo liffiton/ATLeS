@@ -1,11 +1,6 @@
 import argparse
 import os
 
-# 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
-## Import gevent and monkey-patch before importing bottle.
-#from gevent import monkey
-#monkey.patch_all()
-
 import bottle
 
 import config
@@ -70,10 +65,6 @@ if __name__ == '__main__':
                 stderr=log
             )
             with context:
-                # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
-                #app.run(host=host, port=8080, server='gevent', debug=False, reloader=False)
-                # add our boxmanager plugin if not running locally
-                # must be done after forking
                 if not args.local:
                     boxmanager = boxmanager.BoxManagerPlugin()
                     app.install(boxmanager)
@@ -86,6 +77,4 @@ if __name__ == '__main__':
             boxmanager = boxmanager.BoxManagerPlugin()
             app.install(boxmanager)
 
-        # 2014-12-23: For now, not using gevent, as it appears to conflict with python-daemon
-        #app.run(host=host, port=8080, server='gevent', debug=args.testing, reloader=True)
-        app.run(host=host, port=8080, debug=args.testing, reloader=True)
+        app.run(server='cherrypy', host=host, port=8080, debug=args.testing, reloader=args.testing)

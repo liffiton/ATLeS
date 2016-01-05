@@ -13,10 +13,12 @@ angular.module('boxesApp', ['ngRoute', 'ngResource'])
 }])
 .controller('BoxesCtrl', ['$scope', '$interval', 'toArrayFilter', 'BoxesService',
   function($scope, $interval, toArrayFilter, BoxesService) {
-    $scope.boxes = true;  // give ng-show something to go on until boxes is an array
-    $interval(function() {
+    $scope.boxes = null;  // give ng-show something to go on until boxes is an array
+    function update() {
       BoxesService.query({}, function(data) { $scope.boxes = toArrayFilter(data.toJSON()); });  // toJSON to strip $promise and $resolved so toArray works
-    }, 2000);
+    };
+    $interval(update, 2000);
+    update(); // call once to start
 }])
 .filter('toArray', function () {
   // based on https://github.com/petebacondarwin/angular-toArrayFilter/
