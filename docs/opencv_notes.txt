@@ -30,14 +30,17 @@ To install these:
 Download OpenCV
 ---------------
 
-FishyCam currently works with the latest version of OpenCV 2.4 (2.4.11 as of this writing).
-Download it from http://opencv.org/downloads.html and extract it into its own directory.
+FishyCam currently works with the latest version of OpenCV 2.4 (2.4.12 as of
+this writing).  WARNING: OpenCV will fail to compile in Raspbian Jessie with
+2.4.11 or earlier.  To download the latest 2.4.x release, go to
+https://github.com/Itseez/opencv/releases, download the most recent 2.4.x
+archive, and extract it into its own directory.
 
 
 Modifying OpenCV
 ----------------
 
-OpenCV 2.4.10 does not allow the capture size to be modified when capturing via V4L.  The modifications suggested here correct this:
+OpenCV 2.4.x does not allow the capture size to be modified when capturing via V4L.  The modifications suggested here correct this:
   http://www.raspberrypi.org/forums/viewtopic.php?f=43&t=62364&start=322
 
 To make these modifications, apply the patch (found in the same directory as these notes):

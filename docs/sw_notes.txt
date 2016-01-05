@@ -4,7 +4,7 @@ FishyCam on the Raspberry Pi
 OS Setup
 --------
 
-Using the provided image [TODO]:
+Using the provided image:
   * Log in with username 'pi', default password 'fishypi'.
 
 [TODO: Issues w/ current build]
@@ -68,7 +68,15 @@ To install matplotlib, we have to work around an issue with pip.  'pip install m
 Runtime dependencies
 --------------------
 
-First, both the camera and i2c need to be enabled using raspi-config.  Run
+Additional packages required to run the fishbox/fishremote software:
+
+  rsync
+
+Install with:
+
+  sudo apt-get install rsync
+
+Both the camera and i2c need to be enabled using raspi-config.  Run
 'sudo raspi-config' and enable both (i2c is under "advanced options").
 
 To use the camera via v4l, the bcm2835-v4l2 module must be loaded.
