@@ -26,6 +26,7 @@ class Box(object):
         self.archivedir = os.path.join(self.appdir, config.ARCHIVEDIR)
         self.dbgframedir = os.path.join(self.appdir, config.DBGFRAMEDIR)
 
+        self.error = None  # Internal error message, if any
         self.local = None  # True if box is actually the local machine
 
         self._tunnel = None  # SSH tunnel instance
@@ -39,17 +40,27 @@ class Box(object):
             'user': self.user,
             'connected': self.connected,
             'local': self.local,
+            'error': self.error,
             # called via RPC, lock_data() doesn't return a real dict,
             # so pass it to dict() to make it "real"
             'lock_data': dict(self.lock_data()) if self.connected else dict()
         }
 
     def connect(self):
+        self.error = None
         self.local = (self.ip == utils.get_routed_ip())
         if not self.local:
             # only connect if it's a separate machine
-            self._tunnel = plumbum.SshMachine(self.ip, user=self.user)
+            try:
+                # -oBatchMode=yes to disable password auth and just fail if key auth fails
+                self._tunnel = plumbum.SshMachine(self.ip, user=self.user, ssh_opts=['-oBatchMode=yes'])
+            except (plumbum.machines.session.SSHCommsChannel2Error, plumbum.machines.session.SSHCommsError):
+                self.error = "SSH connection failure"
+                self._tunnel = None
+                return
+
             self._rpc = rpyc.ssh_connect(self._tunnel, self.port)
+
         else:
             self._rpc = rpyc.connect("localhost", self.port)
 
