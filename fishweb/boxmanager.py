@@ -69,6 +69,7 @@ class Box(object):
             self._rpc.close()
         if self._tunnel:
             self._tunnel.close()
+        self.error = None
 
     def sync_data(self):
         ''' Copy/sync track data from this box to the local track directory.'''
