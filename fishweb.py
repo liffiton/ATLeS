@@ -25,7 +25,8 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    host = 'localhost' if args.testing else '0.0.0.0'
+    #host = 'localhost' if args.testing else '0.0.0.0'
+    host = '0.0.0.0'
 
     # Create needed directories if not already there
     utils.mkdir(config.PLOTDIR)
