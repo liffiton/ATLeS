@@ -116,7 +116,7 @@ class StimulusLightBar(object):
             raise NotRootError("%s must be run with sudo." % sys.argv[0])
 
         wiringpi2.wiringPiSetupGpio()
-        wiringpi2.pinMode(18,2)  # enable PWM mode on pin 18
+        wiringpi2.pinMode(_LIGHT_PWM_PIN, 2)  # enable PWM mode on lightbar pin
 
         self._light_nostim()
 
