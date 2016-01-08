@@ -91,17 +91,23 @@ class DummyStimulus(StimulusBase):
 
 
 class LightBarStimulus(ThreadedStimulus):
-    def __init__(self, freq_Hz):
-        '''Initialize as a ThreadedStimulus with StimulusLightBar helper, passed kwarg for freq_Hz'''
-        super(LightBarStimulus, self).__init__(StimulusLightBar, freq_Hz)
+    def __init__(self, freq_Hz, nostim_level=_AMBIENT_LIGHT_PWM):
+        '''Initialize as a ThreadedStimulus with StimulusLightBar helper, passed kwarg for freq_Hz and nostim_level.  freq_Hz=0 means the light bar will be on for as long as the stimulus is active.'''
+        super(LightBarStimulus, self).__init__(StimulusLightBar, freq_Hz, nostim_level)
 
 
 class StimulusLightBar(object):
     '''Stimulus in the form of flashing the visible light LED bar at a given frequency.'''
-    def __init__(self, freq_Hz):
+    def __init__(self, freq_Hz, nostim_level):
         self._active = False   # is flashing activated?
         self._on = False       # is light bar on?
-        self._interval = 1.0 / freq_Hz / 2  # half of the period
+        if freq_Hz == 0:
+            self._interval = None  # infinite wait in poll()
+        else:
+            self._interval = 1.0 / freq_Hz / 2  # half of the period
+
+        self._nostim_level = nostim_level  # PWM value for light level when stimulus not active
+
         self._lightval = None  # stores current PWM value to avoid extraneous pwmWrites
 
         # must be root to access GPIO, and wiringpi itself crashes in a way that
@@ -112,7 +118,8 @@ class StimulusLightBar(object):
         wiringpi2.wiringPiSetupGpio()
         wiringpi2.pinMode(18,2)  # enable PWM mode on pin 18
 
-        self._light_ambient()
+        self._light_nostim()
+
         atexit.register(self._light_off)
 
     def _set_light(self, val):
@@ -126,8 +133,8 @@ class StimulusLightBar(object):
     def _light_on(self):
         self._set_light(1023)
 
-    def _light_ambient(self):
-        self._set_light(_AMBIENT_LIGHT_PWM)
+    def _light_nostim(self):
+        self._set_light(self._nostim_level)
 
     def _handle_command(self, cmd):
         if cmd:
@@ -139,13 +146,16 @@ class StimulusLightBar(object):
     def _update(self):
         if self._active:
             # toggle
-            self._on = not self._on
+            if self._interval is None:
+                self._on = True
+            else:
+                self._on = not self._on
             if self._on:
                 self._light_on()
             else:
                 self._light_off()
         else:
-            self._light_ambient()
+            self._light_nostim()
 
     def begin(self):
         pass
