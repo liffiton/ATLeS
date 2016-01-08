@@ -248,11 +248,22 @@ class Grapher(object):
         return count, total_time, total_dist
 
     @staticmethod
-    def _speed2color(speed, median_speed):
-        cutoff = median_speed*5
-        r = max(0,min(1, 0.8+speed/cutoff))
-        g = min(1,max(0, 0.8-speed/cutoff))
-        b = g
+    def _speed2color(speed):
+        # setup ranges, where 0 maps to first number, 1.0 maps to second
+        color_ranges = {
+            'r': (0.8, 1.0),
+            'g': (0.8, 0.0),
+            'b': (0.8, 0.0)
+        }
+
+        def scale(inval, color):
+            range = color_ranges[color]
+            scaled = range[0] + (range[1] - range[0]) * inval
+            return min(1, max(0, scaled))  # constrain to 0-1
+
+        r = scale(speed, 'r')
+        g = scale(speed, 'g')
+        b = scale(speed, 'b')
         return (r,g,b, 0.5)
 
     def plot(self):
@@ -446,8 +457,8 @@ class Grapher(object):
         ax.quiver(
             time, [0] * len(time),
             speed*np.cos(theta), speed*np.sin(theta),
-            color=[self._speed2color(s, median_speed) for s in speed],
-            scale=median_speed*4,
+            color=[self._speed2color(s) for s in speed],
+            scale=1,  # scale all to a speed of 1, which should be close to max (tank is 1.0x1.0)
             scale_units='y',
             width=0.01,
             units='inches',
