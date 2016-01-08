@@ -22,9 +22,10 @@ def _relative_move(srcroot, srcrel, destroot):
     '''
     srcrelpath, srcrelfile = os.path.split(srcrel)
     destpath = os.path.join(destroot, srcrelpath)
-    utils.mkdir(destpath)
+    destfile = os.path.join(destroot, srcrel)
     srcfile = os.path.join(srcroot, srcrel)
-    shutil.move(srcfile, destpath)
+    utils.mkdir(destpath)
+    shutil.move(srcfile, destfile)
 
 
 @post('/archive/')
