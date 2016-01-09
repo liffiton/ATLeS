@@ -14,8 +14,9 @@ import zeroconf
 
 from rpyc.utils.server import ThreadedServer
 
-from fishweb import expmanage
+import config
 import utils
+from fishweb import expmanage
 
 
 boxname = platform.node()
@@ -53,6 +54,12 @@ def term_handler():
 def main():
     # catch SIGTERM (e.g., from start-stop-daemon)
     signal.signal(signal.SIGTERM, term_handler)
+
+    # Create needed directories if not already there
+    utils.mkdir(config.PLOTDIR)
+    utils.mkdir(config.TRACKDIR)
+    utils.mkdir(config.DBGFRAMEDIR)
+    utils.mkdir(config.ARCHIVEDIR)
 
     # make expmanage RPyC-able
     service = module2service(expmanage)
