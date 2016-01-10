@@ -33,10 +33,13 @@
               </a>
             </p>
             <p ng-show="!box.local">
-              <button type="button" class="btn btn-default" role="button" my-sync-button="{{box.name}}">
-                <span class="glyphicon glyphicon-refresh"></span>
-                <span class="btntxt">
+              <button type="button" class="btn btn-default" role="button" my-sync-button="{{box.name}}" ng-disabled="syncing.has(box.name)">
+                <span class="glyphicon glyphicon-refresh" ng-class="{'rotatey': syncing.has(box.name)}"></span>
+                <span class="btntxt" ng-if="!syncing.has(box.name)">
                   Sync Data
+                </span>
+                <span class="btntxt" ng-if="syncing.has(box.name)">
+                  Syncing...
                 </span>
               </button>
             </p>

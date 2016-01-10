@@ -14,6 +14,7 @@ angular.module('boxesApp', ['ngRoute', 'ngResource'])
 .controller('BoxesCtrl', ['$scope', '$interval', 'toArrayFilter', 'BoxesService',
   function($scope, $interval, toArrayFilter, BoxesService) {
     $scope.boxes = null;  // give ng-show something to go on until boxes is an array
+    $scope.syncing = new Set();  // maintained outside of boxes so it persists
     function update() {
       BoxesService.query({}, function(data) { $scope.boxes = toArrayFilter(data.toJSON()); });  // toJSON to strip $promise and $resolved so toArray works
     };
@@ -87,30 +88,27 @@ angular.module('boxesApp', ['ngRoute', 'ngResource'])
   return {
     restrict: 'A',
     link: function(scope, element, attrs, ngModel) {
+      var boxname = attrs.mySyncButton;
 
       function do_sync() {
-        var btn = element;
-        var txt = btn.find(".btntxt");
-        var icon = btn.find(".glyphicon-refresh");
-
-        btn.attr("disabled", true);
-        txt.text("Syncing...")
-        icon.addClass("rotatey");
+        scope.syncing.add(boxname);
 
         $http.post(
-          "/sync/" + attrs.mySyncButton,
+          "/sync/" + boxname,
           ""
         ).then(
           function success(response) { },
           function error(response) {
+            if (response.status == -1 && response.data === null) {
+              // likely caused by navigating away from page; ignore.
+              return;
+            }
             show_alert('#alertModal', 'Sync Failed', response.data);
           }
-        ).finally(function() {
-          btn.attr("disabled", false);
-          txt.text("Sync Data");
-          icon.removeClass("rotatey");
+        ).then(function() {
+          scope.syncing.delete(boxname);
         });
-          
+
       };
 
       element.on('click', do_sync);
