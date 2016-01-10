@@ -47,7 +47,7 @@ class Box(object):
         }
 
     def connect(self):
-        self.error = None
+        self.error = "connecting..."
         self.local = (self.ip == utils.get_routed_ip())
         if not self.local:
             # only connect if it's a separate machine
@@ -64,11 +64,15 @@ class Box(object):
         else:
             self._rpc = rpyc.connect("localhost", self.port)
 
+        self.error = None
+
     def down(self):
         if self._rpc:
             self._rpc.close()
+            self._rpc = None
         if self._tunnel:
             self._tunnel.close()
+            self._tunnel = None
         self.error = None
 
     def sync_data(self):
@@ -142,7 +146,8 @@ class BoxManager(object):
                         port=info.port,
                         appdir=info.properties['appdir'],
                         user=info.properties['user'])
-        newbox.connect()
+        # connect in a separate thread so we don't have to wait for the connection here
+        threading.Thread(target=newbox.connect).start()
         with self._boxlock:
             self._boxes[boxname] = newbox
 
