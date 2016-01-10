@@ -3,6 +3,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track {{trackrel}}</title>
+    <script src="/static/jquery-2.1.4.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <style type="text/css">
         body {
@@ -12,6 +13,13 @@
             padding: 1em;
         }
     </style>
+    <script type="text/javascript">
+      $(document).keypress(function(e) {
+        if (String.fromCharCode(e.which) == '+') {
+          $("img").css('filter', 'brightness(500%)');
+        }
+      });
+    </script>
 </head>
 <body>
 <div class="container">
