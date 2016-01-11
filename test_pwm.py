@@ -1,4 +1,4 @@
-import wiringpi2 as wiringpi
+from fishbox import wiring
 
 # To work in both Python 2 and 3
 try:
@@ -7,16 +7,17 @@ except NameError:
     pass
 
 
+_PIN = 18
+
+
 def main():
-    wiringpi.wiringPiSetupGpio()
-    wiringpi.pinMode(18,2)  # enable PWM mode on pin 18
     while True:
         newval = input("Enter a new PWM value: ")
         if newval == '':
-	    wiringpi.pwmWrite(18, 0)
+            wiring.pwm(_PIN, 0)
             break
         newval = int(newval)
-        wiringpi.pwmWrite(18, newval)
+        wiring.pwm(_PIN, newval)
 
 
 if __name__ == '__main__':

@@ -7,13 +7,7 @@ import tempfile
 import time
 
 import config
-
-# crude detection of whether we're on a Pi / have to run fishbox as root.
-try:
-    import wiringpi2  # noqa - it's fine that we're importing and not using
-    _wiringpi2_available = True
-except ImportError:
-    _wiringpi2_available = False
+from fishbox import wiring
 
 
 def lock_exists():
@@ -35,17 +29,19 @@ def lock_data():
 
 
 def get_image():
+    wiring.IR_on()
     temp = tempfile.NamedTemporaryFile(suffix=".jpg")
     cmdargs = ['raspistill', '-t', '1', '-awb', 'off', '-ex', 'off', '-ss', '100000', '-o', temp.name]
     subprocess.call(cmdargs)
     with open(temp.name, 'rb') as f:
         data = f.read()
     temp.close()
+    wiring.IR_off()
     return data
 
 
 def start_experiment(expname, timelimit, startfromtrig, stimulus, inifile):
-    if _wiringpi2_available and os.geteuid() != 0:
+    if (not wiring.wiringpi2_mocked) and (os.geteuid() != 0):
         cmdparts = ['sudo']  # fishbox.py must be run as root!
     else:
         cmdparts = []

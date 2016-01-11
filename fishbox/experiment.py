@@ -12,33 +12,12 @@ import cv2
 import tracking
 import controllers  # noqa -- 'imported but unused' because used in eval()ed expression
 import stimulus     # noqa -- ditto
+import wiring
 
 try:
     import sensors
 except ImportError:
     sensors = None
-
-try:
-    import wiringpi2
-    _wiringpi2_mocked = False
-except ImportError:
-    from modulemock import Mockclass
-    wiringpi2 = Mockclass()
-    _wiringpi2_mocked = True
-
-
-_IR_GPIO_PIN = 23  # pin for control of IR light bar
-
-
-def _IR_on():
-    wiringpi2.wiringPiSetupGpio()
-    wiringpi2.pinMode(_IR_GPIO_PIN, 1)  # enable output mode on IR pin
-    wiringpi2.digitalWrite(_IR_GPIO_PIN, 1)  # turn on IR light bar
-    atexit.register(_IR_off)
-
-
-def _IR_off():
-    wiringpi2.digitalWrite(_IR_GPIO_PIN, 0)  # turn off IR light bar
 
 
 class Watcher(object):
@@ -156,7 +135,7 @@ class Experiment(object):
             return eval(trigger_code)
         self._trigger = _trigger_func
 
-        _IR_on()
+        wiring.IR_on()
 
         # setup Stream (*after* starting stimulus, visible light bar, and IR light bar)
         if args.vidfile:

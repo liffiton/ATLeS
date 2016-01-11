@@ -5,13 +5,7 @@ import os
 import signal
 import sys
 
-try:
-    import wiringpi2
-    _wiringpi2_mocked = False
-except ImportError:
-    from modulemock import Mockclass
-    wiringpi2 = Mockclass()
-    _wiringpi2_mocked = True
+import wiring
 
 
 _LIGHT_PWM_PIN = 18  # pin for PWM control of visible light bar
@@ -112,11 +106,8 @@ class StimulusLightBar(object):
 
         # must be root to access GPIO, and wiringpi itself crashes in a way that
         # leaves the camera (setup in tracking.py) inaccessible until reboot.
-        if (not _wiringpi2_mocked) and (os.geteuid() != 0):
+        if (not wiring.wiringpi2_mocked) and (os.geteuid() != 0):
             raise NotRootError("%s must be run with sudo." % sys.argv[0])
-
-        wiringpi2.wiringPiSetupGpio()
-        wiringpi2.pinMode(_LIGHT_PWM_PIN, 2)  # enable PWM mode on lightbar pin
 
         self._light_nostim()
 
@@ -124,7 +115,7 @@ class StimulusLightBar(object):
 
     def _set_light(self, val):
         if self._lightval != val:
-            wiringpi2.pwmWrite(_LIGHT_PWM_PIN, val)
+            wiring.pwm(_LIGHT_PWM_PIN, val)
             self._lightval = val
 
     def _light_off(self):
