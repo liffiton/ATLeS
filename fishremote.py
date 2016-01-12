@@ -88,7 +88,7 @@ def main():
         {
             'name': boxname,
             'appdir': os.getcwd(),
-            'user': getpass.getuser()
+            'user': config.FISHREMOTE_USER
         }
     )
     zconf = zeroconf.Zeroconf([ip])
