@@ -17,7 +17,7 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="fishremote RPC service for querying/controlling a fishbox."
+DESC="fishremote RPC service"
 NAME=fishremote
 DAEMON_DIR=/home/pi/fishycam/
 DAEMON_USER=root
