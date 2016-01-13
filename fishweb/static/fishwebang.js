@@ -32,34 +32,32 @@ angular.module('boxesApp', ['ngRoute', 'ngResource'])
 })
 .filter('barwidth', function() {
   return function(lock_data) {
-    var start = parseInt(lock_data.starttime)*1000;
-    var runtime = parseInt(lock_data.runtime)*1000;
-    var startdate = new Date(start);
-    var curdate = new Date();
-    var millis_gone = curdate.getTime() - startdate.getTime();
+    var starttime = parseInt(lock_data.starttime);
+    var runtime = parseInt(lock_data.runtime);
+    var curtime = parseInt(lock_data.curtime);
+    var elapsed = curtime - starttime;
 
-    var width = Math.min(100, 100 * millis_gone / runtime);
+    var width = Math.min(100, 100 * elapsed / runtime);
    
     return width + "%"; 
   };
 })
 .filter('remaining', function() {
   return function(lock_data, in_out) {
-    var start = parseInt(lock_data.starttime)*1000;
-    var runtime = parseInt(lock_data.runtime)*1000;
-    var startdate = new Date(start);
-    var curdate = new Date();
-    var millis_remaining = (startdate.getTime() + runtime) - curdate.getTime();
- 
-    if (in_out == 'in' && millis_remaining < runtime/2
-     || in_out == 'out' && millis_remaining > runtime/2) {
+    var starttime = parseInt(lock_data.starttime);
+    var runtime = parseInt(lock_data.runtime);
+    var curtime = parseInt(lock_data.curtime);
 
-        if (millis_remaining < 60*1000) {
-            var sec_remaining = Math.round(millis_remaining / 1000);
+    var sec_remaining = starttime+runtime - curtime;
+ 
+    if (in_out == 'in' && sec_remaining < runtime/2
+     || in_out == 'out' && sec_remaining > runtime/2) {
+
+        if (sec_remaining < 60) {
             var remtext = sec_remaining + " sec remaining";
         }
         else {
-            var min_remaining = Math.round(millis_remaining / 1000 / 60);
+            var min_remaining = Math.round(sec_remaining / 60);
             var remtext = min_remaining + " min remaining";
         }
         return remtext;

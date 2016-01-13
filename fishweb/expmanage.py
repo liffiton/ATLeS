@@ -22,9 +22,9 @@ def lock_data():
         pid, starttime, runtime = (int(line) for line in f)
         return {'running': True,
                 'pid': pid,
-                'starttimestr': time.strftime("%X", time.localtime(starttime)),
                 'starttime': starttime,
-                'runtime': runtime
+                'runtime': runtime,
+                'curtime': int(time.time())
                 }
 
 
