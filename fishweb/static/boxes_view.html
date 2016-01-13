@@ -17,7 +17,7 @@
             <button type="button" class="btn btn-danger btn-xs pull-right" title="Kill experiment" my-clear-button="{{box.name}}">
               <span class="glyphicon glyphicon-remove"></span>
             </button>
-            <strong>Experiment running</strong> since&nbsp;{{box.lock_data.starttimestr}}.
+            <strong>Experiment running</strong> since&nbsp;{{box.lock_data | since}}.
             <div class="progress" style="width: 90%;">
               <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{box.lock_data | barwidth}};">
                 <span class="pull-right" id="rem_in">{{box.lock_data | remaining:'in'}}</span>
