@@ -32,7 +32,15 @@ def get_image(width=2592):
     wiring.IR_on()
     temp = tempfile.NamedTemporaryFile(suffix=".jpg")
     height = int(width / 4 * 3)  # maintain 4:3 aspect ratio
-    cmdargs = ['raspistill', '--timeout', '1', '--width', width, '--height', height, '-awb', 'off', '-ex', 'off', '-ss', '200000', '-o', temp.name]
+    cmdargs = ['raspistill',
+               '--timeout', '1',
+               '--width', str(width),
+               '--height', str(height),
+               '-awb', 'off',
+               '-ex', 'off',
+               '-ss', '200000',
+               '-o', temp.name
+               ]
     subprocess.call(cmdargs)
     with open(temp.name, 'rb') as f:
         data = f.read()
