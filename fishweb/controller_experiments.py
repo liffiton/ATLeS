@@ -88,10 +88,11 @@ def post_sync_data(tgtbox=None, boxes=None):
 
 
 @route('/image/<tgtbox>')
-def get_image(tgtbox=None, boxes=None):
+@route('/image/<tgtbox>/<width:int>')
+def get_image(tgtbox=None, width=2592, boxes=None):
     box = _get_box(tgtbox, boxes)
 
-    imgdata = box.get_image()
+    imgdata = box.get_image(width)
     response.set_header('Content-type', 'image/jpeg')
     return imgdata
 
