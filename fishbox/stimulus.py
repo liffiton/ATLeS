@@ -40,13 +40,12 @@ class ThreadedStimulus(StimulusBase):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod  # must be overridden, but should be called via super()
-    def __init__(self, helperclass, *args, **kwargs):
+    def __init__(self, helper):
         self._child_pipe, self._pipe = multiprocessing.Pipe(duplex=True)
-        self._helper = helperclass(*args, **kwargs)
+        self._helper = helper
         self._p = None  # the separate process running the stimulus thread
 
     def begin(self):
-        self._helper.begin()
         self._p = multiprocessing.Process(target=self._helper.stimulus_thread, args=(self._child_pipe,))
         self._p.start()
         atexit.register(self.end)
@@ -86,11 +85,12 @@ class DummyStimulus(StimulusBase):
 
 class LightBarStimulus(ThreadedStimulus):
     def __init__(self, freq_Hz, nostim_level=_AMBIENT_LIGHT_PWM):
-        '''Initialize as a ThreadedStimulus with StimulusLightBar helper, passed kwarg for freq_Hz and nostim_level.  freq_Hz=0 means the light bar will be on for as long as the stimulus is active.'''
-        super(LightBarStimulus, self).__init__(StimulusLightBar, freq_Hz, nostim_level)
+        '''Initialize as a ThreadedStimulus with StimulusLightBar helper.  freq_Hz=0 means the light bar will be on for as long as the stimulus is active.'''
+        helper = LightBarHelper(freq_Hz, nostim_level)
+        super(LightBarStimulus, self).__init__(helper)
 
 
-class StimulusLightBar(object):
+class LightBarHelper(object):
     '''Stimulus in the form of flashing the visible light LED bar at a given frequency.'''
     def __init__(self, freq_Hz, nostim_level):
         self._active = False   # is flashing activated?
@@ -108,10 +108,6 @@ class StimulusLightBar(object):
         # leaves the camera (setup in tracking.py) inaccessible until reboot.
         if (not wiring.wiringpi2_mocked) and (os.geteuid() != 0):
             raise NotRootError("%s must be run with sudo." % sys.argv[0])
-
-        self._light_nostim()
-
-        atexit.register(self._light_off)
 
     def _set_light(self, val):
         if self._lightval != val:
@@ -148,13 +144,18 @@ class StimulusLightBar(object):
         else:
             self._light_nostim()
 
-    def begin(self):
-        pass
+    def _begin(self):
+        self._light_nostim()
+
+    def _end(self):
+        self._light_off()
 
     def stimulus_thread(self, pipe):
         # ignore signals that will be handled by parent
         signal.signal(signal.SIGALRM, signal.SIG_IGN)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+        self._begin()
 
         while True:
             # check pipe for commands and implement delay between flashes
@@ -163,6 +164,7 @@ class StimulusLightBar(object):
                 val = pipe.recv()
 
                 if val == 'end' or val is None:
+                    self._end()
                     return
 
                 self._handle_command(val)
