@@ -33,7 +33,7 @@ angular.module('boxesApp', ['ngRoute', 'ngResource'])
 .filter('since', function() {
   return function(lock_data) {
     var starttime = new Date(parseInt(lock_data.starttime)*1000);
-    return starttime.getHours()%12 + ':' + starttime.getMinutes();
+    return starttime.toLocaleTimeString();
   };
 })
 .filter('barwidth', function() {
