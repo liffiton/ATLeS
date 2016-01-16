@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import atexit
-import getpass
 import os
 import platform
 import signal
@@ -20,7 +19,6 @@ from fishweb import expmanage
 
 
 boxname = platform.node()
-ip = utils.get_routed_ip()
 port = 4158
 
 
@@ -84,18 +82,18 @@ def main():
     info = zeroconf.ServiceInfo(
         "_fishbox._tcp.local.",
         "%s._fishbox._tcp.local." % boxname,
-        socket.inet_aton(ip), port, 0, 0,
+        socket.inet_aton("0.0.0.0"), port, 0, 0,
         {
             'name': boxname,
             'appdir': os.getcwd(),
             'user': config.FISHREMOTE_USER
         }
     )
-    zconf = zeroconf.Zeroconf([ip])
+    zconf = zeroconf.Zeroconf(["0.0.0.0"])
     zconf.register_service(info)
     atexit.register(zconf.unregister_service, info)
 
-    print("Service registered: %s port %d" % (ip, port))
+    print("Service registered: port %d" % (port))
 
     # wait until the server is done
     if sys.version_info[0] >= 3:

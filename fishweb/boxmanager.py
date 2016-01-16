@@ -1,6 +1,7 @@
 import copy
 import inspect
 import os
+import platform
 import socket
 import subprocess
 import threading
@@ -10,13 +11,11 @@ import rpyc
 from zeroconf import ServiceBrowser, Zeroconf
 
 import config
-import utils
 
 
 class Box(object):
-    def __init__(self, name, ip, port, appdir, user="pi"):
+    def __init__(self, name, port, appdir, user="pi"):
         self.name = name   # name of remote box
-        self.ip = ip       # IP address
         self.port = port   # port on which fishremote.py is accepting connections
         self.user = user   # username for SSH login to remote box
 
@@ -35,7 +34,6 @@ class Box(object):
     def as_dict(self):
         return {
             'name': self.name,
-            'ip': self.ip,
             'port': self.port,
             'user': self.user,
             'connected': self.connected,
@@ -48,12 +46,12 @@ class Box(object):
 
     def connect(self):
         self.error = "connecting..."
-        self.local = (self.ip == utils.get_routed_ip())
+        self.local = (self.name == platform.node())
         if not self.local:
             # only connect if it's a separate machine
             try:
                 # -oBatchMode=yes to disable password auth and just fail if key auth fails
-                self._tunnel = plumbum.SshMachine(self.ip, user=self.user, ssh_opts=['-oBatchMode=yes'])
+                self._tunnel = plumbum.SshMachine(self.name, user=self.user, ssh_opts=['-oBatchMode=yes'])
             except (plumbum.machines.session.SSHCommsChannel2Error, plumbum.machines.session.SSHCommsError):
                 self.error = "SSH connection failure"
                 self._tunnel = None
@@ -85,40 +83,30 @@ class Box(object):
         # Copy remote files into an archive dir, then have rsync
         # delete the originals after the transfer
         self._tunnel["cp -r %s %s" % (self.trackdir, self.archivedir)]
-        #cmd = ['ssh', '%s@%s' % (self.user, self.ip), 'cp -r %s %s' % (self.trackdir, self.archivedir)]
-        #subprocess.check_output(cmd)
-        ## Currently does *not* copy the debugframes (following 2 lines are
-        ## commented), so they will be removed from remote entirely.
-        ##cmd = ['ssh', '%s@%s' % (self.user, self.ip), 'cp -r %s %s' % (self.dbgramedir, self.archivedir)]
-        ##subprocess.check_output(cmd)
+        # Currently does *not* copy the debugframes (following line is
+        # commented), so they will be removed from remote entirely.
+        #self._tunnel["cp -r %s %s" % (self.dbgframedir, self.archivedir)]
 
         # Both source and dest must end with / to copy contents of one folder
         # into another, isntead of copying the source folder into the
         # destination as a new folder there.
         # In os.path.join, the '' ensures a trailing /
-        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), os.path.join(config.TRACKDIR, self.name, '')]
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.name, self.trackdir), os.path.join(config.TRACKDIR, self.name, '')]
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
-        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name, '')]  # '' to ensure trailing /
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.name, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name, '')]  # '' to ensure trailing /
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
     @property
     def connected(self):
         return self._rpc and not self._rpc.closed
 
-    @property
-    def rpc(self):
-        if self.connected:
-            return self._rpc.root
-        else:
-            return None
-
     def __getattr__(self, name):
         '''Return something from self.rpc if it wasn't found in this object
-        directly.  Lets use use one object namespace to access both "local"
+        directly.  Lets us use one object namespace to access both "local"
         methods like sync_data() and remote RPC methods.'''
-        if self.connected and hasattr(self.rpc, name):
-            return getattr(self.rpc, name)
+        if self.connected and hasattr(self._rpc.root, name):
+            return getattr(self._rpc.root, name)
         else:
             # default behavior
             raise AttributeError
@@ -134,7 +122,7 @@ class BoxManager(object):
         try:
             zeroconf = Zeroconf()
         except socket.error:
-            zeroconf = Zeroconf([utils.get_routed_ip()])
+            zeroconf = Zeroconf(["0.0.0.0"])
         self._browser = ServiceBrowser(zeroconf, "_fishbox._tcp.local.", self)  # starts its own daemon thread
 
     def add_service(self, zeroconf, type, name):
@@ -142,10 +130,9 @@ class BoxManager(object):
         print("Service %s added, service info: %s" % (name, info))
         boxname = name.split('.')[0]
         newbox = Box(name=boxname,
-                        ip=socket.inet_ntoa(info.address),
-                        port=info.port,
-                        appdir=info.properties['appdir'],
-                        user=info.properties['user'])
+                     port=info.port,
+                     appdir=info.properties['appdir'],
+                     user=info.properties['user'])
         # connect in a separate thread so we don't have to wait for the connection here
         threading.Thread(target=newbox.connect).start()
         with self._boxlock:
