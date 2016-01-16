@@ -2,11 +2,11 @@ import atexit
 
 try:
     import wiringpi2
-    wiringpi2_mocked = False
+    wiring_mocked = False
 except ImportError:
     from modulemock import Mockclass
     wiringpi2 = Mockclass()
-    wiringpi2_mocked = True
+    wiring_mocked = True
 
 
 _IR_GPIO_PIN = 23  # pin for control of IR light bar

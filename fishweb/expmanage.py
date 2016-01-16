@@ -50,7 +50,7 @@ def get_image(width=2592):
 
 
 def start_experiment(expname, timelimit, startfromtrig, stimulus, inifile):
-    if (not wiring.wiringpi2_mocked) and (os.geteuid() != 0):
+    if (not wiring.wiring_mocked) and (os.geteuid() != 0):
         cmdparts = ['sudo']  # fishbox.py must be run as root!
     else:
         cmdparts = []

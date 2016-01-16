@@ -106,7 +106,7 @@ class LightBarHelper(object):
 
         # must be root to access GPIO, and wiringpi itself crashes in a way that
         # leaves the camera (setup in tracking.py) inaccessible until reboot.
-        if (not wiring.wiringpi2_mocked) and (os.geteuid() != 0):
+        if (not wiring.wiring_mocked) and (os.geteuid() != 0):
             raise NotRootError("%s must be run with sudo." % sys.argv[0])
 
     def _set_light(self, val):
