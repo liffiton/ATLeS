@@ -29,9 +29,14 @@ def lock_data():
 
 
 def get_image(width=2592):
-    wiring.IR_on()
-    temp = tempfile.NamedTemporaryFile(suffix=".jpg")
     height = int(width / 4 * 3)  # maintain 4:3 aspect ratio
+
+    wiring.IR_on()
+
+    tmpdir = tempfile.mkdtemp()
+    fifoname = os.path.join(tmpdir, 'imgfifo')
+    os.mkfifo(fifoname)
+
     cmdargs = ['raspistill',
                '--timeout', '1',
                '--width', str(width),
@@ -39,12 +44,15 @@ def get_image(width=2592):
                '-awb', 'off',
                '-ex', 'off',
                '-ss', '200000',
-               '-o', temp.name
+               '-e', 'jpg'
+               '-o', fifoname
                ]
     subprocess.call(cmdargs)
-    with open(temp.name, 'rb') as f:
-        data = f.read()
-    temp.close()
+
+    data = open(fifoname, 'rb').read()
+    os.remove(fifoname)
+    os.rmdir(tmpdir)
+
     wiring.IR_off()
     return data
 
