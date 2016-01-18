@@ -7,6 +7,7 @@ import signal
 import socket
 import sys
 import threading
+import time
 
 import rpyc
 import zeroconf
@@ -18,8 +19,7 @@ import utils
 from fishweb import expmanage
 
 
-boxname = platform.node()
-port = 4158
+_PORT = 4158
 
 
 def module2service(module):
@@ -59,11 +59,25 @@ def main():
     utils.mkdir(config.DBGFRAMEDIR)
     utils.mkdir(config.ARCHIVEDIR)
 
+    # Get our external IP
+    # Loop until we have one, because we can't run without it
+    ip = None
+    while ip is None:
+        try:
+            ip = utils.get_routed_ip()
+        except:
+            # any error (in part because I'm not certain what is thrown
+            # when this fails)
+            ip = None
+            # wait 5 seconds between attempts, assuming we're waiting
+            # for the network to come up
+            time.sleep(5)
+
     # make expmanage RPyC-able
     service = module2service(expmanage)
     # and RPyC it
     try:
-        server = ThreadedServer(service, hostname='localhost', port=port, protocol_config={"allow_public_attrs": True})
+        server = ThreadedServer(service, hostname='localhost', port=_PORT, protocol_config={"allow_public_attrs": True})
     except socket.error as e:
         print("Error opening socket.  fishremote may already be running.")
         print(e)
@@ -79,21 +93,22 @@ def main():
     print("RPC server started.")
 
     # register the service via MDNS/Bonjour
+    boxname = platform.node()
     info = zeroconf.ServiceInfo(
         "_fishbox._tcp.local.",
         "%s._fishbox._tcp.local." % boxname,
-        socket.inet_aton("0.0.0.0"), port, 0, 0,
+        socket.inet_aton(ip), _PORT, 0, 0,
         {
             'name': boxname,
             'appdir': os.getcwd(),
             'user': config.FISHREMOTE_USER
         }
     )
-    zconf = zeroconf.Zeroconf(["0.0.0.0"])
+    zconf = zeroconf.Zeroconf([ip])
     zconf.register_service(info)
     atexit.register(zconf.unregister_service, info)
 
-    print("Service registered: port %d" % (port))
+    print("Service registered: %s port %d" % (ip, _PORT))
 
     # wait until the server is done
     if sys.version_info[0] >= 3:

@@ -1,7 +1,6 @@
 import copy
 import inspect
 import os
-import platform
 import socket
 import subprocess
 import threading
@@ -11,11 +10,13 @@ import rpyc
 from zeroconf import ServiceBrowser, Zeroconf
 
 import config
+import utils
 
 
 class Box(object):
-    def __init__(self, name, port, appdir, user="pi"):
+    def __init__(self, name, ip, port, appdir, user="pi"):
         self.name = name   # name of remote box
+        self.ip = ip       # IP address
         self.port = port   # port on which fishremote.py is accepting connections
         self.user = user   # username for SSH login to remote box
 
@@ -34,6 +35,7 @@ class Box(object):
     def as_dict(self):
         return {
             'name': self.name,
+            'ip': self.ip,
             'port': self.port,
             'user': self.user,
             'connected': self.connected,
@@ -46,12 +48,12 @@ class Box(object):
 
     def connect(self):
         self.error = "connecting..."
-        self.local = (self.name == platform.node())
+        self.local = (self.ip == utils.get_routed_ip())
         if not self.local:
             # only connect if it's a separate machine
             try:
                 # -oBatchMode=yes to disable password auth and just fail if key auth fails
-                self._tunnel = plumbum.SshMachine(self.name, user=self.user, ssh_opts=['-oBatchMode=yes'])
+                self._tunnel = plumbum.SshMachine(self.ip, user=self.user, ssh_opts=['-oBatchMode=yes'])
             except (plumbum.machines.session.SSHCommsChannel2Error, plumbum.machines.session.SSHCommsError):
                 self.error = "SSH connection failure"
                 self._tunnel = None
@@ -91,10 +93,10 @@ class Box(object):
         # into another, isntead of copying the source folder into the
         # destination as a new folder there.
         # In os.path.join, the '' ensures a trailing /
-        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.name, self.trackdir), os.path.join(config.TRACKDIR, self.name, '')]
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), os.path.join(config.TRACKDIR, self.name, '')]
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
-        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.name, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name, '')]  # '' to ensure trailing /
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name, '')]  # '' to ensure trailing /
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
     @property
@@ -130,6 +132,7 @@ class BoxManager(object):
         print("Service %s added, service info: %s" % (name, info))
         boxname = name.split('.')[0]
         newbox = Box(name=boxname,
+                     ip=socket.inet_ntoa(info.address),
                      port=info.port,
                      appdir=info.properties['appdir'],
                      user=info.properties['user'])
