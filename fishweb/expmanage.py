@@ -38,7 +38,8 @@ def get_image(width=2592):
     os.mkfifo(fifoname)
 
     cmdargs = ['raspistill',
-               '--timeout', '1',
+               '--timeout', '1000000000',  # run effectively forever (until killed)
+               '--timelapse', '5000',      # capture another image every 5 seconds
                '--width', str(width),
                '--height', str(height),
                '-awb', 'off',
@@ -47,14 +48,22 @@ def get_image(width=2592):
                '-e', 'jpg',
                '-o', fifoname
                ]
-    subprocess.call(cmdargs)
+    proc = subprocess.Popen(cmdargs)
 
-    data = open(fifoname, 'rb').read()
-    os.remove(fifoname)
-    os.rmdir(tmpdir)
-
-    wiring.IR_off()
-    return data
+    try:
+        with open(fifoname, 'rb') as fifo:
+            while True:
+                data = fifo.read(10000)
+                if data == '':
+                    break
+                yield data
+    finally:
+        # handle GeneratorExit caused by close() on the generator iterator,
+        # as well as other possible exceptions
+        proc.kill()
+        os.remove(fifoname)
+        os.rmdir(tmpdir)
+        wiring.IR_off()
 
 
 def start_experiment(expname, timelimit, startfromtrig, stimulus, inifile):
