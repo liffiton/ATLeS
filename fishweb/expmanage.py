@@ -44,7 +44,7 @@ def get_image(width=2592):
                '-awb', 'off',
                '-ex', 'off',
                '-ss', '200000',
-               '-e', 'jpg'
+               '-e', 'jpg',
                '-o', fifoname
                ]
     subprocess.call(cmdargs)
