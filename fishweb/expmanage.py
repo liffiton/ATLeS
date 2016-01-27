@@ -3,7 +3,6 @@ import os
 import shlex
 import signal
 import subprocess
-import tempfile
 import time
 
 import config
@@ -31,38 +30,23 @@ def lock_data():
 def get_image(width=2592):
     height = int(width / 4 * 3)  # maintain 4:3 aspect ratio
 
-    wiring.IR_on()
-
-    tmpdir = tempfile.mkdtemp()
-    fifoname = os.path.join(tmpdir, 'imgfifo')
-    os.mkfifo(fifoname)
-
     cmdargs = ['raspistill',
-               '--timeout', '1000000000',  # run effectively forever (until killed)
-               '--timelapse', '5000',      # capture another image every 5 seconds
+               '-t', '1',
                '--width', str(width),
                '--height', str(height),
                '-awb', 'off',
                '-ex', 'off',
                '-ss', '200000',
                '-e', 'jpg',
-               '-o', fifoname
+               '-o', '-'  # write to stdout
                ]
-    proc = subprocess.Popen(cmdargs)
 
     try:
-        with open(fifoname, 'rb') as fifo:
-            while True:
-                data = fifo.read(10000)
-                if data == '':
-                    break
-                yield data
+        wiring.IR_on()
+        proc = subprocess.Popen(cmdargs, stdout=subprocess.PIPE)
+        data, _ = proc.communicate()
+        return data
     finally:
-        # handle GeneratorExit caused by close() on the generator iterator,
-        # as well as other possible exceptions
-        proc.kill()
-        os.remove(fifoname)
-        os.rmdir(tmpdir)
         wiring.IR_off()
 
 

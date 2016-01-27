@@ -87,13 +87,17 @@ def post_sync_data(tgtbox=None, boxes=None):
         abort(500, str(e))
 
 
-@route('/image/<tgtbox>')
 @route('/image/<tgtbox>/<width:int>')
 def get_image(tgtbox=None, width=2592, boxes=None):
     box = _get_box(tgtbox, boxes)
 
-    response.set_header('Content-type', 'image/jpeg')
-    return box.get_image(width)
+    #imgdata = box.get_image(width)
+    #response.set_header('Content-type', 'image/jpeg')
+    #return imgdata
+    response.set_header('Content-type', 'multipart/x-mixed-replace; boundary=fishboxframe')
+    while True:
+        imgdata = box.get_image(width)
+        yield "--fishboxframe\nContent-Type: image/jpeg\n\n%s\n" % imgdata
 
 
 @post('/clear_experiment/')
