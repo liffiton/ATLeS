@@ -301,7 +301,8 @@ class Grapher(object):
 
     def draw_legend(self, legend_ax):
         # Make a legend with proxy artists
-        height_artist = lines.Line2D([],[], color='green')
+        xpos_artist = lines.Line2D([],[], color='orange')
+        ypos_artist = lines.Line2D([],[], color='limegreen')
         numpts_artist = lines.Line2D([],[], color='orange')
         inleft25_artist = patches.Rectangle((0,0), 1, 1, fc='purple', ec='None')
         inright25_artist = patches.Rectangle((0,0), 1, 1, fc='pink', ec='None')
@@ -311,8 +312,8 @@ class Grapher(object):
         lost_artist = patches.Rectangle((0,0), 1, 1, fc='red', ec='None')
         # Place it in center of top "subplot" area
         legend_ax.legend(
-            [height_artist, numpts_artist, inleft25_artist, inright25_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
-            ['Height of fish', '# Detection pts', 'In left 25%', 'In right 25%', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
+            [xpos_artist, ypos_artist, numpts_artist, inleft25_artist, inright25_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
+            ['x-pos', 'y-pos', '# Detection pts', 'In left 25%', 'In right 25%', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
             loc='center',
             ncol=4,
         )
@@ -378,7 +379,7 @@ class Grapher(object):
         in_left25 = self._in_left25[start:end]
         in_right25 = self._in_right25[start:end]
         in_top = self._in_top[start:end]
-        #x = self._x[start:end]
+        x = self._x[start:end]
         y = self._y[start:end]
         numpts = self._numpts[start:end]
 
@@ -447,8 +448,11 @@ class Grapher(object):
         )
         ax.add_collection(inright25_collection)
 
+        # Plot horizontal position
+        ax.plot(time, x*2-1, color='orange', label='x position of fish')
+
         # Plot height
-        ax.plot(time, y*2-1, color='green', label='Height of fish')
+        ax.plot(time, y*2-1, color='limegreen', label='y position of fish')
 
         # Plot numpts (scaled so 0 = bottom, 20 = top of subplot)
         ax.plot(time, -1+(numpts/10.0), color='orange', label='# detected points')
