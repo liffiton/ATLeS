@@ -28,6 +28,14 @@
 
   <div class="row" id="exp_new">
     <div class="col-lg-6 col-md-8 col-sm-10">
+      <div class="panel panel-default" id="experiment_form">
+        <div class="panel-heading">
+          <h3 class="panel-title">Current Camera View</h3>
+        </div>
+        <div class="panel-body">
+          <img class="center-block" src="/image/{{box}}/324" width=324>
+        </div>
+      </div>
       <form id="new_exp_form" class="form-horizontal" action="/new/{{box}}" method="post">
         <div class="panel panel-default" id="experiment_form">
           <div class="panel-heading">

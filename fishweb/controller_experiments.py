@@ -91,9 +91,9 @@ def post_sync_data(tgtbox=None, boxes=None):
 def get_image(tgtbox=None, width=2592, boxes=None):
     box = _get_box(tgtbox, boxes)
 
-    #imgdata = box.get_image(width)
-    #response.set_header('Content-type', 'image/jpeg')
-    #return imgdata
+    if box.lock_exists():
+        return
+
     response.set_header('Content-type', 'multipart/x-mixed-replace; boundary=fishboxframe')
     while True:
         imgdata = box.get_image(width)
