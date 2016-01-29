@@ -38,7 +38,10 @@ def get_image(width=2592):
                '-ex', 'off',
                '-ss', '200000',
                '-e', 'jpg',
-               '-o', '-'  # write to stdout
+               '-th', '0:0:0',   # no thumbnail
+               '-q', '25',       # high, but not crazy-high quality
+               '-a', '8',        # add a timestamp
+               '-o', '-'         # write to stdout
                ]
 
     try:
