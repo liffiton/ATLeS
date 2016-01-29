@@ -7,7 +7,7 @@ from bottle import abort, post, redirect, request, response, route, template
 from wtforms import Form, BooleanField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 import config
-from fishweb import expmanage
+from fishweb import box_interface
 
 
 def _inis():
@@ -21,7 +21,7 @@ def _get_box(tgtbox, boxes):
         assert tgtbox == platform.node()
         assert boxes is None
         # use the module directly
-        return expmanage
+        return box_interface
     else:
         if tgtbox not in boxes:
             abort(400, "Box %s not registered." % tgtbox)

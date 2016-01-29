@@ -48,7 +48,7 @@ if __name__ == '__main__':
     # load modules with controllers / routes
     bottle.load("fishweb.controller_static")
     bottle.load("fishweb.controller_archive")
-    bottle.load("fishweb.controller_experiments")
+    bottle.load("fishweb.controller_boxes")
     bottle.load("fishweb.controller_analyze")
     bottle.load("fishweb.controller_trackview")
 

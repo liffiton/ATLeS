@@ -16,7 +16,7 @@ from rpyc.utils.server import ThreadedServer
 
 import config
 import utils
-from fishweb import expmanage
+from fishweb import box_interface
 
 
 _PORT = 4158
@@ -73,8 +73,8 @@ def main():
             # for the network to come up
             time.sleep(5)
 
-    # make expmanage RPyC-able
-    service = module2service(expmanage)
+    # make box_interface RPyC-able
+    service = module2service(box_interface)
     # and RPyC it
     try:
         server = ThreadedServer(service, hostname='localhost', port=_PORT, protocol_config={"allow_public_attrs": True})
