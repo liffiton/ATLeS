@@ -1,6 +1,8 @@
 import glob
 import platform
 import re
+import time
+
 from bottle import abort, post, redirect, request, response, route, template
 from wtforms import Form, BooleanField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
@@ -96,8 +98,11 @@ def get_image(tgtbox=None, width=2592, boxes=None):
 
     response.set_header('Content-type', 'multipart/x-mixed-replace; boundary=fishboxframe')
     while True:
+        if box.lock_exists():
+            return
         imgdata = box.get_image(width)
         yield "--fishboxframe\nContent-Type: image/jpeg\n\n%s\n" % imgdata
+        time.sleep(1)
 
 
 @post('/clear_experiment/')
