@@ -31,6 +31,7 @@ def lock_data():
 _raspistill = None
 _imgfile = None
 
+
 def start_img_stream(width=648):
     global _raspistill, _imgfile
 
@@ -57,6 +58,7 @@ def start_img_stream(width=648):
                '-o', _imgfile.name
                ]
 
+    wiring.IR_on()
     _raspistill = subprocess.Popen(cmdargs)
 
 
@@ -66,14 +68,10 @@ def get_image():
     if _raspistill is None:
         return None
 
-    try:
-        wiring.IR_on()
-        _raspistill.send_signal(signal.SIGUSR1)
-        time.sleep(0.2)
-        with open(_imgfile.name, 'rb') as f:
-            return f.read()
-    finally:
-        wiring.IR_off()
+    _raspistill.send_signal(signal.SIGUSR1)
+    time.sleep(0.25)
+    with open(_imgfile.name, 'rb') as f:
+        return f.read()
 
 
 def stop_img_stream():
@@ -82,6 +80,7 @@ def stop_img_stream():
         _raspistill.terminate()
         _raspistill = None
         _imgfile.close()
+    wiring.IR_off()
 
 
 def start_experiment(expname, timelimit, startfromtrig, stimulus, inifile):
