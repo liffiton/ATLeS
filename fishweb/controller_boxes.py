@@ -1,6 +1,7 @@
 import glob
 import platform
 import re
+import time
 
 from bottle import abort, post, redirect, request, response, route, template
 from wtforms import Form, BooleanField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
@@ -104,6 +105,7 @@ def get_image(tgtbox=None, width=648, boxes=None):
                 return
             imgdata = box.get_image()
             yield "--fishboxframe\nContent-Type: image/jpeg\n\n%s\n" % imgdata
+            time.sleep(0.2)
     finally:
         box.stop_img_stream()
 

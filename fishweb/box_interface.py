@@ -44,7 +44,7 @@ def start_img_stream(width=648):
 
     cmdargs = ['raspistill',
                '-t', '1000000000',   # run essentially forever
-               '-s',                 # frame capture triggered by SIGUSR1
+               '-tl', '200',         # take a photo every 200ms
                '--width', str(width),
                '--height', str(height),
                '-awb', 'off',
@@ -68,8 +68,6 @@ def get_image():
     if _raspistill is None:
         return None
 
-    _raspistill.send_signal(signal.SIGUSR1)
-    time.sleep(0.25)
     with open(_imgfile.name, 'rb') as f:
         return f.read()
 

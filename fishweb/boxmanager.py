@@ -81,7 +81,7 @@ class Box(object):
             self._tunnel = None
         self.error = None
 
-    def get_image(self):
+    def NOPEget_image(self):
         '''
         Because get_image() takes so long and it blocks the connection while
         running, other calls are severely delayed during a call.
