@@ -3,6 +3,7 @@ import os
 import shlex
 import signal
 import subprocess
+import tempfile
 import time
 
 import config
@@ -27,33 +28,66 @@ def lock_data():
                 }
 
 
-def get_image(width=2592):
+_raspistill = None
+_imgfile = None
+
+def start_img_stream(width=648):
+    global _raspistill, _imgfile
+
+    stop_img_stream()
+
     height = int(width / 4 * 3)  # maintain 4:3 aspect ratio
+    txtsize = max(16, int(height/20))
+
+    _imgfile = tempfile.NamedTemporaryFile('rb')
 
     cmdargs = ['raspistill',
-               '-t', '1',
+               '-t', '1000000000',   # run essentially forever
+               '-s',                 # frame capture triggered by SIGUSR1
                '--width', str(width),
                '--height', str(height),
                '-awb', 'off',
                '-ex', 'off',
                '-ss', '200000',
                '-e', 'jpg',
-               '-th', '0:0:0',   # no thumbnail
-               '-q', '25',       # high, but not crazy-high quality
-               '-a', '8',        # add a timestamp
-               '-o', '-'         # write to stdout
+               '-th', '0:0:0',       # no thumbnail
+               '-q', '15',           # high, but not crazy-high quality
+               '-a', '8',            # add a timestamp
+               '-ae', str(txtsize),  # with an appropriate font size
+               '-o', _imgfile.name
                ]
+
+    _raspistill = subprocess.Popen(cmdargs)
+
+
+def get_image():
+    global _raspistill, _imgfile
+
+    if _raspistill is None:
+        return None
 
     try:
         wiring.IR_on()
-        proc = subprocess.Popen(cmdargs, stdout=subprocess.PIPE)
-        data, _ = proc.communicate()
-        return data
+        _raspistill.send_signal(signal.SIGUSR1)
+        time.sleep(0.2)
+        with open(_imgfile.name, 'rb') as f:
+            return f.read()
     finally:
         wiring.IR_off()
 
 
+def stop_img_stream():
+    global _raspistill, _imgfile
+    if _raspistill is not None:
+        _raspistill.terminate()
+        _raspistill = None
+        _imgfile.close()
+
+
 def start_experiment(expname, timelimit, startfromtrig, stimulus, inifile):
+    # check for raspistill and kill if running
+    stop_img_stream()
+
     if (not wiring.wiring_mocked) and (os.geteuid() != 0):
         cmdparts = ['sudo']  # fishbox.py must be run as root!
     else:

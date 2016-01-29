@@ -81,7 +81,7 @@ class Box(object):
             self._tunnel = None
         self.error = None
 
-    def get_image(self, width):
+    def get_image(self):
         '''
         Because get_image() takes so long and it blocks the connection while
         running, other calls are severely delayed during a call.
@@ -91,7 +91,7 @@ class Box(object):
         if not self.connected:
             return None
 
-        data = self._img_rpc.root.get_image(width)
+        data = self._img_rpc.root.get_image()
         return data
 
     def sync_data(self):
