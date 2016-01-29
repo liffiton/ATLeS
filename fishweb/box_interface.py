@@ -38,13 +38,13 @@ def start_img_stream(width=648):
     stop_img_stream()
 
     height = int(width / 4 * 3)  # maintain 4:3 aspect ratio
-    txtsize = max(16, int(height/20))
+    #txtsize = max(16, int(height/20))
 
     _imgfile = tempfile.NamedTemporaryFile('rb')
 
     cmdargs = ['raspistill',
                '-t', '1000000000',   # run essentially forever
-               '-tl', '200',         # take a photo every 200ms
+               '-tl', '500',         # take a photo every 500ms
                '--width', str(width),
                '--height', str(height),
                '-awb', 'off',
@@ -53,8 +53,8 @@ def start_img_stream(width=648):
                '-e', 'jpg',
                '-th', '0:0:0',       # no thumbnail
                '-q', '15',           # high, but not crazy-high quality
-               '-a', '8',            # add a timestamp
-               '-ae', str(txtsize),  # with an appropriate font size
+               #'-a', '8',            # add a timestamp [doesn't update w/ -s or -tl]
+               #'-ae', str(txtsize),  # with an appropriate font size
                '-o', _imgfile.name
                ]
 

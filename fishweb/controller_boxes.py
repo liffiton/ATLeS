@@ -103,9 +103,9 @@ def get_image(tgtbox=None, width=648, boxes=None):
         while True:
             if box.lock_exists():
                 return
+            time.sleep(0.5)
             imgdata = box.get_image()
             yield "--fishboxframe\nContent-Type: image/jpeg\n\n%s\n" % imgdata
-            time.sleep(0.2)
     finally:
         box.stop_img_stream()
 
