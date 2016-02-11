@@ -67,22 +67,23 @@ class Watcher(object):
 
         # draw centroids
         for pt in proc.centroids:
+            pt = [int(x) for x in pt]
             if pt == track.position_pixel:
                 continue  # will draw this one separately
-            x = int(pt[0])
-            y = int(pt[1])
+            x = pt[0]
+            y = pt[1]
             cv2.line(tank_overlay, (x-5,y), (x+5,y), self.YELLOW)
             cv2.line(tank_overlay, (x,y-5), (x,y+5), self.YELLOW)
 
         if track.status != 'init':
             # draw a larger cross at the known/estimated position
             color = self.STATUS_COLORS[track.status]
-            x,y = tuple(int(x) for x in track.position_pixel)
+            x,y = track.position_pixel
             cv2.line(tank_overlay, (x-10,y), (x+10,y), color)
             cv2.line(tank_overlay, (x,y-10), (x,y+10), color)
 
             # draw a circle around the estimated position
-            #position = tuple(int(x) for x in track.position_pixel)
+            #position = track.position_pixel
             #cv2.circle(tank_overlay, position, 5, self.STATUS_COLORS[track.status])
 
             # draw a trace of the past k positions recorded
@@ -159,17 +160,22 @@ class Experiment(object):
             self._framecount, self._fps = self._stream.get_video_stats()
             logging.info("Video file: %d frames, %d fps", self._framecount, self._fps)
 
-        # Frame processing
-        filter1 = tracking.TargetFilterBGSub()
-        filter2 = tracking.TargetFilterBrightness()
-        # First try the AND of both filters' outputs; if nothing found there, try brightness alone
-        self._framefilters = [filter1 & filter2, filter1, filter2]
-        self._proc = tracking.FrameProcessor()
-
         # Tracking: Simple
         tank_width = self._tx2 - self._tx1
         tank_height = self._ty2 - self._ty1
         self._track = tracking.VelocityTracker(w=tank_width, h=tank_height)
+
+        # Frame processing (though these feed into the Tracker, some also rely on its position estimate)
+        filt_bgsub = tracking.TargetFilterBGSub()
+        filt_bright = tracking.TargetFilterBrightness()
+        filt_dist = tracking.TargetFilterDistance(self._track, maxdist=int(tank_width*0.05))
+        # First try the AND of both filters' outputs;
+        # then the background subtractor alone;
+        # then the brightness filter alone but with a distance limit
+        #   (brightness should only be needed if fish isn't moving,
+        #    so don't accept large jumps from brightness filter)
+        self._framefilters = [filt_bgsub & filt_bright, filt_bgsub, filt_bright & filt_dist]
+        self._proc = tracking.FrameProcessor()
 
         # For measuring status percentages
         self._statuses = collections.defaultdict(int)

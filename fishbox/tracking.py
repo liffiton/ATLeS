@@ -38,6 +38,32 @@ class TargetFilterBase(object):
         return filter_frame
 
 
+class TargetFilterDistance(TargetFilterBase):
+    ''' The Distance filter just returns a filled circle around the last position
+    estimate from its tracker object.  This should not be used by itself but rather
+    combined with another filter to limit the distance from the last estimate that
+    it will "consider."
+    '''
+    def __init__(self, tracker, maxdist):
+        super(TargetFilterDistance, self).__init__()
+
+        self._tracker = tracker
+        self._maxdist = maxdist
+
+    def _do_filter(self, frame):
+        ''' "Process" (really "draw" in this case) a single frame. '''
+        pos = self._tracker.position_pixel
+        if any(x is None for x in pos):
+            # no position, so return a filled frame (any position is okay)
+            ret = numpy.ones_like(frame)
+        else:
+            # black w/ white circle around position estimate
+            ret = numpy.zeros_like(frame)
+            cv2.circle(ret, pos, self._maxdist, color=(255,255,255), thickness=-1)  # thickness=-1 -> filled circle
+
+        return ret
+
+
 class TargetFilterBrightness(TargetFilterBase):
     def __init__(self):
         super(TargetFilterBrightness, self).__init__()
@@ -56,10 +82,11 @@ class TargetFilterBrightness(TargetFilterBase):
         # threshold to find contiguous regions of "bright" pixels
         # ignore all "dark" (<1/8 max) pixels
         max = numpy.max(frame)
+        min = numpy.min(frame)
         # if the frame is completely dark, then just return it
-        if max == 0:
+        if max == min:
             return frame
-        threshold = max / 8
+        threshold = min + (max - min) / 8
         _, frame = cv2.threshold(frame, threshold, 255, cv2.THRESH_BINARY)
 
         # filter out single pixels and other noise
@@ -171,8 +198,11 @@ class TrackerBase(object):
 
     @property
     def position_pixel(self):
-        '''Return the position in pixel coordinates.'''
-        return tuple(self._pos)
+        '''Return the position in integer pixel coordinates.'''
+        if self._have_pos():
+            return tuple(int(x) for x in self._pos)
+        else:
+            return tuple(self._pos)
 
     def _pixel_to_tank(self, pt):
         '''Transform pixel coordinates to tank coordinates.
@@ -243,7 +273,7 @@ class TrackerBase(object):
         self._update_estimates(prevpos)
 
         if self._have_pos():
-            self._positions.append(tuple(int(x) for x in self.position_pixel))
+            self._positions.append(self.position_pixel)
 
 
 class SimpleTracker(TrackerBase):
@@ -321,7 +351,7 @@ class VelocityTracker(TrackerBase):
             # possible w.r.t. acceleration.
             new_vel = pt - self._pos
             accel = numpy.linalg.norm(new_vel - self._vel)
-            max_accel_per_frame = 30 
+            max_accel_per_frame = 30
             max_accel = (self._missing_count + 1) * max_accel_per_frame
             if accel > max_accel:
                 print "--------------------"
