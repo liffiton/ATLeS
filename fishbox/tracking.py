@@ -356,7 +356,7 @@ class VelocityTracker(TrackerBase):
             max_accel = (self._missing_count + 1) * max_accel_per_frame
             if accel > max_accel:
                 # not considered a valid point
-                logging.info("Point rejected due to acceleration: {pos: %s, vel: %f, new_vel: %f, accel: %f}" % (str(self._pos), self._vel, new_vel, accel))
+                logging.info("Point rejected due to acceleration: {pos: %s, vel: %s, new_vel: %s, accel: %f}" % (str(self._pos), str(self._vel), str(new_vel), accel))
                 return -1
 
             # consider the acceleration in the score as well

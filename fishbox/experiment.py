@@ -168,7 +168,7 @@ class Experiment(object):
         # Frame processing (though these feed into the Tracker, some also rely on its position estimate)
         filt_bgsub = tracking.TargetFilterBGSub()
         filt_bright = tracking.TargetFilterBrightness()
-        filt_dist = tracking.TargetFilterDistance(self._track, maxdist=int(tank_width*0.05))
+        filt_dist = tracking.TargetFilterDistance(self._track, maxdist=int(tank_width*0.1))
         # First try the AND of both filters' outputs;
         # then the background subtractor alone;
         # then the brightness filter alone but with a distance limit
