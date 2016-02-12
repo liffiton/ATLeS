@@ -338,10 +338,11 @@ class VelocityTracker(TrackerBase):
             # (based on fish's max velocity and number of tracking-missing
             # frames) then consider this a bad detection.
             # NOTE: based on a semi-magic number: max_dist_per_frame...
-            max_dist_per_frame = 0.2 * self._w  # assume fish can't move more than 20% of tank in one frame time
+            max_dist_per_frame = 0.3 * self._w  # assume fish can't move more than 30% of tank in one frame time
             max_est_dist = (self._missing_count + 1) * max_dist_per_frame
             if dist > max_est_dist:
                 # not considered a valid point
+                logging.info("Point rejected due to distance: {pos: %s, dist: %f, max_est_dist: %f}" % (str(self._pos), dist, max_est_dist))
                 return -1
 
             # scale (dist==0)->1.0, (dist==inf)->0.0
@@ -351,17 +352,11 @@ class VelocityTracker(TrackerBase):
             # possible w.r.t. acceleration.
             new_vel = pt - self._pos
             accel = numpy.linalg.norm(new_vel - self._vel)
-            max_accel_per_frame = 30
+            max_accel_per_frame = 50
             max_accel = (self._missing_count + 1) * max_accel_per_frame
             if accel > max_accel:
-                print "--------------------"
-                print "REJECTED BY ACCELERATION"
-                print "pos:", self._pos
-                print "tested pt:", pt
-                print "vel:", self._vel
-                print "new_vel:", new_vel
-                print "accel:", accel
-                print "--------------------"
+                # not considered a valid point
+                logging.info("Point rejected due to acceleration: {pos: %s, vel: %f, new_vel: %f, accel: %f}" % (str(self._pos), self._vel, new_vel, accel))
                 return -1
 
             # consider the acceleration in the score as well
