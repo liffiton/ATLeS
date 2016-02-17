@@ -29,6 +29,14 @@ def _dbgframes(trackrel):
     return sorted(glob.glob(os.path.join(config.DBGFRAMEDIR, expname, "*")))
 
 
+def _setupfile(trackpath):
+    setupfile = trackpath[:trackpath.find("-track.csv")] + "-setup.txt"
+    if os.path.isfile(setupfile):
+        return setupfile
+    else:
+        return None
+
+
 def _get_track_data(track):
     # configuration: # buckets for x/y in heatmap
     xbuckets = 30
@@ -116,7 +124,7 @@ def tracks():
         else:
             lines, aml, heat, vel = _get_track_data(trackfile)
             track_data_cache[key] = (lines, aml, heat, vel)
-        tracks.append( (index, trackfile, trackrel, lines, aml, heat, vel, _imgs(trackrel), _dbgframes(trackrel)) )
+        tracks.append( (index, trackfile, trackrel, lines, aml, heat, vel, _imgs(trackrel), _dbgframes(trackrel), _setupfile(trackfile)) )
     return dict(tracks=tracks, local=local, name='tracks')
 
 

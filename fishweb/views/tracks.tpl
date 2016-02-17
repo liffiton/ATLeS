@@ -13,7 +13,7 @@
     </div>
   </div>
   <div class="row">
-    <div class="col-lg-10 col-md-12 col-sm-12">
+    <div class="col-lg-12 col-md-12 col-sm-12">
       <table class="table table-hover table-vertmid">
         <thead>
           <tr>
@@ -31,25 +31,25 @@
             <th>Actions</th>
           </tr>
         </thead>
-        %for index, path, relpath, points, aml, heat, vel, imgs, dbgframes in tracks:
+        %for index, trackpath, relpath, points, aml, heat, vel, imgs, dbgframes, setupfile in tracks:
         <tr class="undo_row" id="row_{{index}}_undo">
           <td></td>
           <td>{{relpath}}</td>
           <td colspan=5><i>Archived</i></td>
           <td>
-            <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{path}}', {{index}});" title="Unarchive">
+            <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{trackpath}}', {{index}});" title="Unarchive">
               <span class="glyphicon glyphicon-log-in"></span>
               Undo archive
             </button>
           </td>
         </tr>
-        <tr class="track_row" id="row_{{index}}" data-path='{{path}}' data-index='{{index}}'>
+        <tr class="track_row" id="row_{{index}}" data-path='{{trackpath}}' data-index='{{index}}'>
           <td>
             <button type="button" class="btn btn-default btn-xs text-muted selectbutton" title='Select'>
               <span class="glyphicon glyphicon-ok"></span>
             </button>
           </td>
-          <td class="trackfile_cell"><a href="/{{path}}">{{relpath}}</a></td>
+          <td class="trackfile_cell"><a href="/{{trackpath}}">{{relpath}}</a></td>
           <td class="number_cell">{{points}}</td>
           <td class="chart_cell">
             <canvas class="aml" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}"></canvas>
@@ -66,15 +66,18 @@
           </td>
           <td>
             %if imgs:
-            <a href="/view/{{path}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-stats"></span> Plots</a>
+            <a href="/view/{{trackpath}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-stats"></span> Plots</a>
             %end
             %if dbgframes:
-            <a href="/dbgframes/{{path}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-camera"></span> Debug</a>
+            <a href="/dbgframes/{{trackpath}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-camera"></span> Debug</a>
+            %end
+            %if setupfile:
+            <a href="/{{setupfile}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-cog"></span> Setup</a>
             %end
           </td>
           <td class="actionbuttons">
             %if points > 0:
-            <button type="button" class="btn btn-default btn-xs" onclick="do_post('/analyze/', 'path={{path}}');">
+            <button type="button" class="btn btn-default btn-xs" onclick="do_post('/analyze/', 'path={{trackpath}}');">
               %if imgs:
               <span class="glyphicon glyphicon-refresh"></span>
               Re-plot
@@ -84,7 +87,7 @@
               %end
             </button>
             %end
-            <button type="button" class="btn btn-xs btn-danger" onclick="do_archive('{{path}}', {{index}});" title='Archive'>
+            <button type="button" class="btn btn-xs btn-danger" onclick="do_archive('{{trackpath}}', {{index}});" title='Archive'>
               <span class="glyphicon glyphicon-log-out"></span>
             </button>
           </td>
