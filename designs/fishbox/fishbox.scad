@@ -14,11 +14,13 @@ acrylic_thickness = 2.4;
     // 2.4mm = 0.094" (looks good based on cut test piece for acrylic slotting into itself)
 
 // 1/8" Hardboard:
-hardboard_thickness = 3.1;
+hardboard_thickness = 3.2;
     // 2.8mm = 0.110"
     //   * looked good based on cut test piece for hardboard slotting into hardboard
     //   * 2015-03-06: Hanging supports didn't fit into cutouts (or did only with lots of force)
     // 3.1mm for some breathing room
+    //   * 2016-02-26: Still tighter than is ideal for sliding parts together.
+    // 3.2mm for just a smidge more...
 
 // Assign materials: window/back wall and everything else
 //window_thickness = acrylic_thickness;
@@ -57,11 +59,11 @@ tank_foot_offset_right = 101;
 // x-position of mask piece inside box
 mask_loc = tank_width + thickness;  // center-to-center
 // dimensions for mask view opening
-view_opening_left = 75;
-view_opening_right = 85;
+view_opening_left = 65;
+view_opening_right = 78;
 view_opening_width = depth-thickness - view_opening_left - view_opening_right;
-view_opening_bottom = 29;
-view_opening_height = 90;
+view_opening_bottom = 24;
+view_opening_height = 96;
 
 // camera mounting measurements
 camera_hole_diameter = 1.7;       // bolts are m2; 2mm nominal, 1.9mm actual, and a bit less for the beam width
@@ -120,7 +122,7 @@ else {
 
 module mask(x) {
     difference() {
-        vert_face_base(x, top_offset=0, bottom_offset=base_height-thickness);
+        vert_face_base(x, top_offset=thickness, bottom_offset=base_height-thickness);
         side(y=0);
         side(y=depth);
         translate([x-thickness/2, -overhang, 0]) {
@@ -274,18 +276,20 @@ module rounded_rect(x,y,z, center, radius) {
 
 module top_cover() {
     // width1 = main cover ; width2 = tank section cover
-    width1 = width - mask_loc - thickness;
-    width2 = mask_loc - thickness;
+    width1 = width - mask_loc - thickness/2;
+    width2 = mask_loc - thickness/2;
     color("Grey", alpha=0.5)
     union() {
+        // back piece (over empty space)
         translate([0,-outset,height-thickness])
         difference() {
-            translate([mask_loc+thickness/2,0,0])
+            translate([mask_loc,0,0])
                 cube([width1+thickness+outset,depth+outset*2,thickness]);
             cutouts(4,width1,outset,rot=0,trans=[width1/2+mask_loc,0,0]);
             cutouts(4,width1,outset,rot=180,trans=[width1/2+mask_loc,depth+outset*2,0]);
             cutouts(5,depth-thickness,outset,rot=90,trans=[width+outset,depth/2+outset,0]);
         }
+        // front piece (over tank)
         translate([-outset-thickness/2,-overhang,height-thickness])
         difference() {
             cube([width2+thickness+outset,depth+overhang*2,thickness]);
@@ -312,8 +316,10 @@ module tank_support() {
         tank_support_layer1();
         color("Grey", alpha=0.5)
             tank_support_layer2();
+/*
         color("Grey", alpha=0.5)
             tank_support_layer3();
+*/
     }
 }
 // Two strips of hardboard on either side of LED strip
@@ -328,9 +334,14 @@ module tank_support_layer1() {
 // Clear acrylic over LED strip
 module tank_support_layer2() {
     translate([0, 0, thickness])
+    difference() {
         cube([tank_width, depth-thickness, thickness]);
+        translate([tank_width/2, depth-tank_width/2, 0])
+            cylinder(d=25, h=100, center=true);
+    }
 }
 // Clear acrylic end blocks to prevent tank shifting / seat it in correct location
+// [Currently unused -- 2016-02-26]
 module tank_support_layer3() {
     translate([0, 0, thickness*2])
         cube([tank_width, tank_foot_offset_right, thickness]);
