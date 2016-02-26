@@ -49,8 +49,9 @@ def start_img_stream(width=648):
                '--height', str(height),
                '-awb', 'off',
                '-ex', 'off',
-               '-ss', '200000',
+               '-ss', '100000',
                '-e', 'jpg',
+               '-sa', '-100',        # completely desaturate
                '-th', '0:0:0',       # no thumbnail
                '-q', '15',           # high, but not crazy-high quality
                #'-a', '8',            # add a timestamp [doesn't update w/ -s or -tl]
