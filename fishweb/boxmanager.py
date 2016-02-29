@@ -120,7 +120,8 @@ class Box(object):
 
     @property
     def connected(self):
-        return self._rpc and not self._rpc.closed
+        return self._rpc and not self._rpc.closed and \
+               self._img_rpc and not self._img_rpc.closed
 
     def __getattr__(self, name):
         '''Return something from self.rpc if it wasn't found in this object
