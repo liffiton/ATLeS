@@ -49,7 +49,7 @@ def start_img_stream(width=648):
                '--height', str(height),
                '-awb', 'off',
                '-ex', 'off',
-               '-ss', '100000',
+               '-ss', '200000',      # 200ms shutter
                '-e', 'jpg',
                '-sa', '-100',        # completely desaturate
                '-th', '0:0:0',       # no thumbnail

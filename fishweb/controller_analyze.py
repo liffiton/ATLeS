@@ -84,6 +84,10 @@ def _do_analyze(trackfile):
     g.savefig(config.PLOTDIR + "%s.heat.png" % trackrel)
     g.plot_heatmap(10)
     g.savefig(config.PLOTDIR + "%s.heat.10.png" % trackrel)
+    g.plot_x_fft()
+    g.savefig(config.PLOTDIR + "%s.x_fft.png" % trackrel)
+    g.plot_x_fft(10)
+    g.savefig(config.PLOTDIR + "%s.x_fft.10.png" % trackrel)
     g.plot_leftright()
     g.savefig(config.PLOTDIR + "%s.leftright.png" % trackrel)
 

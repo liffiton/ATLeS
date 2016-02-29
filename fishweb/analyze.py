@@ -4,6 +4,8 @@ try:
     from ConfigParser import RawConfigParser, MissingSectionHeaderError
 except ImportError:
     from configparser import RawConfigParser, MissingSectionHeaderError
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import collections, gridspec, lines, patches
 import numpy as np
@@ -342,6 +344,39 @@ class Grapher(object):
             plt.ylabel("Cumulative entries")
             plt.xlim(0, self._time[-1])
             plt.legend(["Left", "Right"], fontsize=8, loc=2)
+
+    def plot_x_fft(self, numplots=1):
+        plt.close('all')
+        plt.figure(figsize=(4*numplots, 4))
+        for i in range(numplots):
+            start = i * len(self._x) / numplots
+            end = (i+1) * len(self._x) / numplots
+            ax = plt.subplot(1, numplots, i+1)
+            ax.set_yscale('log')
+            ax.set_ylim([0.1,1000])
+            self._format_axis(plt.gca())
+            #ax.axes.get_xaxis().set_visible(False)
+            #ax.axes.get_yaxis().set_visible(False)
+
+            # compute fft
+            fft = np.fft.rfft(self._x[start:end])
+            freq = np.fft.rfftfreq(n=end-start, d=1.0/10)
+
+            ax.plot(freq[:len(freq)/2], abs(fft[:len(fft)/2]))
+
+#            # imshow expects y,x for the image, but x,y for the extents,
+#            # so we have to manage that here...
+#            nbins = 50
+#            #heatmap, yedges, xedges = np.histogram2d(self._y[start:end], self._x[start:end], bins=nbins)
+#            bins = np.concatenate( (np.arange(0,1.0,1.0/nbins), [1.0]) )
+#            fft_binned, edges = np.histogram(fft, bins=bins)
+#            extent = [xedges[0],xedges[-1], yedges[0], yedges[-1]]
+#            # make sure we always show the full extent of the tank and the full extent of the data,
+#            # whichever is wider.
+#            ax.set_xlim(min(0, xedges[0]), max(1, xedges[-1]))
+#            ax.set_ylim(min(0, yedges[0]), max(1, yedges[-1]))
+#            ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest')
+
 
     def plot_heatmap(self, numplots=1):
         plt.close('all')
