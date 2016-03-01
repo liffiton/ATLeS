@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="62.160622mm"
+   height="160mm"
+   viewBox="0 0 220.25417 566.92912"
+   id="svg7344"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="tank_baffle.svg">
+  <defs
+     id="defs7346" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.74625"
+     inkscape:cx="110.12705"
+     inkscape:cy="283.46463"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-width="1920"
+     inkscape:window-height="1176"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7349">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(1995.3724,-44.866344)">
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#ff0000;stroke-width:0.38784984px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m -1995.1678,45.060208 29.4819,548.016682 c 1.2219,13.62292 12.5802,18.48764 20.3773,18.49861 l 0,-4.76931 120.1615,0.0128 -0.035,4.78223 c 7.7972,-0.0108 19.1553,-4.87574 20.3772,-18.49866 l 29.482,-548.017353 -10.4054,0 -1.1559,7.515346 -95.8906,-0.01287 0,44.820153 -5.4405,0 0,-44.820153 -95.3921,-0.01212 -1.156,-7.515347 z"
+       id="path7302-4"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccccccccccccc" />
+  </g>
+</svg>
