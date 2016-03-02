@@ -146,6 +146,7 @@ $(function() {
   $("#rowfilter").on('input', function(e) {
     filter_rows(this.value);
   });
+  $("#rowfilter").trigger('input');
   $("._selectallbutton").click(toggle_select_all);
   $("tr.track_row .selectbutton").click(function(e) {
     var row = $(this).closest("tr");
