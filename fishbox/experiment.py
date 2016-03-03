@@ -219,9 +219,9 @@ class Experiment(object):
         ''' Save a copy of the current frame for debugging. '''
         # Save as world-writable so rsync can delete them.
         oldmask = os.umask(0)
-        imgfile = "%s/frame_%04d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
+        imgfile = "%s/frame_%05d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
         cv2.imwrite(imgfile, frame)
-        subimgfile = "%s/subframe_%04d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
+        subimgfile = "%s/subframe_%05d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
         cv2.imwrite(subimgfile, subframe)
         os.umask(oldmask)
         logging.info("Saved frame %d." % frame_num)
