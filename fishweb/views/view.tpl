@@ -17,6 +17,7 @@
       $(document).keypress(function(e) {
         if (String.fromCharCode(e.which) == '+') {
           $("img").css('filter', 'brightness(500%)');
+          $("img").css('-webkit-filter', 'brightness(500%)');
         }
       });
     </script>
