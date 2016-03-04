@@ -1,0 +1,12 @@
+Classical assay: Same fish over time?  How do you then attribute the improved learning to their development instead of to their repeated exposure?
+
+Fig 3A, 3B: what is the red dot in the middle of the extinction trial at t=90?  Reinstatement?  But that's not described for this, huh, assay(?) at all...
+
+Why the striped stimulus for <4wk larvae?  The sample trace shows them hitting the 50% boundary plenty often, so why add two more boundaries?  Wouldn't this just confuse the training?  How does this not massively bias the learning results for those fish???
+
+Thought: the fish *might* be able to sense what is displayed beneath them without the visual input.  Electrical differences between light, dark, red pixels, e.g.  So the "vision is the sensory modality governing..." part isn't really bulletproof unless they do something to test the same things with the backlight off.
+
+WTF is with the supplemental figures?  Figure 3 has something to do with trapping fish in agar and poking them in the head.  No explanation, though.
+
+"We deliberately avoided the use of stimuli that elicit any innate preference or aversion, as these make the interpretation of the assay inherently difficult."  Yes... probably a good idea...
+
