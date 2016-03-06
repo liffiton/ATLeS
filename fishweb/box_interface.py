@@ -82,7 +82,12 @@ def stop_img_stream():
     wiring.IR_off()
 
 
-def start_experiment(expname, timelimit, startfromtrig, stimulus, inifile):
+def start_experiment(expname, inifile, phases):
+    '''
+    Parameters:
+       phases: Tuple(int, bool, str) - length, startfromtrig, stimulus
+               stimulus choices: on, off, rand
+    '''
     # check for raspistill and kill if running
     stop_img_stream()
 
@@ -90,15 +95,13 @@ def start_experiment(expname, timelimit, startfromtrig, stimulus, inifile):
         cmdparts = ['sudo']  # fishbox.py must be run as root!
     else:
         cmdparts = []
+
     cmdparts.append(config.EXPSCRIPT)
-    cmdparts.append("-t %d" % timelimit)
-    if startfromtrig:
-        cmdparts.append("--time-from-trigger")
-    if stimulus == "nostim":
-        cmdparts.append("--nostim")
-    elif stimulus == "randstim":
-        cmdparts.append("--randstim")
     cmdparts.append("--inifile %s" % inifile)
+    # phases: each specified with a -p argument w/ ','-delimited values in each
+    # e.g.: -p 10,False,off -p 30,Flase,rand -p 30,False,off
+    for p in phases:
+        cmdparts.append("--phases %s" % ','.join(str(x) for x in p))
     cmdparts.append(expname)
     cmdline = ' '.join(cmdparts)
     cmdargs = shlex.split(cmdline)

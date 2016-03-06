@@ -1,5 +1,6 @@
 import argparse
 import atexit
+from collections import namedtuple, OrderedDict
 try:
     from ConfigParser import RawConfigParser
 except ImportError:
@@ -14,10 +15,10 @@ import time
 
 import config
 import utils
-from fishbox import experiment, tracking
+from fishbox import experiment
 
-
-_expargs = []  # track which arguments are related to the experiment
+# define a named tuple for storing Phase data
+Phase = namedtuple('Phase', ['phasenum', 'length', 'time_from_trig', 'dostim'])
 
 
 def greedy_parse(s):
@@ -30,7 +31,7 @@ def greedy_parse(s):
 
 
 def get_conf(args):
-    '''Read a configuration file.'''
+    '''Read a configuration file, add configuration from cmdline args.'''
     config_filename = args.inifile
     if not os.path.isfile(config_filename):
         logging.error("Configuration file not found: %s", config_filename)
@@ -49,25 +50,38 @@ def get_conf(args):
             # greedy_parse() converts each to a float or an int, if it can.
             conf[section][key] = greedy_parse(parser.get(section, key))
 
-    # create a dictionary for relevant cmdline arguments,
-    conf['experiment_args'] = {}
-    for arg in _expargs:
-        conf['experiment_args'][arg] = getattr(args, arg)
-
     return conf
 
 
-def make_runtime_choices(conf):
-    conf['at_runtime'] = {}
-    section = conf['at_runtime']
-    # Determine and record whether stimulus is enabled for this run
-    section['dostim'] = True
-    if conf['experiment_args']['nostim']:
-        section['dostim'] = False
-    elif conf['experiment_args']['randstim']:
-        choice = random.choice([True, False])
-        section['dostim'] = choice
-        logging.info("--randstim selected; chose stimulus %s." % ("ENABLED" if choice else "DISABLED"))
+def setup_phases(args, conf):
+    # create a dictionary for relevant cmdline arguments,
+    conf['phases'] = {}
+    section = conf['phases']
+    section['phases_argstrings'] = ' '.join("-p %s" % p for p in args.phases)
+
+    # setup phases data to be used during experiment execution
+    phase_args = [p.split(',') for p in args.phases]
+    phases = []
+    for i, (length, time_from_trig, stim) in enumerate(phase_args):
+        length = int(length)
+        time_from_trig = bool(time_from_trig)
+        # Determine and record whether stimulus is enabled for each phase
+        if stim == 'on':
+            dostim = True
+        elif stim == 'off':
+            dostim = False
+        elif stim == 'rand':
+            dostim = random.choice([True, False])
+            logging.info("stim=rand selected for phase %d; chose stimulus %s." % (i, ("ENABLED" if dostim else "DISABLED")))
+
+        phase_data = Phase(i, length, time_from_trig, dostim)
+        phases.append(phase_data)
+
+        section['phase_%d_length' % i] = length
+        section['phase_%d_time_from_trigger' % i] = time_from_trig
+        section['phase_%d_dostim' % i] = dostim
+
+    section['phases_data'] = phases
 
 
 def get_args():
@@ -79,26 +93,41 @@ def get_args():
                         help='create a window to see the camera view and tracking information')
     parser.add_argument('--debug-frames', type=int, default=100,
                         help='save an image of the current frame when tracking fails every DEBUG_FRAMES frames (default: 100; 0 means no debug frames will be written)')
-    exp_group = parser.add_argument_group('experiment settings')
-    exp_group.add_argument('-t', '--time', type=int, default=None,
-                        help='limit the experiment to TIME minutes (default: run forever / until stopped with CTRL-C)')
-    exp_group.add_argument('--time-from-trigger', action='store_true',
-                        help='when using -t/--time, only start counting the time from the moment the tracking first hits its trigger condition'),
-    stimgroup = exp_group.add_mutually_exclusive_group(required=False)
-    stimgroup.add_argument('--nostim', action='store_true',
-                        help='disable all stimulus for this run')
-    stimgroup.add_argument('--randstim', action='store_true',
-                        help='choose whether to enable or disable stimulus for this run with 50/50 probabilities')
-    global _expargs
-    _expargs = ['time', 'time_from_trigger', 'nostim', 'randstim']
+
+#    exp_group = parser.add_argument_group('experiment settings')
+#    exp_group.add_argument('-t', '--time', type=int, default=None,
+#                        help='limit the experiment to TIME minutes (default: run forever / until stopped with CTRL-C)')
+#    exp_group.add_argument('--time-from-trigger', action='store_true',
+#                        help='when using -t/--time, only start counting the time from the moment the tracking first hits its trigger condition'),
+#    stimgroup = exp_group.add_mutually_exclusive_group(required=False)
+#    stimgroup.add_argument('--nostim', action='store_true',
+#                        help='disable all stimulus for this run')
+#    stimgroup.add_argument('--randstim', action='store_true',
+#                        help='choose whether to enable or disable stimulus for this run with 50/50 probabilities')
+    parser.add_argument('-p', '--phases', type=str, action='append',
+                        help='configure phases of the experiment. '
+                             'Each phase is specified as "len,trig,stim", '
+                             'where "len" is the phase length in minutes, '
+                             '"trig" is True/False controlling whether to '
+                             'start counting the time immediately or after '
+                             'the first trigger event, and "stim" is one of '
+                             '"on", "off", or "rand", controlling whether the '
+                             'stimulus is on, off, or randomly enabled with '
+                             'a 50%% chance. '
+                             'Specify each phase with its own -p/--phases '
+                             'argument in the order the phases should run. '
+                             'e.g.: "-p 10,False,off -p 30,False,rand -p 30,False,off" '
+                             'If not specified, fishbox runs a single, '
+                             'infinite "phase" with trig=False and stim=True.'
+                        )
 
     rare_group = parser.add_argument_group('rarely-used arguments')
     rare_group.add_argument('--inifile', type=str, default='ini/default.ini',
-                        help="configuration file specifying physical setup (default: ini/default.ini)")
+                            help="configuration file specifying physical setup (default: ini/default.ini)")
     rare_group.add_argument('--vidfile', type=str,
-                        help='read video input from the given file (for testing purposes)')
+                            help='read video input from the given file (for testing purposes)')
     rare_group.add_argument('--delay', type=int, default=0,
-                        help='delay in ms to add between frames (default: 0) -- useful for slowing video processing/display.')
+                            help='delay in ms to add between frames (default: 0) -- useful for slowing video processing/display.')
 
     return parser.parse_args()
 
@@ -147,14 +176,14 @@ def init_logging(args, conf):
 def write_setup(conf):
     # Record the setup in a -setup.txt file.
 
-    parser = RawConfigParser()
+    parser = RawConfigParser(dict_type=OrderedDict)
     for section in conf:
         if not isinstance(conf[section], dict):
             # only record values stored in sections/dicts
             continue
 
         parser.add_section(section)
-        for key in conf[section]:
+        for key in sorted(conf[section]):
             parser.set(section, key, conf[section][key])
 
     setupfilename = "%s/%s-setup.txt" % (config.TRACKDIR, conf['name'])
@@ -184,8 +213,17 @@ def main():
     conf = get_conf(args)
     init_logging(args, conf)
 
-    # add runtime-decided config
-    make_runtime_choices(conf)
+    if args.phases:
+        # add phases and runtime-decided config
+        setup_phases(args, conf)
+        total_time = sum(p.length for p in conf['phases']['phases_data'])
+    else:
+        # run as a single "infinite" phase with dostim=True
+        conf['phases'] = {}
+        onephase = Phase(0, float('inf'), False, True)
+        conf['phases']['phases_data'] = [onephase]
+
+        total_time = None
 
     # record all configuration to the setup file
     write_setup(conf)
@@ -201,7 +239,7 @@ def main():
         lockfd = os.open(config.LOCKFILE, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         lockfile = os.fdopen(lockfd, 'w')
         # store PID, start time (in UTC), and experiment runtime
-        lockfile.write("%d\n%d\n%d\n" % (os.getpid(), int(time.time()), args.time*60 if args.time else 0))
+        lockfile.write("%d\n%d\n%d\n" % (os.getpid(), int(time.time()), total_time*60 if total_time else 0))
         lockfile.close()
         # remove lockfile at exit
         atexit.register(os.unlink, config.LOCKFILE)
@@ -212,16 +250,13 @@ def main():
     # create Experiment object
     exp = experiment.Experiment(conf, args)
 
-    # setup timeout alarm if needed
+    # setup timeout alarm as a backup
     # NOTE: not cross-platform (SIGALRM not available on Windows)
-    if args.time and sys.platform in ['cygwin', 'nt']:
-        logging.error("Timeout not available under Windows.  Timeout option ignored.")
-    elif args.time:
+    if total_time and sys.platform in ['cygwin', 'nt']:
+        logging.warning("SIGALRM not available under Windows.  Backup timeout not enabled.")
+    elif total_time:
         signal.signal(signal.SIGALRM, sighandler)
-        if not args.time_from_trigger:
-            # set the alarm here; otherwise (if --time-from-trigger),
-            # it will be set in experiment thread
-            signal.alarm(args.time*60)
+        signal.alarm(total_time*60 + 60)  # with 60 seconds buffer
 
     # run in separate thread so signal handler is more reliable
     runthread = threading.Thread(target=exp.run)

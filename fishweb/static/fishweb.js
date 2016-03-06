@@ -278,6 +278,46 @@ function update_ini(iniFile) {
 }
 
 /*******************************************************************
+ * Dynamic form (add/del experiment phases)
+ */
+function num_phases_enabled() {
+    var count = 0;
+    $.each($(".phasediv"), function() {
+        var enabled = $("#var_enabled", this).val();
+        if (enabled == "True") {
+            count++;
+        }
+    });
+    return count;
+}
+function update_phase_ui() {
+    var num_enabled = num_phases_enabled();
+    $("#phasecount").val(num_enabled);
+    $("#btn_addPhase").toggleClass("disabled", (num_enabled >= 10));
+    $("#btn_delPhase").toggleClass("disabled", (num_enabled <= 1));
+    $.each($(".phasediv"), function() {
+        var enabled = $("#var_enabled", this).val();
+        $(this).toggleClass('hidden', enabled != "True");
+    });
+}
+function add_phase() {
+    var num_enabled = num_phases_enabled();
+    if (num_enabled >= 10) return;
+
+    var addphase = $("#phase_" + num_enabled);
+    $("#var_enabled", addphase).val("True");
+    update_phase_ui();
+}
+function del_phase() {
+    var num_enabled = num_phases_enabled();
+    if (num_enabled <= 1) return;
+
+    var delphase = $("#phase_" + (num_enabled-1));
+    $("#var_enabled", delphase).val("False");
+    update_phase_ui();
+}
+
+/*******************************************************************
  * Form caching
  */
 function iterate_fields(form, func) {
@@ -286,7 +326,7 @@ function iterate_fields(form, func) {
 }
 
 function clear_form_data() {
-    // enumerate and save all fields in localstorage
+    // clear all fields in localstorage
     iterate_fields($(this).closest('form'), function(i, field) {
         localStorage.removeItem(window.location.pathname + "|" + field.name);
     });
@@ -303,7 +343,10 @@ function save_form_data() {
         }
         else {
             if (field.value) {
-                localStorage.setItem(window.location.pathname + "|" + field.name, field.value);
+                localStorage.setItem(storename, field.value);
+            }
+            else {
+                localStorage.removeItem(storename);
             }
         }
     });

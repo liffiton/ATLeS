@@ -4,7 +4,6 @@ import datetime
 import logging
 import numpy
 import os
-import signal
 import time
 
 import cv2
@@ -236,7 +235,7 @@ class Experiment(object):
         # if we get here, they were all empty, so return the last one (which is empty)
         return output
 
-    def _do_tracking(self, frame, frame_num):
+    def _do_tracking(self, frame, frame_num, phase_data):
         # Process the frame (finds contours, centroids, and updates background subtractor)
         subframe = self._extract_subframe(frame)
         filtered = self._apply_filters(subframe)
@@ -289,18 +288,27 @@ class Experiment(object):
         if status != 'lost' and self._trigger(pos_tank):
             # Only provide a stimulus if we know where the fish is
             # and the behavior test for that position says we should.
-            if self._conf['at_runtime']['dostim']:
+            if phase_data.dostim:
                 self._control.add_hit(str(pos_tank))
                 response = self._control.get_response()
                 self._stim.show(response)
 
             # set an alarm if we're supposed to start timing based on the trigger
-            if self._args.time and self._args.time_from_trigger and not self._alarm_set:
-                signal.alarm(self._args.time*60)
-                self._alarm_set = True
+            #if self._args.time and self._args.time_from_trigger and not self._alarm_set:
+            #    signal.alarm(self._args.time*60)
+            #    self._alarm_set = True
 
         else:
             self._stim.show(0)  # 0 = no stimulus
+
+    def _get_phase_data(self, runningtime):
+        t_sum = 0
+        for p in self._conf['phases']['phases_data']:
+            t_sum += p.length*60
+            if runningtime < t_sum:
+                return p
+        # if we get here, we've run longer than the sum of all phase lengths
+        return 'done'
 
     def run(self):
         self._stim.begin()
@@ -316,7 +324,19 @@ class Experiment(object):
 
         self._starttime = time.time()
 
+        phase_data = None
+
         while True:
+            curtime = time.time()
+
+            new_phase_data = self._get_phase_data(curtime-self._starttime)
+            if new_phase_data == 'done':
+                logging.info("End of last phase reached; exiting.")
+                break
+            elif new_phase_data != phase_data:
+                logging.info("Starting phase: %s" % (str(new_phase_data)))
+                phase_data = new_phase_data
+
             stim_msg = self._stim.msg_poll()
             if stim_msg == 'quit':
                 logging.info("Stimulus window closed; exiting.")
@@ -330,7 +350,7 @@ class Experiment(object):
 
             frame_num += 1
 
-            self._do_tracking(frame, frame_num)
+            self._do_tracking(frame, frame_num, phase_data)
 
             if self._args.watch:
                 _watcher.draw_watch(frame, self._track, self._proc)
@@ -339,9 +359,8 @@ class Experiment(object):
                     break
 
             # tracking performance / FPS
-            if frame_num % 100 == 0:
-                curtime = time.time()
-                frame_time = (curtime - prevtime) / 100
+            if frame_num % 1000 == 0:
+                frame_time = (curtime - prevtime) / 1000
                 logging.info("%dms / frame : %dfps", 1000*frame_time, 1/frame_time)
                 prevtime = curtime
 

@@ -4,7 +4,7 @@ import re
 import time
 
 from bottle import abort, post, redirect, request, response, route, template
-from wtforms import Form, BooleanField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
+from wtforms import Form, BooleanField, FieldList, FormField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 import config
 from fishweb import box_interface
@@ -51,13 +51,25 @@ def _name_is_sane(form, field):
         raise ValidationError("Experiment name must be alphanumeric characters only.")
 
 
+def _skip_if_not_enabled(form, field):
+    if form.enabled.data != "True":
+        # clear any previous errors
+        field.errors[:] = []
+        raise validators.StopValidation()
+
+
+class ExperimentPhaseForm(Form):
+    enabled = StringField("enabled")
+    length = IntegerField("Length", [_skip_if_not_enabled, validators.InputRequired(), validators.NumberRange(min=1, max=7*24*60)])
+    startfromtrig = BooleanField("startFromTrigger", [_skip_if_not_enabled])
+    stimulus = RadioField("Stimulus", choices=[('off', 'Off'), ('on', 'On'), ('rand', 'Random (50/50 off/on)')], validators=[_skip_if_not_enabled, validators.InputRequired()])
+
+
 class NewExperimentForm(Form):
     ''' Form for creating a new experiment. '''
     expname = StringField("Experiment Name", [validators.Length(max=32), _name_is_sane])
-    timelimit = IntegerField("Time Limit", [validators.NumberRange(min=1, max=24*60)])
-    startfromtrig = BooleanField("startFromTrigger")
-    stimulus = RadioField("Stimulus", choices=[('nostim', 'Off'), ('stim', 'On'), ('randstim', 'Randomized (equal chance off or on)')])
     inifile = SelectField(".ini File", choices=zip(_inis(), _inis()))
+    phases = FieldList(FormField(ExperimentPhaseForm), min_entries=10, max_entries=10)
 
 
 @route('/')
@@ -75,6 +87,9 @@ def new_experiment_box(tgtbox, boxes=None):
     box = _get_box(tgtbox, boxes)
 
     form = NewExperimentForm()
+    # first element must be visible
+    form.phases[0].enabled.data = True
+
     return template('new', dict(form=form, lock_exists=box.lock_exists(), box=tgtbox))
 
 
@@ -130,12 +145,17 @@ def post_new(tgtbox=None, boxes=None):
     if not form.validate():
         return template('new', form=form, lock_exists=box.lock_exists(), box=tgtbox)
 
-    expname = request.forms.expname
-    timelimit = int(request.forms.timelimit)
-    startfromtrig = bool(request.forms.startfromtrig)
-    stimulus = request.forms.stimulus
-    inifile = request.forms.inifile
+    expname = form.expname.data
+    inifile = form.inifile.data
 
-    box.start_experiment(expname, timelimit, startfromtrig, stimulus, inifile)
+    def get_phase(phase):
+        length = phase.length.data
+        startfromtrig = phase.startfromtrig.data
+        stimulus = phase.stimulus.data
+        return (length, startfromtrig, stimulus)
+
+    phases = [get_phase(p) for p in form.phases if p.enabled.data == 'True']
+
+    box.start_experiment(expname, inifile, phases)
 
     redirect("/")
