@@ -85,7 +85,7 @@ def stop_img_stream():
 def start_experiment(expname, inifile, phases):
     '''
     Parameters:
-       phases: Tuple(int, bool, str) - length, startfromtrig, stimulus
+       phases: Tuple(int, str) - length, stimulus
                stimulus choices: on, off, rand
     '''
     # check for raspistill and kill if running
@@ -99,7 +99,7 @@ def start_experiment(expname, inifile, phases):
     cmdparts.append(config.EXPSCRIPT)
     cmdparts.append("--inifile %s" % inifile)
     # phases: each specified with a -p argument w/ ','-delimited values in each
-    # e.g.: -p 10,False,off -p 30,Flase,rand -p 30,False,off
+    # e.g.: -p 10,off -p 30,rand -p 30,off
     for p in phases:
         cmdparts.append("--phases %s" % ','.join(str(x) for x in p))
     cmdparts.append(expname)

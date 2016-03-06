@@ -18,7 +18,7 @@ import utils
 from fishbox import experiment
 
 # define a named tuple for storing Phase data
-Phase = namedtuple('Phase', ['phasenum', 'length', 'time_from_trig', 'dostim'])
+Phase = namedtuple('Phase', ['phasenum', 'length', 'dostim'])
 
 
 def greedy_parse(s):
@@ -62,9 +62,8 @@ def setup_phases(args, conf):
     # setup phases data to be used during experiment execution
     phase_args = [p.split(',') for p in args.phases]
     phases = []
-    for i, (length, time_from_trig, stim) in enumerate(phase_args):
+    for i, (length, stim) in enumerate(phase_args):
         length = int(length)
-        time_from_trig = bool(time_from_trig)
         # Determine and record whether stimulus is enabled for each phase
         if stim == 'on':
             dostim = True
@@ -74,11 +73,10 @@ def setup_phases(args, conf):
             dostim = random.choice([True, False])
             logging.info("stim=rand selected for phase %d; chose stimulus %s." % (i, ("ENABLED" if dostim else "DISABLED")))
 
-        phase_data = Phase(i, length, time_from_trig, dostim)
+        phase_data = Phase(i, length, dostim)
         phases.append(phase_data)
 
         section['phase_%d_length' % i] = length
-        section['phase_%d_time_from_trigger' % i] = time_from_trig
         section['phase_%d_dostim' % i] = dostim
 
     section['phases_data'] = phases
@@ -106,11 +104,9 @@ def get_args():
 #                        help='choose whether to enable or disable stimulus for this run with 50/50 probabilities')
     parser.add_argument('-p', '--phases', type=str, action='append',
                         help='configure phases of the experiment. '
-                             'Each phase is specified as "len,trig,stim", '
-                             'where "len" is the phase length in minutes, '
-                             '"trig" is True/False controlling whether to '
-                             'start counting the time immediately or after '
-                             'the first trigger event, and "stim" is one of '
+                             'Each phase is specified as "len,stim", '
+                             'where "len" is the phase length in minutes '
+                             'and "stim" is one of '
                              '"on", "off", or "rand", controlling whether the '
                              'stimulus is on, off, or randomly enabled with '
                              'a 50%% chance. '
@@ -118,7 +114,7 @@ def get_args():
                              'argument in the order the phases should run. '
                              'e.g.: "-p 10,False,off -p 30,False,rand -p 30,False,off" '
                              'If not specified, fishbox runs a single, '
-                             'infinite "phase" with trig=False and stim=True.'
+                             'infinite "phase" with stim=True.'
                         )
 
     rare_group = parser.add_argument_group('rarely-used arguments')

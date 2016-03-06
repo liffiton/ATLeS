@@ -97,12 +97,12 @@
               <tbody>
                 %for i, phase in enumerate(form.phases):
                   <tr class="phasediv {{'hidden' if not phase.enabled.data else ''}}" id="phase_{{i}}">
-                    <th>
+                    <th class="text-center">
                       {{!phase.enabled(class_="hidden", id="var_enabled")}}
                       {{i+1}}
                     </th>
-                    <td class="{{"has-error" if phase.length.errors else ""}}" width="40%">
-                      <div class="input-group col-sm-8">
+                    <td class="{{"has-error" if phase.length.errors else ""}}" width="30%">
+                      <div class="input-group col-sm-11">
                         {{!phase.length(class_="form-control")}}
                         <span class="input-group-addon">
                           minutes
@@ -113,20 +113,13 @@
                           <div class="help-block">{{e}}</div>
                         %end
                       %end
-                      <div class="checkbox input">
-                        <label>
-                          {{!phase.startfromtrig}}
-                          Time from first trigger
-                        </label>
-                      </div>
                     </td>
                     <td class="radio {{"has-error" if phase.stimulus.errors else ""}}">
                       %for value, label, _ in phase.stimulus.iter_choices():
-                        <label for="{{phase.stimulus.name}}:{{value}}">
+                        <label class="radio-inline" for="{{phase.stimulus.name}}:{{value}}">
                           <input type="radio" name="{{phase.stimulus.name}}" id="{{phase.stimulus.name}}:{{value}}" value="{{value}}">
                           {{label}}
                         </label>
-                        <br>
                       %end
                       %if phase.stimulus.errors:
                         %for e in phase.stimulus.errors:

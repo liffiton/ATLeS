@@ -182,9 +182,6 @@ class Experiment(object):
         # Setup printing stats on exit
         atexit.register(self._print_stats)
 
-        # Record whether the alarm has already been set (for --time-from-trigger)
-        self._alarm_set = False
-
         # Record when we last saved a debug frame (-1000000 is effectively "never")
         self._prev_dbg_frame = -1000000
 
@@ -292,12 +289,6 @@ class Experiment(object):
                 self._control.add_hit(str(pos_tank))
                 response = self._control.get_response()
                 self._stim.show(response)
-
-            # set an alarm if we're supposed to start timing based on the trigger
-            #if self._args.time and self._args.time_from_trigger and not self._alarm_set:
-            #    signal.alarm(self._args.time*60)
-            #    self._alarm_set = True
-
         else:
             self._stim.show(0)  # 0 = no stimulus
 

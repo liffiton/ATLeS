@@ -4,7 +4,7 @@ import re
 import time
 
 from bottle import abort, post, redirect, request, response, route, template
-from wtforms import Form, BooleanField, FieldList, FormField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
+from wtforms import Form, FieldList, FormField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 import config
 from fishweb import box_interface
@@ -61,7 +61,6 @@ def _skip_if_not_enabled(form, field):
 class ExperimentPhaseForm(Form):
     enabled = StringField("enabled")
     length = IntegerField("Length", [_skip_if_not_enabled, validators.InputRequired(), validators.NumberRange(min=1, max=7*24*60)])
-    startfromtrig = BooleanField("startFromTrigger", [_skip_if_not_enabled])
     stimulus = RadioField("Stimulus", choices=[('off', 'Off'), ('on', 'On'), ('rand', 'Random (50/50 off/on)')], validators=[_skip_if_not_enabled, validators.InputRequired()])
 
 
@@ -150,9 +149,8 @@ def post_new(tgtbox=None, boxes=None):
 
     def get_phase(phase):
         length = phase.length.data
-        startfromtrig = phase.startfromtrig.data
         stimulus = phase.stimulus.data
-        return (length, startfromtrig, stimulus)
+        return (length, stimulus)
 
     phases = [get_phase(p) for p in form.phases if p.enabled.data == 'True']
 
