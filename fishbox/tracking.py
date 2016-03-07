@@ -462,6 +462,12 @@ class Stream(object):
         # Hacks using v4l2-ctl to set capture parameters we can't control through OpenCV
         v4l2args = []
 
+        # Change AWB setting once to make sure new settings are actually used
+        # Not sure why this is required, but it appears to work.
+        # Without this, white balance is still somehow automatic even
+        # after setting it to manual below.
+        self._v4l2_call("--set-ctrl=white_balance_auto_preset=1")
+
         # Set FPS (OpenCV requests 30, hardcoded)
         v4l2args.append("-p %d" % fps)
 
@@ -469,11 +475,12 @@ class Stream(object):
         # exposure_time_absolute is given in multiples of 0.1ms.
         # Make sure fps above is not set too high (exposure time
         # will be adjusted automatically to allow higher frame rate)
-        v4l2args.append("--set-ctrl auto_exposure=1")  # 0=auto, 1=manual
-        v4l2args.append("--set-ctrl exposure_time_absolute=%d" % exposure)
-        v4l2args.append("--set-ctrl iso_sensitivity=1")  # 1=ISO100 -- not sure this has an effect
+        v4l2args.append("--set-ctrl=auto_exposure=1")  # 0=auto, 1=manual
+        v4l2args.append("--set-ctrl=exposure_time_absolute=%d" % exposure)
 
-        v4l2args.append("--set-ctrl white_balance_auto_preset=0")
+        v4l2args.append("--set-ctrl=white_balance_auto_preset=0")
+        v4l2args.append("--set-ctrl=red_balance=1000")
+        v4l2args.append("--set-ctrl=blue_balance=1000")
 
         self._v4l2_call(" ".join(v4l2args))
 
