@@ -216,7 +216,7 @@ def main():
     else:
         # run as a single "infinite" phase with dostim=True
         conf['phases'] = {}
-        onephase = Phase(0, float('inf'), False, True)
+        onephase = Phase(0, float('inf'), True)
         conf['phases']['phases_data'] = [onephase]
 
         total_time = None
