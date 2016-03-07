@@ -49,7 +49,7 @@ def start_img_stream(width=648):
                '--width', str(width),
                '--height', str(height),
                '-awb', 'off',
-               '--awbgains', '1,1,1'
+               '--awbgains', '1,1,1',
                '-ex', 'off',
                '-ss', '100000',      # 100ms shutter
                '-br', '55',          # push up brightness a bit
