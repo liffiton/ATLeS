@@ -359,7 +359,8 @@ class Grapher(object):
             #ax.axes.get_yaxis().set_visible(False)
 
             # compute fft
-            fft = np.fft.rfft(self._x[start:end])
+            window = np.blackman(end-start)
+            fft = np.fft.rfft(self._x[start:end] * window)
             freq = np.fft.rfftfreq(n=end-start, d=1.0/10)
 
             ax.plot(freq[:len(freq)/2], abs(fft[:len(fft)/2]))
@@ -376,7 +377,6 @@ class Grapher(object):
 #            ax.set_xlim(min(0, xedges[0]), max(1, xedges[-1]))
 #            ax.set_ylim(min(0, yedges[0]), max(1, yedges[-1]))
 #            ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest')
-
 
     def plot_heatmap(self, numplots=1):
         plt.close('all')
