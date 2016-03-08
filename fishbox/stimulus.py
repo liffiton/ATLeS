@@ -9,7 +9,6 @@ import wiring
 
 
 _LIGHT_PWM_PIN = 18  # pin for PWM control of visible light bar
-_AMBIENT_LIGHT_PWM = 550  # value that produces ~70lux in a quick test (with enclosure fully opaque and board pushed into corner)
 
 
 class NotRootError(RuntimeError):
@@ -84,23 +83,27 @@ class DummyStimulus(StimulusBase):
 
 
 class LightBarStimulus(ThreadedStimulus):
-    def __init__(self, freq_Hz, nostim_level=_AMBIENT_LIGHT_PWM):
-        '''Initialize as a ThreadedStimulus with StimulusLightBar helper.  freq_Hz=0 means the light bar will be on for as long as the stimulus is active.'''
-        helper = LightBarHelper(freq_Hz, nostim_level)
+    def __init__(self, nostim_level, stim_level, freq_Hz=None):
+        '''Initialize as a ThreadedStimulus with LightBarHelper helper.
+        freq_Hz=0 means the light bar will be on for as long as the
+        stimulus is active.
+        '''
+        helper = LightBarHelper(nostim_level, stim_level, freq_Hz)
         super(LightBarStimulus, self).__init__(helper)
 
 
 class LightBarHelper(object):
     '''Stimulus in the form of flashing the visible light LED bar at a given frequency.'''
-    def __init__(self, freq_Hz, nostim_level):
-        self._active = False   # is flashing activated?
-        self._on = False       # is light bar on?
-        if freq_Hz == 0:
+    def __init__(self, nostim_level, stim_level, freq_Hz=None):
+        self._stim_on = False   # is stimulus activated?
+        self._on = False        # is light bar on?
+
+        self._nostim_level = nostim_level  # PWM value for light level when stimulus not active
+        self._stim_level = stim_level      # PWM value for light level when stimulus is active
+        if freq_Hz is None or freq_Hz == 0:
             self._interval = None  # infinite wait in poll()
         else:
             self._interval = 1.0 / freq_Hz / 2  # half of the period
-
-        self._nostim_level = nostim_level  # PWM value for light level when stimulus not active
 
         self._lightval = None  # stores current PWM value to avoid extraneous pwmWrites
 
@@ -123,24 +126,27 @@ class LightBarHelper(object):
     def _light_nostim(self):
         self._set_light(self._nostim_level)
 
+    def _light_stim(self):
+        self._set_light(self._stim_level)
+
     def _handle_command(self, cmd):
         if cmd:
-            self._active = True
+            self._stim_on = True
         else:
-            self._active = False
+            self._stim_on = False
             self._on = False
 
     def _update(self):
-        if self._active:
-            # toggle
+        if self._stim_on:
             if self._interval is None:
-                self._on = True
+                self._light_stim()
             else:
+                # toggle fully on/off
                 self._on = not self._on
-            if self._on:
-                self._light_on()
-            else:
-                self._light_off()
+                if self._on:
+                    self._light_on()
+                else:
+                    self._light_off()
         else:
             self._light_nostim()
 

@@ -176,7 +176,6 @@ $(function() {
     var iniFile = this.value;
     update_ini(iniFile);
   });
-  update_ini($("#inifile option:selected").text());
 
   $("#clear_exp_button").click(function(e) {
     var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
@@ -198,7 +197,9 @@ $(function() {
     setTimeout(update_phase_ui, 0);
   });
 
+  // Update UI after everything is setup
   checkProgress("{{box}}");
   update_phase_ui();
+  update_ini($("#inifile option:selected").text());
 });
 </script>

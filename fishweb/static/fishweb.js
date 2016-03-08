@@ -267,7 +267,7 @@ function archive_selection() {
 }
 
 function update_ini(iniFile) {
-  $.get("/" + iniFile, function(data) {
+  $.get("/ini/" + iniFile, function(data) {
     lines = data.split('\n');
     real_lines = lines.filter(function(line) {return line[0] != '#';});
     contents = real_lines.join('\n').replace("\n", "");

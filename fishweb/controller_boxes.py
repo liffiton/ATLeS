@@ -1,4 +1,4 @@
-import glob
+import os
 import platform
 import re
 import time
@@ -11,7 +11,8 @@ from fishweb import box_interface
 
 
 def _inis():
-    return sorted(glob.glob(config.INIDIR + "*.ini"))
+    inifiles = [f for f in os.listdir(config.INIDIR) if f.endswith('.ini')]
+    return sorted(inifiles)
 
 
 def _get_box(tgtbox, boxes):
@@ -145,7 +146,7 @@ def post_new(tgtbox=None, boxes=None):
         return template('new', form=form, lock_exists=box.lock_exists(), box=tgtbox)
 
     expname = form.expname.data
-    inifile = form.inifile.data
+    inifile = os.path.join(config.INIDIR, form.inifile.data)
 
     def get_phase(phase):
         length = phase.length.data
