@@ -59,12 +59,12 @@
               {{!form.inifile.label(class_="col-sm-4 control-label")}}
               <div class="col-sm-8">
                 {{!form.inifile(class_="form-control")}}
-              </div>
-              %if form.inifile.errors:
-                %for e in form.inifile.errors:
-                  <p class="help-block">{{e}}</p>
+                %if form.inifile.errors:
+                  %for e in form.inifile.errors:
+                    <p class="help-block">{{e}}</p>
+                  %end
                 %end
-              %end
+              </div>
             </div>
             <div class="form-group">
               <label class="col-sm-4 control-label" for="phasecount"># Phases</label>
