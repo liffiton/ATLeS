@@ -7,9 +7,9 @@
 <title>{{title}}</title>
 <script src="/static/jquery-2.1.4.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-resource.min.js"></script>
+<script src="/static/angular-1.5.0.min.js"></script>
+<script src="/static/angular-route-1.5.0.min.js"></script>
+<script src="/static/angular-resource-1.5.0.min.js"></script>
 <script src="/static/fishweb.js"></script>
 %for script in scripts:
   <script src="{{script}}"></script>
