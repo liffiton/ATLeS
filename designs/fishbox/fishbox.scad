@@ -81,7 +81,7 @@ $fn = 50;
 
 // vars to control projection for DXF export (see makefile)
 if (DXF_TOP) {
-    projection() top_cover();
+    projection() top_cover(spacing=1);
 } else if (DXF_BOTTOM) {
     projection() tank_base();
 } else if (DXF_SIDE1) {
@@ -274,14 +274,15 @@ module rounded_rect(x,y,z, center, radius) {
     }
 }
 
-module top_cover() {
+module top_cover(spacing=0) {
     // width1 = main cover ; width2 = tank section cover
     width1 = width - mask_loc - thickness/2;
     width2 = mask_loc - thickness/2;
     color("Grey", alpha=0.5)
     union() {
         // back piece (over empty space)
-        translate([0,-outset,height-thickness])
+        // spacing added to make separate pieces for laser cutting
+        translate([spacing,-outset,height-thickness])
         difference() {
             translate([mask_loc,0,0])
                 cube([width1+thickness+outset,depth+outset*2,thickness]);
