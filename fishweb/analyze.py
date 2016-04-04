@@ -380,11 +380,17 @@ class Grapher(object):
 
     def plot_heatmap(self, numplots=1):
         plt.close('all')
-        plt.figure(figsize=(4*numplots, 4))
+
+        if numplots == 'perminute':
+            numplots = int(self._time[-1] / 60)
+
+        numrows = int(math.ceil(numplots / 10.0))
+
+        plt.figure(figsize=(4*min(numplots, 10), 4*numrows))
         for i in range(numplots):
             start = i * len(self._x) / numplots
             end = (i+1) * len(self._x) / numplots
-            ax = plt.subplot(1, numplots, i+1)
+            ax = plt.subplot(numrows, min(numplots, 10), i+1)
             if numplots > 1:
                 ax.axes.get_xaxis().set_visible(False)
                 ax.axes.get_yaxis().set_visible(False)
