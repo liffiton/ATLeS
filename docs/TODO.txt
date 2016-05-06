@@ -4,8 +4,6 @@ TODOs and Plans
 
 Enclosure
 ---------
- - Holes for tank feet for set, consistent tank location
-
 Wait on these until we start looking at monitor stimulus again:
  - Integrate frameless LCD display
  - Add cable routing for HDMI, etc.
@@ -28,6 +26,7 @@ FishBox [.py]
 -------------
 
 Big / Important:
+ - Safety limit: End experiment if electrical stimulus active for more than [n] seconds.
  - Switch to pigpio library for PWM -- runs separate daemon as root, all rest
    as unprivileged user.
    - OR switch to latest kernel w/ /dev/gpiomem access... see if wiringpi will use it.

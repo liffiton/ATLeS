@@ -1,0 +1,17 @@
+May 6, 2016
+
+Measuring resistance through H2O between two pieces of Al foil:  multimeter says >2MOhm.
+
+Current:
+  * Measured by DMM with voltage set on power supply
+  * With Al foil on **inside** of plastic baffles, right at baffles:
+    * 32V -> 75mA
+    * 20V -> 47mA
+    * 15V -> 35mA
+    * 10V -> 22mA
+    * 5V  -> 10mA
+    * 2V  ->  3mA
+  * With Al foil on **outside** of plastic baffles (only conductance via thin gaps at edges):
+    * 20v -> 16mA
+  * Baffles **block a lot**
+
