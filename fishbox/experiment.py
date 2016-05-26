@@ -329,7 +329,10 @@ class Experiment(object):
                 phase_data = new_phase_data
 
             stim_msg = self._stim.msg_poll()
-            if stim_msg == 'quit':
+            if stim_msg == 'safety limit reached':
+                logging.warn("Stimulus safety limit reached; exiting.")
+                break
+            elif stim_msg == 'quit':
                 logging.info("Stimulus window closed; exiting.")
                 break
 

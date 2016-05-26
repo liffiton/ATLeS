@@ -10,37 +10,37 @@ import wiring
 
 
 _LIGHT_PWM_PIN = 18      # pin for PWM control of visible light bar
-_ELECTRIC_STIM_PIN = 18  # pin for control of the electric current stimulation
+_ELECTRIC_STIM_PIN = 25  # pin for control of the electric current stimulation
 
 
 class NotRootError(RuntimeError):
     pass
 
 
-class SafetyLimitReached(RuntimeError):
-    pass
-
-
 # adapted from http://stackoverflow.com/a/16148744
 class Watchdog:
-    def __init__(self, timeout):  # timeout in seconds
+    def __init__(self, timeout, pipe):  # timeout in seconds
         self._timeout = timeout
+        self._pipe = pipe
         self._timer = None
 
     def stop(self):
-        self._timer.cancel()
-        self._timer = None
+        if self._timer:
+            self._timer.cancel()
+            self._timer = None
 
     def start(self):
         self._timer = Timer(self._timeout, self._triggered)
+        self._timer.start()
 
     def poke(self):
         """Start the timer if it is not already started; else let it run."""
-        if self._timer is not None:
+        if self._timer is None:
             self.start()
 
     def _triggered(self):
-        raise SafetyLimitReached("Stimulus active for %d seconds." % self._timeout)
+        self._pipe.send("timeout")
+        self.stop()
 
 
 class StimulusBase(object):
@@ -126,6 +126,8 @@ class GPIOStimulus(ThreadedStimulus):
         safety_limit is given in seconds.  If the stimulus is active for that many seconds,
         an exception is raised.
         '''
+        super(GPIOStimulus, self).__init__()
+
         # must be root to access GPIO, and wiringpi itself crashes in a way that
         # leaves the camera (setup in tracking.py) inaccessible until reboot.
         if (not wiring.wiring_mocked) and (os.geteuid() != 0):
@@ -145,15 +147,13 @@ class GPIOStimulus(ThreadedStimulus):
             self._interval = 1.0 / freq_Hz / 2  # half of the period
 
         if safety_limit is not None:
-            self._watchdog = Watchdog(safety_limit)
+            self._watchdog = Watchdog(safety_limit, self._pipe)
         else:
             self._watchdog = None
 
         self._stim_on = False   # is stimulus activated?
         self._on = False        # is stimulus pin currently on? (may be off while 'activated' if toggling)
         self._pinval = None  # stores current PWM value to avoid extraneous pwmWrites
-
-        super(GPIOStimulus, self).__init__()
 
     def _set_pin(self, val):
         if self._pinval != val:
@@ -224,6 +224,10 @@ class GPIOStimulus(ThreadedStimulus):
                 if val == 'end' or val is None:
                     self._end()
                     return
+                elif val == 'timeout':
+                    pipe.send('safety limit reached')
+                    self._end()
+                    return
 
                 self._handle_command(val)
 
@@ -239,5 +243,6 @@ class LightBarStimulus(GPIOStimulus):
 
 
 class ElectricalStimulus(GPIOStimulus):
-    def __init__(self):
-        super(ElectricalStimulus, self).__init__(_ELECTRIC_STIM_PIN, safety_limit=30)
+    def __init__(self, safety_limit):
+        '''safety_limit: integer number of seconds; if stimulus active without a break for that long, terminate experiment.'''
+        super(ElectricalStimulus, self).__init__(_ELECTRIC_STIM_PIN, safety_limit=safety_limit)
