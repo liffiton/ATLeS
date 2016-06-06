@@ -1,6 +1,7 @@
 import csv
 import multiprocessing
 import os
+import traceback
 try:
     from StringIO import StringIO
 except ImportError:
@@ -30,9 +31,9 @@ def post_stats():
 
         try:
             g = analyze.Grapher(track)
-        except ValueError:
+        except ValueError as e:
             # often 'wrong number of columns' due to truncated file from killed experiment
-            return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % track)
+            return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % track, exception=traceback.format_exc())
 
         curstats.update(g.read_setup(['experiment', 'at_runtime']))
         curstats.update(g.get_stats())
@@ -97,9 +98,9 @@ def post_analyze():
     trackfile = request.query.path
     try:
         _do_analyze(trackfile)
-    except ValueError:
+    except ValueError as e:
         # often 'wrong number of columns' due to truncated file from killed experiment
-        return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackfile)
+        return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackfile, exception=traceback.format_exc())
     redirect("/view/%s" % trackfile)
 
 
@@ -107,10 +108,9 @@ def _analyze_selection(trackfiles):
     for trackfile in trackfiles:
         try:
             _do_analyze(trackfile)
-        except ValueError:
+        except ValueError as e:
             # often 'wrong number of columns' due to truncated file from killed experiment
-            return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackfile)
-
+            return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackfile, exception=traceback.format_exc())
 
 @post('/analyze_selection/')
 def post_analyze_selection():

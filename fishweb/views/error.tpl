@@ -9,6 +9,7 @@
         <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
         <span class="sr-only">Error:</span>
         {{errormsg}}
+        <pre>{{exception}}</pre>
       </div>
     </div>
   </div>

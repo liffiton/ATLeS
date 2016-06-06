@@ -382,11 +382,15 @@ class Grapher(object):
         plt.close('all')
 
         if numplots == 'perminute':
-            numplots = int(self._time[-1] / 60)
+            title = "Per-minute heatmap"
+            numplots = int(math.ceil(self._time[-1] / 60.0))
+        else:
+            title = "Overall heatmap"
 
         numrows = int(math.ceil(numplots / 10.0))
 
         plt.figure(figsize=(4*min(numplots, 10), 4*numrows))
+        plt.title(title)
         for i in range(numplots):
             start = i * len(self._x) / numplots
             end = (i+1) * len(self._x) / numplots
