@@ -1,5 +1,6 @@
 import argparse
 import math
+import re
 try:
     from ConfigParser import RawConfigParser, MissingSectionHeaderError
 except ImportError:
@@ -274,13 +275,13 @@ class Grapher(object):
         maxpts = 500
         numplots = 1 + self._len / maxpts
 
-        fig = plt.figure(figsize=(12,2*numplots))
+        fig = plt.figure(figsize=(12,1+2*numplots))
         # make final chart only as wide as needed
         last_width = (self._len % maxpts) / float(maxpts)
         gs = gridspec.GridSpec(
             numplots+1,  # +1 for legend
             2,           # 2 columns for final axis reduced size
-            height_ratios=[0.3] + ([1] * numplots),   # 0.2 for 'legend subplot'
+            height_ratios=[0.5] + ([1] * numplots),   # 0.5 for 'legend subplot'
             width_ratios=[last_width, 1-last_width],  # all but last will span both columns
         )
 
@@ -532,7 +533,18 @@ class Grapher(object):
 
     def savefig(self, outfile):
         self._format_figure()
-        plt.savefig(outfile, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
+        # A bit of an ugly hack to split giant images into multiple parts
+        max_height = 100
+        # plot height in inches
+        height = plt.gcf().get_window_extent().transformed(plt.gcf().dpi_scale_trans.inverted()).height
+        if height > max_height:
+            numparts = int(height / max_height) + 1
+            for i in range(numparts):
+                filename = re.sub(r"(\.[^\.]+)$", r"%02d\1" % (numparts-i), outfile)
+                bbox = matplotlib.transforms.Bbox.from_extents([0,i*max_height,12,min(height,(i+1)*max_height)])
+                plt.savefig(filename, facecolor=plt.gcf().get_facecolor(), edgecolor='none', bbox_inches=bbox)
+        else:
+            plt.savefig(outfile, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
 
 
 def main():
