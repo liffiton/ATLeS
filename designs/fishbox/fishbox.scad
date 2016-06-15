@@ -14,13 +14,13 @@ acrylic_thickness = 2.4;
     // 2.4mm = 0.094" (looks good based on cut test piece for acrylic slotting into itself)
 
 // 1/8" Hardboard:
-hardboard_thickness = 3.2;
+hardboard_thickness = 3.3;
     // 2.8mm = 0.110"
     //   * looked good based on cut test piece for hardboard slotting into hardboard
     //   * 2015-03-06: Hanging supports didn't fit into cutouts (or did only with lots of force)
     // 3.1mm for some breathing room
     //   * 2016-02-26: Still tighter than is ideal for sliding parts together.
-    // 3.2mm for just a smidge more...
+    // 3.3mm for just a smidge more...
 
 // Assign materials: window/back wall and everything else
 //window_thickness = acrylic_thickness;
@@ -32,7 +32,7 @@ thickness = hardboard_thickness;
 // so material thickness is added to account for that.
 width = 290 + thickness;    // x = 29cm wall-to-wall
 depth = 348 + thickness;    // y = 34.8cm to accomodate 34.8cm tank length
-i_height = 180 + thickness; // z = 18cm to accomodate 16cm tank height plus cover
+i_height = 195 + thickness; // z = 19.5cm to accomodate 16cm tank height plus wires for shock
                             // (i_height because 'height' is used for height of entire box)
 
 // amount faces extend past each other at corners
@@ -120,7 +120,7 @@ else {
 // Module definitions
 //
 
-module mask(x) {
+module mask(x, tab_extra=0) {
     difference() {
         vert_face_base(x, top_offset=thickness, bottom_offset=base_height-thickness);
         side(y=0);
@@ -134,12 +134,19 @@ module mask(x) {
         // opening for tank view
         translate([0,view_opening_left+thickness/2, view_opening_bottom+base_height+thickness/2])
             cube([width, view_opening_width, view_opening_height]);
-        // opening for wires
+        // bottom opening for wires
         translate([0, depth-thickness/2, base_height+thickness])
         rotate(a=[0,90,0])
             cylinder(r=10, h=width);
+        // top openings for wires (electrical stim)
+        translate([0, depth-15, height-thickness/2])
+        rotate(a=[0,90,0])
+            cylinder(r=5, h=width);
+        translate([0, 15, height-thickness/2])
+        rotate(a=[0,90,0])
+            cylinder(r=5, h=width);
         // tabs for rigidity w/ bottom panel
-        cutouts(4,depth-thickness,outset*2,rot=[-90,0,90],trans=[x+thickness/2,depth/2,base_height+thickness/2]);
+        cutouts(4,depth-thickness,outset*2,rot=[-90,0,90],trans=[x+thickness/2,depth/2,base_height+thickness/2], extra=tab_extra);
     }
 }
 
@@ -155,6 +162,7 @@ module vert_face(x=0) {
         // round=false so we get the full width of the piece in the cutout, not reduced because we hit the rounded corner
         rpi_support(x=width+thickness*2, y=rpi_ypos-10, z=height/2+support_drop, round=false);
         wire_opening();
+        power_jack_cutout();
         // CAUTION: OpenSCAD won't let me make a projection of vert_face(x=0)
         //   if tank_base is put after side(y=depth) here... bug.  :(
         tank_base();
@@ -307,7 +315,7 @@ module tank_base() {
                 cutouts(5,depth,outset,rot=-90,trans=[0,(depth-thickness)/2,0]);
                 cutouts(5,depth,outset,rot=90,trans=[width+outset*2,(depth-thickness)/2,0]);
             }
-        mask(x=mask_loc);
+        mask(x=mask_loc, tab_extra=5);
     }
 }
 
@@ -350,13 +358,15 @@ module tank_support_layer3() {
         cube([tank_width, tank_foot_offset_left, thickness]);
 }
 
-module cutouts(num, width, outset, rot, trans) {
+module cutouts(num, width, outset, rot, trans, extra=0) {
+    // "extra" is *removed* from width of cubes
+    // so that resulting tabs (after differencing this) are *wider*
     w = width / ((num-1) * 2);
     translate(trans)
     rotate([0,0,1], a=rot)
     for (i = [0 : num-1]) {
-        translate([-width/2 - w/2 + i*2*w, -thickness/2, -thickness/2])
-            cube([w, outset+thickness, thickness*2]);
+        translate([-width/2 - w/2 + i*2*w + extra/2, -thickness/2, -thickness/2])
+            cube([w-extra, outset+thickness, thickness*2]);
     }
 }
 
@@ -365,6 +375,12 @@ module wire_opening() {
     scale([1,2,1])
     rotate(a=[0,90,0])
         cylinder(d=12, h=thickness+epsilon, center=true);
+}
+
+module power_jack_cutout() {
+    translate([width, depth-40, overhang+30])
+    rotate(a=[0,90,0])
+        cylinder(d=7, h=thickness+epsilon, center=true);
 }
 
 module side(y=0) {
