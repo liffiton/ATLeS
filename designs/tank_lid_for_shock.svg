@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="284.59998mm"
+   height="62.181702mm"
+   viewBox="0 0 1008.4251 220.32886"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="tank_lid_for_shock.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4160694"
+     inkscape:cx="504.21258"
+     inkscape:cy="110.16443"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="1920"
+     inkscape:window-height="1176"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-446.01682,-434.98504)">
+    <path
+       style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.77537274;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 480.91785,435.87273 c -11.22584,0 -20.26301,9.03726 -20.26301,20.26297 l 0,34.01355 -13.75033,0 0,110.00046 13.75033,0 0,34.01358 c 0,11.22572 9.03717,20.26293 20.26301,20.26293 l 926.32075,0 c 11.2258,0 20.263,-9.03721 20.263,-20.26293 l 0,-57.89511 26.0527,0 0,-62.23704 -26.0527,0 0,-57.89544 c 0,-11.22571 -9.0372,-20.26297 -20.263,-20.26297 l -926.32075,0 z m -0.72298,13.02546 10.85449,0 0,37.63214 10.13149,0 0,117.23833 -10.13149,0 0,37.63211 -10.85449,0 0,-192.50258 z m 767.47103,0 10.8544,0 0,192.50258 -10.8544,0 0,-37.63211 -10.1315,0 0,-117.23833 10.1315,0 0,-37.63214 z"
+       id="rect4147"
+       inkscape:connector-curvature="0" />
+  </g>
+</svg>
