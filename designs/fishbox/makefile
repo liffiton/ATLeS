@@ -1,7 +1,7 @@
 # Use openscad binary from path unless specified in environment variable
 OPENSCAD?=openscad
 
-all: top.dxf bottom.dxf side1.dxf side2.dxf end1.dxf end2.dxf mask.dxf tank_support.dxf rpi_support.dxf
+all: top.dxf bottom.dxf side1.dxf side2.dxf end1.dxf end2.dxf mask.dxf tank_support.dxf rpi_support.dxf rear_support.dxf
 
 clean:
 	rm *.dxf
