@@ -14,13 +14,17 @@ acrylic_thickness = 2.4;
     // 2.4mm = 0.094" (looks good based on cut test piece for acrylic slotting into itself)
 
 // 1/8" Hardboard:
-hardboard_thickness = 3.3;
+hardboard_thickness = 3.5;
     // 2.8mm = 0.110"
     //   * looked good based on cut test piece for hardboard slotting into hardboard
     //   * 2015-03-06: Hanging supports didn't fit into cutouts (or did only with lots of force)
     // 3.1mm for some breathing room
     //   * 2016-02-26: Still tighter than is ideal for sliding parts together.
     // 3.3mm for just a smidge more...
+    //   * 2016-06-17: 3.3 is *still* too tight in a few connections!
+    //                 Most are fine, but we need to handle the variability
+    //                 in material thickness, so...
+    // 3.5mm.  (Final?)
 
 // Assign materials: window/back wall and everything else
 //window_thickness = acrylic_thickness;
@@ -389,7 +393,7 @@ module wire_opening() {
 module power_jack_cutout() {
     translate([width, depth-40, overhang+30])
     rotate(a=[0,90,0])
-        cylinder(d=7, h=thickness+epsilon, center=true);
+        cylinder(d=8, h=thickness+epsilon, center=true);
 }
 
 module side(y=0) {
