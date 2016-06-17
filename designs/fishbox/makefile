@@ -33,3 +33,5 @@ tank_support.dxf: fishbox.scad
 rpi_support.dxf: fishbox.scad
 	"$(OPENSCAD)" -o $@ -D DXF_RPI_SUPPORT=true fishbox.scad
 
+rear_support.dxf: fishbox.scad
+	"$(OPENSCAD)" -o $@ -D DXF_REAR_SUPPORT=true fishbox.scad

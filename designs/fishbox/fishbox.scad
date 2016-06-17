@@ -47,6 +47,9 @@ base_height = overhang/2;
 // create height var to account for raised base
 height = i_height + base_height;
 
+// height of insert for rear tank support
+insert_height = height/6;
+
 // hanging support thickness and drop (distance it "sits down" after in place)
 support_w = 10;
 support_drop = support_w/2;
@@ -97,9 +100,14 @@ if (DXF_TOP) {
 } else if (DXF_TANK_SUPPORT) {
     projection() tank_support_layer1();
     projection() translate([tank_width+thickness,0,0]) tank_support_layer2();
-    projection() translate([(tank_width+thickness)*2,0,0]) tank_support_layer3();
 } else if (DXF_RPI_SUPPORT) {
     projection() rotate(a=[90,0,0]) rpi_support();
+} else if (DXF_REAR_SUPPORT) {
+    projection() rotate(a=[90,0,0]) rear_support(1);
+    translate([overhang*3,0,0])
+    projection() rotate(a=[90,0,0]) rear_support(2);
+    translate([overhang*6,0,0])
+    projection() rotate(a=[90,0,0]) rear_support(3);
 }
 else {
     // 3D model
@@ -114,6 +122,7 @@ else {
     rpi_support(x=width, y=rpi_ypos-10, z=height/2);
     mock_rpi(x=width, y=rpi_ypos, z=height/2);
     top_cover();
+    rear_support();
 }
 
 //////////////////////////////////////////////////////////////////
@@ -161,6 +170,8 @@ module vert_face(x=0) {
         camera_opening();
         // round=false so we get the full width of the piece in the cutout, not reduced because we hit the rounded corner
         rpi_support(x=width+thickness*2, y=rpi_ypos-10, z=height/2+support_drop, round=false);
+        translate([thickness+epsilon,0,-insert_height/2])
+            rear_support();
         wire_opening();
         power_jack_cutout();
         // CAUTION: OpenSCAD won't let me make a projection of vert_face(x=0)
@@ -252,8 +263,18 @@ module hanging_support(x, y, z, out, up, round=true) {
 
 // rounded corners in x,z directions
 module rounded_rect(x,y,z, center, radius) {
+    if (center) {
+        rounded_rect_centered(x,y,z, radius);
+    }
+    else {
+        translate([x/2, y/2, z/2])
+            rounded_rect_centered(x,y,z, radius);
+    }
+}
+    
+module rounded_rect_centered(x,y,z, radius) {
     difference() {
-        cube([x,y,z], center);
+        cube([x,y,z], center=true);
 
         translate([x/2-radius, 50, z/2-radius])
         rotate(a=[90,0,0])
@@ -325,10 +346,6 @@ module tank_support() {
         tank_support_layer1();
         color("Grey", alpha=0.5)
             tank_support_layer2();
-/*
-        color("Grey", alpha=0.5)
-            tank_support_layer3();
-*/
     }
 }
 // Two strips of hardboard on either side of LED strip
@@ -348,14 +365,6 @@ module tank_support_layer2() {
         translate([tank_width/2, depth-tank_width/2, 0])
             cylinder(d=25, h=100, center=true);
     }
-}
-// Clear acrylic end blocks to prevent tank shifting / seat it in correct location
-// [Currently unused -- 2016-02-26]
-module tank_support_layer3() {
-    translate([0, 0, thickness*2])
-        cube([tank_width, tank_foot_offset_right, thickness]);
-    translate([0, depth-thickness-tank_foot_offset_left, thickness*2])
-        cube([tank_width, tank_foot_offset_left, thickness]);
 }
 
 module cutouts(num, width, outset, rot, trans, extra=0) {
@@ -407,6 +416,35 @@ module side_base(y) {
             rounded_truncation(width=overhang-thickness/2, up=true, rot=[0,0,-90]);
         translate([0, 0, 3/4*height])
             rounded_truncation(width=overhang-window_thickness/2, up=true, rot=[0,0,-90]);
+    }
+}
+
+module rear_support(num_high=1) {
+    support_height = num_high*height;
+    ypos = depth/2-thickness/2;
+    color("Orange")
+    translate([width+thickness/2, ypos, 0])
+    union() {
+        // entering-tank part
+        translate([-overhang, 0, insert_height/2+overhang])
+        difference() {
+            rounded_rect(overhang*2, thickness, insert_height, radius=overhang/2);
+            translate([overhang-thickness, -thickness/2, insert_height/2])
+                cube([thickness, thickness*2, height]);
+            translate([overhang-thickness, -thickness/2, insert_height/2])
+                difference() {
+                    translate([0,0,overhang*0.8])
+                        cube([thickness+overhang, thickness*2, height]);
+                    translate([overhang+thickness, 0, overhang*0.8])
+                    rotate(a=[90,0,0])
+                        cylinder(d=overhang*2, h=100, center=true);
+                }
+        }
+        // connect and fill in one of the rounded corners
+        cube([overhang, thickness, insert_height/2+overhang+overhang]);
+        // below-tank part
+        translate([0, 0, -support_height])
+            cube([overhang, thickness, support_height]);
     }
 }
 
