@@ -210,7 +210,7 @@ class Grapher(object):
                 stats["Freeze frequency (per min)"] = 60.0*(freeze_count / time_total)
 
         if minute is not None:
-            stats = {"Minute %02d - %s" % (minute, key): value for key, value in stats.items()}
+            stats = {"%s - minute %04d" % (key, minute): value for key, value in stats.items()}
 
         return stats
 
