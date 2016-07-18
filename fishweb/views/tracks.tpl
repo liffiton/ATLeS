@@ -112,10 +112,10 @@
         <button type="button" class="btn btn-default disabled" id="comparebutton" onclick="do_compare();">
           Compare
         </button>
-        <button type="button" class="btn btn-default disabled" id="statsbutton" onclick="do_stats();">
+        <button type="button" class="btn btn-default disabled" id="statsbutton" onclick="go_stats();">
           View Statistics
         </button>
-        <button type="button" class="btn btn-default disabled" id="statscsvbutton" onclick="do_stats_csv();">
+        <button type="button" class="btn btn-default disabled" id="statscsvbutton" onclick="go_stats_csv();">
           Download Statistics [.csv]
         </button>
         <button type="button" class="btn btn-default disabled" id="downloadbutton" onclick="do_download();">

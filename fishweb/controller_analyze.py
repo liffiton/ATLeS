@@ -13,14 +13,14 @@ import matplotlib
 matplotlib.use('Agg')
 import analyze
 
-from bottle import post, redirect, request, response, template
+from bottle import get, post, redirect, request, response, template
 
 import config
 import utils
 
 
-@post('/stats/')
-def post_stats():
+@get('/stats/')
+def get_stats():
     tracks = request.query.tracks.split('|')
     do_csv = request.query.csv
     stats = []

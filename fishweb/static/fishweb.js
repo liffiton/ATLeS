@@ -223,14 +223,14 @@ function do_compare() {
   do_post('/compare/', 'p1=' + sels[0] + '&p2=' + sels[1]);
 }
 
-function do_stats() {
+function go_stats() {
   var sels = Object.keys(selection).sort();
-  do_post('/stats/', 'tracks=' + sels.join('|'));
+  window.location = '/stats/?tracks=' + sels.join('|');
 }
 
-function do_stats_csv() {
+function go_stats_csv() {
   var sels = Object.keys(selection).sort();
-  do_post('/stats/', 'csv=true&tracks=' + sels.join('|'));
+  window.location = '/stats/?csv=true&tracks=' + sels.join('|');
 }
 
 function do_download() {
