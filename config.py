@@ -12,5 +12,6 @@ EXPSCRIPT = "python fishbox.py"
 WEBAPPDIR = "fishweb/"
 TEMPLATEDIR = WEBAPPDIR + "views/"
 STATICDIR = WEBAPPDIR + "static/"
+IMGDIR = STATICDIR + "bgimgs/"
 
 FISHREMOTE_USER = "pi"  # username for logging into remote Pi via SSH

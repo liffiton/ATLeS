@@ -26,8 +26,8 @@
     </div>
   </div>
 
-  <div class="row" id="exp_new">
-    <div class="col-lg-6 col-md-8 col-sm-10">
+  <div ng-app class="row" id="exp_new">
+    <div class="col-lg-7 col-md-7 col-sm-10">
       <form id="new_exp_form" class="form-horizontal" action="/new/{{box}}" method="post">
         <div class="panel panel-default" id="experiment_form">
           <div class="panel-heading">
@@ -92,6 +92,9 @@
                   <th>
                     Conditional Stimulus
                   </th>
+                  <th>
+                    Background
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -120,10 +123,22 @@
                           <input type="radio" name="{{phase.stimulus.name}}" id="{{phase.stimulus.name}}:{{value}}" value="{{value}}">
                           {{label}}
                         </label>
+                        <br>
                       %end
                       %if phase.stimulus.errors:
                         %for e in phase.stimulus.errors:
                           <div class="help-block">{{e}}</div>
+                        %end
+                      %end
+                    </td>
+                    <td class="bgsel {{"has-error" if phase.background.errors else ""}}">
+                      <!-- Some ugly hacks in here.  Clean this up if/when we make a 'real'
+                        Angular app for this.  See http://stackoverflow.com/q/10610282 -->
+                      {{!phase.background(**{'class': "form-control", 'ng-init': "bgimg"+str(i)+"='"+phase.background.data+"'", 'ng-model': "bgimg"+str(i)}) }}
+                      <img class="thumb center-block" ng-src="/static/bgimgs/{{"{{"}}bgimg{{i}}{{"}}"}}" ng-show="bgimg{{i}}">
+                      %if phase.background.errors:
+                        %for e in phase.background.errors:
+                          <p class="help-block">{{e}}</p>
                         %end
                       %end
                     </td>
@@ -143,7 +158,7 @@
       </form>
     </div>
 
-    <div class="col-lg-6 col-md-8 col-sm-10">
+    <div class="col-lg-5 col-md-5 col-sm-10">
       <!-- Camera view -->
       <div class="panel panel-default" id="experiment_form">
         <div class="panel-heading">

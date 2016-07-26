@@ -41,6 +41,9 @@ body {
 table.table-vertmid td, table.table-vertmid th {
   vertical-align: middle !important;
 }
+table.table-vertmid td.bgsel {
+  vertical-align: top !important;
+}
 .number_cell {
   text-align: right;
 }
@@ -100,6 +103,12 @@ div#inidisplay {
 }
 pre#inidisplay_contents {
   max-height: 30em;
+}
+img.thumb {
+  border: solid 1px #ccc;
+  margin-top: 0.5em;
+  max-height: 5em;
+  max-width: 12em;
 }
 
 /* CSS animation woo! */

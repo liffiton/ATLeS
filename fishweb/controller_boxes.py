@@ -15,6 +15,11 @@ def _inis():
     return sorted(inifiles)
 
 
+def _bgimgs():
+    bgimgs = os.listdir(config.IMGDIR)
+    return sorted(bgimgs)
+
+
 def _get_box(tgtbox, boxes):
     local = request.app.config['fishweb.local']
 
@@ -62,7 +67,9 @@ def _skip_if_not_enabled(form, field):
 class ExperimentPhaseForm(Form):
     enabled = StringField("enabled")
     length = IntegerField("Length", [_skip_if_not_enabled, validators.InputRequired(), validators.NumberRange(min=1, max=7*24*60)])
-    stimulus = RadioField("Stimulus", choices=[('off', 'Off'), ('on', 'On'), ('rand', 'Random (50/50 off/on)')], validators=[_skip_if_not_enabled, validators.InputRequired()])
+    stimulus = RadioField("Stimulus", choices=[('off', 'Off'), ('on', 'On'), ('rand', 'Random choice')], validators=[_skip_if_not_enabled, validators.InputRequired()])
+    imgoptions = [""] + _bgimgs()
+    background = SelectField("Background Image", default="", choices=zip(imgoptions, imgoptions), validators=[validators.InputRequired()])
 
 
 class NewExperimentForm(Form):
