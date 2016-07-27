@@ -8,9 +8,12 @@ import time
 
 import cv2
 
+import config
+
 import tracking
 import controllers  # noqa -- 'imported but unused' because used in eval()ed expression
 import stimulus     # noqa -- ditto
+import display
 import wiring
 
 try:
@@ -122,6 +125,9 @@ class Experiment(object):
         else:
             self._sensors = None
             logging.warn("sensors module not loaded.")
+
+        # Background image manager
+        self._background = display.Display()
 
         # Evaluate experiment setup expression
         self._control = eval(conf['experiment']['controller'])
@@ -325,8 +331,10 @@ class Experiment(object):
                 logging.info("End of last phase reached; exiting.")
                 break
             elif new_phase_data != phase_data:
-                logging.info("Starting phase: %s" % (str(new_phase_data)))
                 phase_data = new_phase_data
+                logging.info("Starting phase: %s" % (str(phase_data)))
+                imgfile = os.path.join(config.IMGDIR, phase_data.background)
+                self._background.show_image(imgfile)
 
             stim_msg = self._stim.msg_poll()
             if stim_msg == 'safety limit reached':

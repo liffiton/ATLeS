@@ -18,7 +18,7 @@ import utils
 from fishbox import experiment
 
 # define a named tuple for storing Phase data
-Phase = namedtuple('Phase', ['phasenum', 'length', 'dostim'])
+Phase = namedtuple('Phase', ['phasenum', 'length', 'dostim', 'background'])
 
 
 def greedy_parse(s):
@@ -62,7 +62,7 @@ def setup_phases(args, conf):
     # setup phases data to be used during experiment execution
     phase_args = [p.split(',') for p in args.phases]
     phases = []
-    for i, (length, stim) in enumerate(phase_args):
+    for i, (length, stim, background) in enumerate(phase_args):
         length = int(length)
         # Determine and record whether stimulus is enabled for each phase
         if stim == 'on':
@@ -73,11 +73,12 @@ def setup_phases(args, conf):
             dostim = random.choice([True, False])
             logging.info("stim=rand selected for phase %d; chose stimulus %s." % (i, ("ENABLED" if dostim else "DISABLED")))
 
-        phase_data = Phase(i, length, dostim)
+        phase_data = Phase(i, length, dostim, background)
         phases.append(phase_data)
 
         section['phase_%d_length' % i] = length
         section['phase_%d_dostim' % i] = dostim
+        section['phase_%d_background' % i] = background
 
     section['phases_data'] = phases
 
@@ -215,8 +216,9 @@ def main():
         total_time = sum(p.length for p in conf['phases']['phases_data'])
     else:
         # run as a single "infinite" phase with dostim=True
+        # and a black background image
         conf['phases'] = {}
-        onephase = Phase(0, float('inf'), True)
+        onephase = Phase(0, float('inf'), True, 'black.png')
         conf['phases']['phases_data'] = [onephase]
 
         total_time = None

@@ -88,7 +88,7 @@ def stop_img_stream():
 def start_experiment(expname, inifile, phases):
     '''
     Parameters:
-       phases: Tuple(int, str) - length, stimulus
+       phases: Tuple(int, str, str) - length, stimulus, background file
                stimulus choices: on, off, rand
     '''
     # check for raspistill and kill if running

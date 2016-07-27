@@ -69,7 +69,7 @@ class ExperimentPhaseForm(Form):
     length = IntegerField("Length", [_skip_if_not_enabled, validators.InputRequired(), validators.NumberRange(min=1, max=7*24*60)])
     stimulus = RadioField("Stimulus", choices=[('off', 'Off'), ('on', 'On'), ('rand', 'Random choice')], validators=[_skip_if_not_enabled, validators.InputRequired()])
     imgoptions = [""] + _bgimgs()
-    background = SelectField("Background Image", default="", choices=zip(imgoptions, imgoptions), validators=[validators.InputRequired()])
+    background = SelectField("Background Image", default="", choices=zip(imgoptions, imgoptions), validators=[_skip_if_not_enabled, validators.InputRequired()])
 
 
 class NewExperimentForm(Form):
@@ -158,7 +158,8 @@ def post_new(tgtbox=None, boxes=None):
     def get_phase(phase):
         length = phase.length.data
         stimulus = phase.stimulus.data
-        return (length, stimulus)
+        background = phase.background.data
+        return (length, stimulus, background)
 
     phases = [get_phase(p) for p in form.phases if p.enabled.data == 'True']
 
