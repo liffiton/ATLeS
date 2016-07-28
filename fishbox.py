@@ -105,17 +105,18 @@ def get_args():
 #                        help='choose whether to enable or disable stimulus for this run with 50/50 probabilities')
     parser.add_argument('-p', '--phases', type=str, action='append',
                         help='configure phases of the experiment. '
-                             'Each phase is specified as "len,stim", '
-                             'where "len" is the phase length in minutes '
-                             'and "stim" is one of '
+                             'Each phase is specified as "len,stim,background", '
+                             'where "len" is the phase length in minutes, '
+                             '"stim" is one of '
                              '"on", "off", or "rand", controlling whether the '
                              'stimulus is on, off, or randomly enabled with '
-                             'a 50%% chance. '
+                             'a 50%% chance, '
+                             'and "background" is an image file to display on the monitor. '
                              'Specify each phase with its own -p/--phases '
                              'argument in the order the phases should run. '
-                             'e.g.: "-p 10,False,off -p 30,False,rand -p 30,False,off" '
+                             'e.g.: "-p 10,off,a.png -p 30,rand,b.png -p 30,off,a.png" '
                              'If not specified, fishbox runs a single, '
-                             'infinite "phase" with stim=True.'
+                             'infinite "phase" with stim=True and a black background image.'
                         )
 
     rare_group = parser.add_argument_group('rarely-used arguments')

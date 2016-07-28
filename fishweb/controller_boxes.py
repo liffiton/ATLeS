@@ -7,7 +7,6 @@ from bottle import abort, post, redirect, request, response, route, template
 from wtforms import Form, FieldList, FormField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 import config
-from fishweb import box_interface
 
 
 def _inis():
@@ -27,6 +26,7 @@ def _get_box(tgtbox, boxes):
         assert tgtbox == platform.node()
         assert boxes is None
         # use the module directly
+        from fishweb import box_interface
         return box_interface
     else:
         if tgtbox not in boxes:

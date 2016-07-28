@@ -50,6 +50,7 @@ def start_img_stream(width=648):
                '--height', str(height),
                '-awb', 'off',
                '--awbgains', '1,1,1',
+               '--nopreview',        # do not show preview frames on the display
                '-ex', 'off',
                '-ss', '100000',      # 100ms shutter
                '-br', '55',          # push up brightness a bit
