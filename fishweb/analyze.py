@@ -273,11 +273,14 @@ class Grapher(object):
         plt.close('all')
 
         maxpts = 500
-        numplots = 1 + self._len / maxpts
+        numplots = int(math.ceil(float(self._len) / maxpts))
 
         fig = plt.figure(figsize=(12,1+2*numplots))
         # make final chart only as wide as needed
         last_width = (self._len % maxpts) / float(maxpts)
+        if last_width == 0.0:
+            # Final chart may be full-width
+            last_width = 1.0
         gs = gridspec.GridSpec(
             numplots+1,  # +1 for legend
             2,           # 2 columns for final axis reduced size
@@ -439,7 +442,7 @@ class Grapher(object):
         # Mark lost/missing sections
         lost_collection = collections.BrokenBarHCollection.span_where(
             time,
-            -0.9, -1.0,
+            -1.0, -0.9,
             lost,
             edgecolors='none',
             facecolors='red',
@@ -447,7 +450,7 @@ class Grapher(object):
         ax.add_collection(lost_collection)
         missing_collection = collections.BrokenBarHCollection.span_where(
             time,
-            -0.9, -1.0,
+            -1.0, -0.9,
             missing,
             edgecolors='none',
             facecolors='yellow',
@@ -457,7 +460,7 @@ class Grapher(object):
         # Mark frozen sections
         frozen_collection = collections.BrokenBarHCollection.span_where(
             time,
-            -0.8, -0.85,
+            -0.85, -0.8,
             frozen,
             edgecolors='none',
             facecolors='lightblue',
@@ -467,7 +470,7 @@ class Grapher(object):
         # Mark in-top sections
         intop_collection = collections.BrokenBarHCollection.span_where(
             time,
-            -0.7, -0.75,
+            -0.75, -0.7,
             in_top,
             edgecolors='none',
             facecolors='blue',
@@ -477,7 +480,7 @@ class Grapher(object):
         # Mark in-left25 sections
         inleft25_collection = collections.BrokenBarHCollection.span_where(
             time,
-            -0.6, -0.65,
+            -0.65, -0.6,
             in_left25,
             edgecolors='none',
             facecolors='purple',
@@ -487,7 +490,7 @@ class Grapher(object):
         # Mark in-right25 sections
         inright25_collection = collections.BrokenBarHCollection.span_where(
             time,
-            -0.6, -0.65,
+            -0.65, -0.6,
             in_right25,
             edgecolors='none',
             facecolors='pink',
