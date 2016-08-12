@@ -9,7 +9,8 @@ except ImportError:
     wiring_mocked = True
 
 
-_IR_GPIO_PIN = 23  # pin for control of IR light bar
+_LIGHT_PWM_PIN = 18   # pin for PWM control of visible light bar
+_IR_GPIO_PIN = 23     # pin for control of IR light bar
 
 wiringpi2.wiringPiSetupGpio()
 _pinmodes = dict()
@@ -38,3 +39,12 @@ def IR_on():
 
 def IR_off():
     out(_IR_GPIO_PIN, 0)  # turn off IR light bar
+
+
+def visible_on(level):
+    pwm(_LIGHT_PWM_PIN, level)  # turn on visible light bar
+    atexit.register(visible_off)
+
+
+def visible_off():
+    out(_LIGHT_PWM_PIN, 0)  # turn off visible light bar

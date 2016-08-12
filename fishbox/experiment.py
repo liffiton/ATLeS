@@ -136,6 +136,8 @@ class Experiment(object):
         self._trigger = _trigger_func
 
         wiring.IR_on()
+        if 'ambient_light_level' in conf['experiment']:
+            wiring.visible_on(conf['experiment']['ambient_light_level'])
 
         # setup Stream (*after* starting stimulus, visible light bar, and IR light bar)
         if args.vidfile:
