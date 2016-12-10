@@ -5,16 +5,16 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{title}}</title>
-<script src="/static/jquery-2.1.4.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-<script src="/static/angular-1.5.0.min.js"></script>
-<script src="/static/angular-route-1.5.0.min.js"></script>
-<script src="/static/angular-resource-1.5.0.min.js"></script>
+<script src="/static/jquery-3.1.1.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="/static/angular-1.6.0.min.js"></script>
+<script src="/static/angular-route-1.6.0.min.js"></script>
+<script src="/static/angular-resource-1.6.0.min.js"></script>
 <script src="/static/fishweb.js"></script>
 %for script in scripts:
   <script src="{{script}}"></script>
 %end
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <link rel="stylesheet" href="/static/fishweb.css">
 </head>
 <body>

@@ -3,8 +3,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track {{trackrel}}</title>
-    <script src="/static/jquery-2.1.4.min.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <style type="text/css">
         body {
             background: #1f1f1f;  // equiv: 0.12
@@ -12,12 +11,18 @@
         img {
             padding: 1em;
         }
+        img.brighter {
+            filter: brightness(500%);
+            -webkit-filter: brightness(500%);
+        }
     </style>
     <script type="text/javascript">
-      $(document).keypress(function(e) {
+      document.addEventListener("keypress", function(e) {
         if (String.fromCharCode(e.which) == '+') {
-          $("img").css('filter', 'brightness(500%)');
-          $("img").css('-webkit-filter', 'brightness(500%)');
+          imgs = document.getElementsByTagName("img");
+          for (var i = 0 ; i < imgs.length ; i++) {
+            imgs[i].classList.add("brighter");
+          }
         }
       });
     </script>
