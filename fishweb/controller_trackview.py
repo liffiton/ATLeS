@@ -46,16 +46,18 @@ def _get_track_data(track):
     heatmap = collections.Counter()
     velocities = []
     with open(track) as f:
-        i = -1  # so lines = 0 if file is empty
+        lines = 0
         prev_x = None
         prev_y = None
-        for i, line in enumerate(f):
+        for line in f:
             vals = line.split(',')
             try:
                 state, x, y = vals[1:4]
             except ValueError:
                 # most likely an empty line
                 break
+
+            lines += 1
             if state == "init":
                 state = "lost"
             states[state] += 1
@@ -66,8 +68,6 @@ def _get_track_data(track):
                     if prev_x is not None:
                         dx = x - prev_x
                         dy = y - prev_y
-                        # convert to [typically 3 digit] integer in range 0-1000
-                        #velocities.append("%d" % (1000.0 * math.sqrt(dx*dx+dy*dy)))
                         velocities.append(math.sqrt(dx*dx+dy*dy))
                     else:
                         velocities.append(0)
@@ -84,7 +84,7 @@ def _get_track_data(track):
                     prev_y = None
             except ValueError:
                 pass  # not super important if we can't parse x,y
-        lines = i+1
+
     if lines:
         aml = ["%0.3f" % (states[key] / float(lines)) for key in ('acquired', 'missing', 'lost')]
     else:
