@@ -56,7 +56,7 @@
           </td>
           <td class="chart_cell">
             %if heat:
-            <canvas class="heatmap" data-values="{{'|'.join(','.join(row) for row in heat)}}" title="Position heatmap"></canvas>
+            <canvas class="heatmap" data-values="{{heat}}" title="Position heatmap"></canvas>
             %end
           </td>
           <td class="chart_cell">

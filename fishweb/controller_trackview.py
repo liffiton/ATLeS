@@ -91,17 +91,17 @@ def _get_track_data(track):
         aml = []
     if heatmap:
         maxheat = max(heatmap.values())
-        # convert counts to [typically 3 digit] integer in range 0-1000
-        heat = [["%d" % (1000 * float(heatmap[hx,hy])/maxheat) for hx in range(xbuckets)] for hy in range(ybuckets)]
+        # convert counts to 2-digit hex integer in range 0-255
+        heatstr = '|'.join(''.join("%02x" % int(255 * float(heatmap[hx,hy])/maxheat) for hx in range(xbuckets)) for hy in range(ybuckets))
     else:
-        heat = []
+        heatstr = ""
     if velocities:
         veldata = [sum(velocities) / len(velocities), max(velocities)]
         veldata = ["%0.3f" % datum for datum in veldata]
     else:
         veldata = []
 
-    return lines, aml, heat, veldata
+    return lines, aml, heatstr, veldata
 
 
 # Cache computed a/m/l and heatmap data to avoid recomputation
