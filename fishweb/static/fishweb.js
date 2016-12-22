@@ -105,33 +105,39 @@ function makeAML() {
     ctx.fillRect(a+b,0,c,1);
 }
 
+function putPixel(imgdata, x, y, r, g, b) {
+    var i = (x + y*imgdata.width)*4;
+    imgdata.data[i] = r;
+    imgdata.data[i+1] = g;
+    imgdata.data[i+2] = b;
+    imgdata.data[i+3] = 255;  // opaque
+}
+
 function makeHeatMap() {
-    var data = $(this).data("values").split('|');
+    var rows = $(this).data("values").split('|');
 
     // get number of buckets from received data
-    var _width = data[0].split(',').length;
-    var _height = data.length;
+    var _width = rows[0].length/2;  // 2 characters per value
+    var _height = rows.length;
 
     this.width = _width;
     this.height = _height;
     var ctx = this.getContext("2d");
-
-    // background
-    ctx.fillStyle = "rgb(240,240,240)";
-    ctx.fillRect(0,0,_width,_height);
+    var imgdata = ctx.createImageData(_width, _height);
 
     for (var y = 0 ; y < _height ; y++) {
-        var rowdata = data[y].split(',');
         for (var x = 0 ; x < _width ; x++) {
-            var amt = parseInt(rowdata[x]) / 1000;
+            var amtstr = rows[y].substr(x*2, 2);
+            var amt = parseInt(amtstr, 16)/255;
             amt = Math.sqrt(amt);
             var r = Math.floor(240-240*amt);
             var g = Math.floor(240-200*amt);
             var b = Math.floor(240-120*amt);
-            ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-            ctx.fillRect(x, (_height-1)-y, 1, 1);
+            // _height-1-y because heatmap data is given w/ y=0 = bottom
+            putPixel(imgdata, x, _height-1-y, r, g, b);
         }
     }
+    ctx.putImageData(imgdata, 0, 0);
 }
 
 function makeVelocityPlot() {
@@ -153,13 +159,13 @@ function makeVelocityPlot() {
     var ctx = this.getContext("2d");
 
     // background
-    ctx.fillStyle = "rgb(240,240,240)";
+    ctx.fillStyle = "#f0f0f0";
     ctx.fillRect(0,0,_width, 1);
 
-    ctx.fillStyle = "rgb(40,240,40)";
+    ctx.fillStyle = "#0b0";
     ctx.fillRect((_width-1) * avg, 0, 1, 1);
 
-    ctx.fillStyle = "rgb(240,120,40)";
+    ctx.fillStyle = "#d00";
     ctx.fillRect((_width-1) * max, 0, 1, 1);
 }
 

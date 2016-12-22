@@ -80,13 +80,13 @@ class NewExperimentForm(Form):
 
 
 @route('/')
-def index(boxes=None):
+def index():
     local = request.app.config['fishweb.local']
     if local:
         # no need to choose a box, just give them the new exp. form
         return new_experiment_box(tgtbox=platform.node(), boxes=boxes)
 
-    return template('boxes', dict(boxes=boxes, name='boxes'))
+    return template('boxes')
 
 
 @route('/new/<tgtbox>')
