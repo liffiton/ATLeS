@@ -8,18 +8,18 @@
 <body>
     <table class="table text-right">
         <tr>
-        %for key in keys:
-            <th>{{key}}</th>
-        %end
+        {% for key in keys: %}
+            <th>{{ key }}</th>
+        {% endfor %}
         </tr>
         <tbody>
-        %for stat in stats:
+        {% for stat in stats: %}
             <tr>
-            %for key in keys:
+            {% for key in keys: %}
                 <td>{{stat[key]}}</td>
-            %end
+            {% endfor %}
             </tr>
-        %end
+        {% endfor %}
         </tbody>
     </table>
 </body>

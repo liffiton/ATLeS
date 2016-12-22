@@ -1,14 +1,16 @@
-%import platform
-%rebase('base.tpl', title='Track Analyzer/Viewer')
+{% extends "base.html" %}
+{% set name='tracks' %}
+{% set Title='Track Analyzer/Viewer' %}
 
+{% block body %}
 <div class="container">
   <div class="row">
     <div class="my-header col-lg-12 col-md-12 col-sm-12">
       <span class="h1">
         Track Analyzer/Viewer
-        %if local:
-          on <span class="hostname">{{platform.node()}}</span>
-        %end
+        {% if local: %}
+          on <span class="hostname">{{ node }}</span>
+        {% endif %}
       </span>
     </div>
   </div>
@@ -31,19 +33,19 @@
             <th>Actions</th>
           </tr>
         </thead>
-        %for index, trackpath, relpath, points, aml, heat, vel, imgs, dbgframes, setupfile in tracks:
-        <tr class="undo_row" id="row_{{index}}_undo">
+        {% for trackpath, relpath, points, aml, heat, vel, imgs, dbgframes, setupfile in tracks: %}
+        <tr class="undo_row" id="row_{{loop.index0}}_undo">
           <td></td>
           <td>{{relpath}}</td>
           <td colspan=5><i>Archived</i></td>
           <td>
-            <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{trackpath}}', {{index}});" title="Unarchive">
+            <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{trackpath}}', {{loop.index0}});" title="Unarchive">
               <span class="glyphicon glyphicon-log-in"></span>
               Undo archive
             </button>
           </td>
         </tr>
-        <tr class="track_row" id="row_{{index}}" data-path='{{trackpath}}' data-index='{{index}}'>
+        <tr class="track_row" id="row_{{loop.index0}}" data-path='{{trackpath}}' data-index='{{loop.index0}}'>
           <td>
             <button type="button" class="btn btn-default btn-xs text-muted selectbutton" title='Select'>
               <span class="glyphicon glyphicon-ok"></span>
@@ -55,44 +57,44 @@
             <canvas class="aml" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}"></canvas>
           </td>
           <td class="chart_cell">
-            %if heat:
+            {% if heat: %}
             <canvas class="heatmap" data-values="{{heat}}" title="Position heatmap"></canvas>
-            %end
+            {% endif %}
           </td>
           <td class="chart_cell">
-            %if vel:
+            {% if vel: %}
             <canvas class="velocity" data-values="{{','.join(vel)}}" title="Avg: {{vel[0]}}  Max: {{vel[1]}}"></canvas>
-            %end
+            {% endif %}
           </td>
           <td>
-            %if imgs:
+            {% if imgs: %}
             <a href="/view/{{trackpath}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-stats"></span> Plots</a>
-            %end
-            %if dbgframes:
+            {% endif %}
+            {% if dbgframes: %}
             <a href="/dbgframes/{{trackpath}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-camera"></span> Debug</a>
-            %end
-            %if setupfile:
+            {% endif %}
+            {% if setupfile: %}
             <a href="/{{setupfile}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-cog"></span> Setup</a>
-            %end
+            {% endif %}
           </td>
           <td class="actionbuttons">
-            %if points > 0:
+            {% if points > 0: %}
             <button type="button" class="btn btn-default btn-xs" onclick="do_post('/analyze/', 'path={{trackpath}}');">
-              %if imgs:
+              {% if imgs: %}
               <span class="glyphicon glyphicon-refresh"></span>
               Re-plot
-              %else:
+              {% else: %}
               <span class="glyphicon glyphicon-plus"></span>
               Plot
-              %end
+              {% endif %}
             </button>
-            %end
-            <button type="button" class="btn btn-xs btn-danger" onclick="do_archive('{{trackpath}}', {{index}});" title='Archive'>
+            {% endif %}
+            <button type="button" class="btn btn-xs btn-danger" onclick="do_archive('{{trackpath}}', {{loop.index0}});" title='Archive'>
               <span class="glyphicon glyphicon-log-out"></span>
             </button>
           </td>
         </tr>
-        %end
+        {% endfor %}
         <tr>
           <td colspan=8>
             <button type="button" class="btn btn-default btn-xs text-muted _selectallbutton" title='Select All'>
@@ -164,3 +166,4 @@ $(function() {
   console.timeEnd('velocities');
 });
 </script>
+{% endblock %}

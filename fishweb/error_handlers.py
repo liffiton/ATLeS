@@ -1,4 +1,4 @@
-from bottle import error, template
+from bottle import error, jinja2_template as template
 
 
 # Provide custom, simple error responses for 400 and 500 errors,
@@ -6,4 +6,5 @@ from bottle import error, template
 @error(400)
 @error(500)
 def customerror(error):
-    return template("error_simple", e=error)
+    from bottle import DEBUG
+    return template("error_simple", DEBUG=DEBUG, e=error)

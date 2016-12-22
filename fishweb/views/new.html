@@ -1,9 +1,12 @@
-%rebase('base.tpl', title='New Experiment on %s' % box)
+{% extends "base.html" %}
+{% set name='boxes' %}
+{% set Title='New Experiment on %s' % box %}
 
+{% block body %}
 <div class="container">
   <h1>New Experiment on <span class="hostname">{{box}}</span></h1>
 
-  <div class="exp_progress_box row" id="exp_progress">
+  <div class="exp_progress_box row" style="display: none;" id="exp_progress">
     <div class="col-sm-6 col-sm-offset-1 alert alert-info">
       <strong>Experiment running</strong> since <span id="exp_run_since"></span>.
       <div class="progress" style="width: 100%;">
@@ -26,7 +29,7 @@
     </div>
   </div>
 
-  <div ng-app class="row" id="exp_new">
+  <div ng-app class="row" style="display: none;" id="exp_new">
     <div class="col-lg-7 col-md-7 col-sm-10">
       <form id="new_exp_form" class="form-horizontal" action="/new/{{box}}" method="post">
         <div class="panel panel-default" id="experiment_form">
@@ -34,7 +37,7 @@
             <h3 class="panel-title">Experiment Setup</h3>
           </div>
           <div class="panel-body">
-            %if form.errors:
+            {% if form.errors: %}
             <div class="row">
               <div class="col-sm-12">
                 <div class="alert alert-danger">
@@ -43,27 +46,27 @@
                 </div>
               </div>
             </div>
-            %end
-            <div class="form-group {{"has-error" if form.expname.errors else ""}}">
-              {{!form.expname.label(class_="col-sm-4 control-label")}}
+            {% endif %}
+            <div class="form-group {{ "has-error" if form.expname.errors }}">
+              {{ form.expname.label(class_="col-sm-4 control-label") }}
               <div class="col-sm-8">
-                {{!form.expname(class_="form-control")}}
-                %if form.expname.errors:
-                  %for e in form.expname.errors:
+                {{ form.expname(class_="form-control") }}
+                {% if form.expname.errors: %}
+                  {% for e in form.expname.errors: %}
                     <p class="help-block">{{e}}</p>
-                  %end
-                %end
+                  {% endfor %}
+                {% endif %}
               </div>
             </div>
-            <div class="form-group {{"has-error" if form.inifile.errors else ""}}">
-              {{!form.inifile.label(class_="col-sm-4 control-label")}}
+            <div class="form-group {{ "has-error" if form.inifile.errors }}">
+              {{ form.inifile.label(class_="col-sm-4 control-label") }}
               <div class="col-sm-8">
-                {{!form.inifile(class_="form-control")}}
-                %if form.inifile.errors:
-                  %for e in form.inifile.errors:
+                {{ form.inifile(class_="form-control") }}
+                {% if form.inifile.errors: %}
+                  {% for e in form.inifile.errors: %}
                     <p class="help-block">{{e}}</p>
-                  %end
-                %end
+                  {% endfor %}
+                {% endif %}
               </div>
             </div>
             <div class="form-group">
@@ -98,52 +101,50 @@
                 </tr>
               </thead>
               <tbody>
-                %for i, phase in enumerate(form.phases):
-                  <tr class="phasediv {{'hidden' if not phase.enabled.data else ''}}" id="phase_{{i}}">
+                {% for phase in form.phases: %}
+                  <tr class="phasediv {{ 'hidden' if not phase.enabled.data }}" id="phase_{{loop.index0}}">
                     <th class="text-center">
-                      {{!phase.enabled(class_="hidden", id="var_enabled")}}
-                      {{i+1}}
+                      {{ phase.enabled(class_="hidden", id="var_enabled") }}
+                      {{ loop.index1 }}
                     </th>
-                    <td class="{{"has-error" if phase.length.errors else ""}}" width="30%">
+                    <td {{ 'class="has-error"' if phase.length.errors }} width="30%">
                       <div class="input-group col-sm-11">
-                        {{!phase.length(class_="form-control")}}
+                        {{ phase.length(class_="form-control") }}
                         <span class="input-group-addon">
                           minutes
                         </span>
                       </div>
-                      %if phase.length.errors:
-                        %for e in phase.length.errors:
+                      {% if phase.length.errors: %}
+                        {% for e in phase.length.errors: %}
                           <div class="help-block">{{e}}</div>
-                        %end
-                      %end
+                        {% endfor %}
+                      {% endif %}
                     </td>
-                    <td class="radio {{"has-error" if phase.stimulus.errors else ""}}">
-                      %for value, label, _ in phase.stimulus.iter_choices():
+                    <td class="radio {{'has-error' if phase.stimulus.errors }}">
+                      {% for value, label, _ in phase.stimulus.iter_choices(): %}
                         <label class="radio-inline" for="{{phase.stimulus.name}}:{{value}}">
                           <input type="radio" name="{{phase.stimulus.name}}" id="{{phase.stimulus.name}}:{{value}}" value="{{value}}">
                           {{label}}
                         </label>
                         <br>
-                      %end
-                      %if phase.stimulus.errors:
-                        %for e in phase.stimulus.errors:
-                          <div class="help-block">{{e}}</div>
-                        %end
-                      %end
+                      {% endfor %}
+                      {% if phase.stimulus.errors: %}
+                        <div class="help-block">{{e}}</div>
+                      {% endif %}
                     </td>
-                    <td class="bgsel {{"has-error" if phase.background.errors else ""}}">
+                    <td class="bgsel {{ "has-error" if phase.background.errors }}">
                       <!-- Some ugly hacks in here.  Clean this up if/when we make a 'real'
                         Angular app for this.  See http://stackoverflow.com/q/10610282 -->
-                      {{!phase.background(**{'class': "form-control", 'ng-init': "bgimg"+str(i)+"='"+phase.background.data+"'", 'ng-model': "bgimg"+str(i)}) }}
-                      <img class="thumb center-block" ng-src="/static/bgimgs/{{"{{"}}bgimg{{i}}{{"}}"}}" ng-show="bgimg{{i}}">
-                      %if phase.background.errors:
-                        %for e in phase.background.errors:
+                      {{ phase.background(**{'class': "form-control", 'ng-init': "bgimg%d='%s'" % (loop.index0, phase.background.data), 'ng-model': "bgimg%d" % loop.index0}) }}
+                      <img class="thumb center-block" ng-src="/static/bgimgs/{{'{{bgimg%d}}' % loop.index0}}" ng-show="bgimg{{loop.index0}}">
+                      {% if phase.background.errors: %}
+                        {% for e in phase.background.errors: %}
                           <p class="help-block">{{e}}</p>
-                        %end
-                      %end
+                        {% endfor %}
+                      {% endif %}
                     </td>
                   </tr>
-                  %end
+                  {% endfor %}
               </tbody>
             </table>
             <div class="form-group">
@@ -218,3 +219,4 @@ $(function() {
   update_ini($("#inifile option:selected").text());
 });
 </script>
+{% endblock %}

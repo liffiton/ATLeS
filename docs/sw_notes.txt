@@ -42,6 +42,7 @@ installing these follow):
   fishweb.py:
     bottle
     cherrypy
+    Jinja2
     wtforms
     python-daemon
     matplotlib
@@ -59,7 +60,7 @@ To install smbus:
   $ sudo apt-get install python-smbus
 
 To install all of the remaining but matplotlib:
-  $ sudo pip install wiringpi2 bottle cherrypy wtforms python-daemon numpy rpyc zeroconf
+  $ sudo pip install wiringpi2 bottle cherrypy Jinja2 wtforms python-daemon numpy rpyc zeroconf
 
 To install matplotlib, we have to work around an issue with pip.  'pip install matplotlib' fails on a stock RPi (both models 1 and 2) with a memory error.  To work around this, install it without using the cache (thanks to: http://stackoverflow.com/a/31526029):
   $ sudo pip install --no-cache-dir matplotlib

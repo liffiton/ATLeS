@@ -13,7 +13,7 @@ import matplotlib
 matplotlib.use('Agg')
 import analyze
 
-from bottle import get, post, redirect, request, response, template
+from bottle import get, post, redirect, request, response, jinja2_template as template
 
 import config
 import utils

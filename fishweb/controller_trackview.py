@@ -3,10 +3,11 @@ import fnmatch
 import glob
 import math
 import os
+import platform
 import tempfile
 import zipfile
 
-from bottle import post, request, response, route, static_file, view
+from bottle import post, request, response, route, static_file, jinja2_template as template
 
 import config
 
@@ -109,13 +110,11 @@ track_data_cache = {}
 
 
 @route('/tracks/')
-@view('tracks')
 def tracks():
     global track_data_cache
-    local = request.app.config['fishweb.local']
 
     tracks = []
-    for index, trackfile in enumerate(_tracks()):
+    for trackfile in _tracks():
         mtime = os.stat(trackfile).st_mtime
         trackrel = os.path.relpath(trackfile, config.TRACKDIR)
         key = "%f|%s" % (mtime, trackrel)
@@ -124,22 +123,22 @@ def tracks():
         else:
             lines, aml, heat, vel = _get_track_data(trackfile)
             track_data_cache[key] = (lines, aml, heat, vel)
-        tracks.append( (index, trackfile, trackrel, lines, aml, heat, vel, _imgs(trackrel), _dbgframes(trackrel), _setupfile(trackfile)) )
-    return dict(tracks=tracks, local=local, name='tracks')
+        tracks.append( (trackfile, trackrel, lines, aml, heat, vel, _imgs(trackrel), _dbgframes(trackrel), _setupfile(trackfile)) )
+
+    local = request.app.config['fishweb.local']
+    return template('tracks', tracks=tracks, local=local, node=platform.node())
 
 
 @route('/view/<trackfile:path>')
-@view('view')
 def view_track(trackfile):
     trackrel = os.path.relpath(trackfile, config.TRACKDIR)
-    return dict(imgs=_imgs(trackrel), trackfile=trackfile, trackrel=trackrel)
+    return template('view', imgs=_imgs(trackrel), trackfile=trackfile, trackrel=trackrel)
 
 
 @route('/dbgframes/<trackfile:path>')
-@view('view')
 def debug_frames(trackfile):
     trackrel = os.path.relpath(trackfile, config.TRACKDIR)
-    return dict(imgs=_dbgframes(trackrel), trackfile=trackfile, trackrel=trackrel)
+    return template('view', imgs=_dbgframes(trackrel), trackfile=trackfile, trackrel=trackrel)
 
 
 @post('/download/')

@@ -1,12 +1,4 @@
-angular.module('boxesApp', ['ngRoute', 'ngResource'])
-.config(['$routeProvider', '$locationProvider',
-  function($routeProvider, $locationProvider) {
-    $routeProvider
-      .when('/', {
-        templateUrl: '/static/boxes_view.html',
-        controller: 'BoxesCtrl'
-      });
-}])
+angular.module('BoxesApp', ['ngResource'])
 .factory('BoxesService', ['$resource',
   function($resource) {
     return $resource('/boxes/', {}, { query: {method: 'GET', params: {}, isArray: false} });

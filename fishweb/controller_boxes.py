@@ -3,7 +3,7 @@ import platform
 import re
 import time
 
-from bottle import abort, post, redirect, request, response, route, template
+from bottle import abort, post, redirect, request, response, route, jinja2_template as template
 from wtforms import Form, FieldList, FormField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 import config
@@ -80,7 +80,7 @@ class NewExperimentForm(Form):
 
 
 @route('/')
-def index():
+def index(boxes=None):
     local = request.app.config['fishweb.local']
     if local:
         # no need to choose a box, just give them the new exp. form

@@ -1,5 +1,7 @@
-%rebase('base.tpl', title='Error')
+{% extends "base.html" %}
+{% set Title='Error' %}
 
+{% block body %}
 <div class="container">
   <h1>Error</h1>
 
@@ -15,3 +17,4 @@
   </div>
 
 </div>
+{% endblock %}
