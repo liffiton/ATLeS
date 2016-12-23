@@ -2,6 +2,37 @@
 {% set name='tracks' %}
 {% set Title='Track Analyzer/Viewer' %}
 
+{% block extrahead %}
+<script type="text/javascript">
+// setup handlers / onload stuff
+$(function() {
+  $("#filterclear").click(function(e) {
+    $("#rowfilter").val('');
+    $("#rowfilter").trigger('input');
+  });
+  $("#rowfilter").on('input', function(e) {
+    filter_rows(this.value);
+  });
+  $("#rowfilter").trigger('input');
+  $("._selectallbutton").click(toggle_select_all);
+  $("tr.track_row .selectbutton").click(function(e) {
+    var row = $(this).closest("tr");
+    togglesel(row);
+  });
+  // create charts/heatmaps
+  console.time('aml');
+  $("canvas.aml").each(makeAML);
+  console.timeEnd('aml');
+  console.time('heatmaps');
+  $("canvas.heatmap").each(makeHeatMap);
+  console.timeEnd('heatmaps');
+  console.time('velocities');
+  $("canvas.velocity").each(makeVelocityPlot);
+  console.timeEnd('velocities');
+});
+</script>
+{% endblock %}
+
 {% block body %}
 <div class="container">
   <div class="row">
@@ -137,33 +168,4 @@
   </div>
 
 </div>
-
-<script type="text/javascript">
-// setup handlers / onload stuff
-$(function() {
-  $("#filterclear").click(function(e) {
-    $("#rowfilter").val('');
-    $("#rowfilter").trigger('input');
-  });
-  $("#rowfilter").on('input', function(e) {
-    filter_rows(this.value);
-  });
-  $("#rowfilter").trigger('input');
-  $("._selectallbutton").click(toggle_select_all);
-  $("tr.track_row .selectbutton").click(function(e) {
-    var row = $(this).closest("tr");
-    togglesel(row);
-  });
-  // create charts/heatmaps
-  console.time('aml');
-  $("canvas.aml").each(makeAML);
-  console.timeEnd('aml');
-  console.time('heatmaps');
-  $("canvas.heatmap").each(makeHeatMap);
-  console.timeEnd('heatmaps');
-  console.time('velocities');
-  $("canvas.velocity").each(makeVelocityPlot);
-  console.timeEnd('velocities');
-});
-</script>
 {% endblock %}

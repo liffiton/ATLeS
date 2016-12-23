@@ -1,6 +1,43 @@
 {% extends "base.html" %}
 {% set name='boxes' %}
-{% set Title='New Experiment on %s' % box %}
+{% set title='New Experiment on %s' % box %}
+{% set scripts=['/static/angular-1.6.0.min.js'] %}
+
+{% block extrahead %}
+<script type="text/javascript">
+$(function() {
+  $("#inifile").on("change reset", function(e) {
+    var iniFile = this.value;
+    update_ini(iniFile);
+  });
+
+  $("#clear_exp_button").click(function(e) {
+    var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
+    if (! go) return;
+    $.post("/clear_experiment/{{box}}");
+  });
+
+  // for handling dynamic form
+  $("#btn_addPhase").click(add_phase);
+  $("#btn_delPhase").click(del_phase);
+
+  // store and load values used in forms
+  $.each($("form"), load_form_data);
+  $("form").submit(save_form_data);
+  // and clear anything we've saved if the user resets the form
+  $("form *").filter(":reset").click(clear_form_data);
+  // and reset the phases
+  $("form").on("reset", function() {
+    setTimeout(update_phase_ui, 0);
+  });
+
+  // Update UI after everything is setup
+  checkProgress("{{box}}");
+  update_phase_ui();
+  update_ini($("#inifile option:selected").text());
+});
+</script>
+{% endblock %}
 
 {% block body %}
 <div class="container">
@@ -105,7 +142,7 @@
                   <tr class="phasediv {{ 'hidden' if not phase.enabled.data }}" id="phase_{{loop.index0}}">
                     <th class="text-center">
                       {{ phase.enabled(class_="hidden", id="var_enabled") }}
-                      {{ loop.index1 }}
+                      {{ loop.index }}
                     </th>
                     <td {{ 'class="has-error"' if phase.length.errors }} width="30%">
                       <div class="input-group col-sm-11">
@@ -185,38 +222,4 @@
   </div>
 
 </div>
-
-<script type="text/javascript">
-$(function() {
-  $("#inifile").on("change reset", function(e) {
-    var iniFile = this.value;
-    update_ini(iniFile);
-  });
-
-  $("#clear_exp_button").click(function(e) {
-    var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
-    if (! go) return;
-    $.post("/clear_experiment/{{box}}");
-  });
-
-  // for handling dynamic form
-  $("#btn_addPhase").click(add_phase);
-  $("#btn_delPhase").click(del_phase);
-
-  // store and load values used in forms
-  $.each($("form"), load_form_data);
-  $("form").submit(save_form_data);
-  // and clear anything we've saved if the user resets the form
-  $("form *").filter(":reset").click(clear_form_data);
-  // and reset the phases
-  $("form").on("reset", function() {
-    setTimeout(update_phase_ui, 0);
-  });
-
-  // Update UI after everything is setup
-  checkProgress("{{box}}");
-  update_phase_ui();
-  update_ini($("#inifile option:selected").text());
-});
-</script>
 {% endblock %}

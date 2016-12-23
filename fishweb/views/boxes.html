@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% set name='boxes' %}
 {% set Title='Boxes' %}
-{% set scripts=['static/fishwebang.js'] %}
+{% set scripts=['/static/angular-1.6.0.min.js', '/static/angular-resource-1.6.0.min.js', '/static/fishwebang.js'] %}
 
 {% block body %}
-{% raw %}
+{%- raw -%}
 <div class="container" ng-app="BoxesApp" ng-controller="BoxesCtrl">
   <h1>Boxes</h1>
 
@@ -66,5 +66,5 @@
   </div>
 
 </div>
-{% endraw %}
+{%- endraw -%}
 {% endblock %}

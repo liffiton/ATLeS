@@ -2,7 +2,7 @@
 <pre>{{e.body}}</pre>
 {% if DEBUG and e.exception: %}
   <h4>Exception:</h4>
-  <pre>{{repr(e.exception)}}</pre>
+  <pre>{{e.exception}}</pre>
 {% endif %}
 {% if DEBUG and e.traceback: %}
   <h4>Traceback:</h4>

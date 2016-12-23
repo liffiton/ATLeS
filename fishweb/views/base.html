@@ -5,14 +5,13 @@
 <title>{{title}}</title>
 <script src="/static/jquery-3.1.1.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-<script src="/static/angular-1.6.0.min.js"></script>
-<script src="/static/angular-resource-1.6.0.min.js"></script>
 <script src="/static/fishweb.js"></script>
 {% for script in scripts: -%}
   <script src="{{script}}"></script>
-{%- endfor %}
+{% endfor -%}
 <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <link rel="stylesheet" href="/static/fishweb.css">
+{% block extrahead %}{% endblock -%}
 </head>
 <body>
   <!-- Navbar -->
@@ -21,16 +20,16 @@
       <ul class="nav navbar-nav">
         <li {{ 'class="active"' if name == 'boxes' else '' }}>
           <a href="/">Boxes / Experiments
-          {% if name == 'boxes': %}
+          {% if name == 'boxes': -%}
             <span class="sr-only">(current)</span>
-          {% endif %}
+          {%- endif %}
           </a>
         </li>
         <li {{ 'class="active"' if name == 'tracks' else '' }}>
           <a href="/tracks/">Tracks
-          {% if name == 'tracks': %}
+          {% if name == 'tracks': -%}
             <span class="sr-only">(current)</span>
-          {% endif %}
+          {%- endif %}
           </a>
         </li>
       </ul>
