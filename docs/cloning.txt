@@ -16,9 +16,9 @@ To save a disk image of a working/configured Raspberry Pi SD card:
   4) Determine the number of blocks now occupied.
      Adapted from: http://raspberrypi.stackexchange.com/a/8314
 
-       sudo fdisk /dev/[device of entire card (e.g., sdd)]
-       p  # to print the partition table,
-          # then record 'End' of final partition and sector size
+       sudo fdisk -l /dev/[device of entire card (e.g., sdd)]
+       # Prints the partition table.
+       # Record 'End' of final partition and sector size.
 
   5) Use dd | gzip to create the image using the size from the previous step.
     
