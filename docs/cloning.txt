@@ -36,7 +36,7 @@ Writing an Image to a New Card
 
   3) Use gunzip | dd to decompress and write the image to the card
 
-       gunzip -c fishypi.gz | dd bs=1M of=/dev/[device of entire card]
+       gunzip -c fishypi.gz | sudo dd bs=1M of=/dev/[device of entire card]
 
 
 Setting Up a Newly Cloned System
