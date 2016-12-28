@@ -1,0 +1,9 @@
+bottle
+cherrypy
+Jinja2
+wtforms
+python-daemon
+matplotlib
+numpy
+rpyc
+zeroconf

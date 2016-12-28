@@ -31,15 +31,10 @@ Before installing the python modules themselves, install the required tools:
 Many python packages are most easily installed via pip.  To install pip,
 follow the instructions here: https://pip.pypa.io/en/latest/installing.html
 
-The fishbox scripts rely on the following libraries (instructions for
-installing these follow):
+The fishbox scripts rely on the following libraries:
 
-  fishbox.py:
-    cv2         (for OpenCV)
-    smbus       (for reading sensor values)
-    wiringpi2   (for controlling light bar via PWM)
-  
-  fishweb.py:
+
+### fishweb.py:
     bottle
     cherrypy
     Jinja2
@@ -47,23 +42,33 @@ installing these follow):
     python-daemon
     matplotlib
     numpy
-  
-  fishremote.py:
     rpyc
     zeroconf
 
-Note: the matplotlib and numpy packages available via apt-get are too old to use in FishyCam.
+Install by running:
+  $ pip install --user -U -r requirements_fishweb.txt
+
+If you need to install matplotlib on an RPi, you may have to work around an issue with pip.  'pip install matplotlib' fails on a stock RPi (both models 1 and 2) with a memory error.  To work around this, install it without using the cache (thanks to: http://stackoverflow.com/a/31526029):
+  $ sudo pip install --no-cache-dir matplotlib
+
+ 
+### fishremote.py:
+    rpyc
+    zeroconf
+
+Install by running:
+  $ pip install --user -U -r requirements_fishremote.txt
+
+
+### fishbox.py:
+    cv2         (for OpenCV)
+    smbus       (for reading sensor values)
+    wiringpi2   (for controlling light bar via PWM)
 
 To install cv2, see opencv_notes.txt.
 
 To install smbus:
   $ sudo apt-get install python-smbus
-
-To install all of the remaining but matplotlib:
-  $ sudo pip install wiringpi2 bottle cherrypy Jinja2 wtforms python-daemon numpy rpyc zeroconf
-
-To install matplotlib, we have to work around an issue with pip.  'pip install matplotlib' fails on a stock RPi (both models 1 and 2) with a memory error.  To work around this, install it without using the cache (thanks to: http://stackoverflow.com/a/31526029):
-  $ sudo pip install --no-cache-dir matplotlib
 
 
 Runtime dependencies
