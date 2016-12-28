@@ -4,7 +4,7 @@ try:
     import wiringpi
     wiring_mocked = False
 except ImportError:
-    from modulemock import Mockclass
+    from .modulemock import Mockclass
     wiringpi = Mockclass()
     wiring_mocked = True
 
