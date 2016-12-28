@@ -11,7 +11,7 @@ except ImportError:
 # before the analyze module pulls it in.
 import matplotlib
 matplotlib.use('Agg')
-import analyze
+from . import analyze
 
 from bottle import get, post, redirect, request, response, jinja2_template as template
 

@@ -63,7 +63,7 @@ Install by running:
 ### fishbox.py:
     cv2         (for OpenCV)
     smbus       (for reading sensor values)
-    wiringpi2   (for controlling light bar via PWM)
+    wiringpi    (for controlling light bar via PWM)
 
 To install cv2, see opencv_notes.txt.
 
