@@ -123,7 +123,7 @@ $(function() {
             <table class="table table-hover table-vertmid">
               <thead>
                 <tr>
-                  <th>
+                  <th class="text-center">
                     Phase
                   </th>
                   <th>
@@ -132,16 +132,19 @@ $(function() {
                   <th>
                     Conditional Stimulus
                   </th>
+                  {% if box.hasdisplay: %}
                   <th>
                     Background
                   </th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody>
                 {% for phase in form.phases: %}
                   <tr class="phasediv {{ 'hidden' if not phase.enabled.data }}" id="phase_{{loop.index0}}">
                     <th class="text-center">
-                      {{ phase.enabled(class_="hidden", id="var_enabled") }}
+                      {{ phase.enabled(id="var_enabled") }}
+                      {{ phase.hasdisplay(value="True" if box.hasdisplay else "False") }}
                       {{ loop.index }}
                     </th>
                     <td {{ 'class="has-error"' if phase.length.errors }} width="30%">
@@ -169,6 +172,7 @@ $(function() {
                         <div class="help-block">{{e}}</div>
                       {% endif %}
                     </td>
+                    {% if box.hasdisplay: %}
                     <td class="bgsel {{ "has-error" if phase.background.errors }}">
                       <!-- Some ugly hacks in here.  Clean this up if/when we make a 'real'
                         Angular app for this.  See http://stackoverflow.com/q/10610282 -->
@@ -180,6 +184,7 @@ $(function() {
                         {% endfor %}
                       {% endif %}
                     </td>
+                    {% endif %}
                   </tr>
                   {% endfor %}
               </tbody>

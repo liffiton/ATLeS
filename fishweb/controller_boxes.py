@@ -4,7 +4,7 @@ import re
 import time
 
 from bottle import abort, post, redirect, request, response, route, jinja2_template as template
-from wtforms import Form, FieldList, FormField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
+from wtforms import Form, FieldList, FormField, HiddenField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
 
 import config
 
@@ -64,12 +64,20 @@ def _skip_if_not_enabled(form, field):
         raise validators.StopValidation()
 
 
+def _skip_if_no_display(form, field):
+    if form.hasdisplay.data != "True":
+        # clear any previous errors
+        field.errors[:] = []
+        raise validators.StopValidation()
+
+
 class ExperimentPhaseForm(Form):
-    enabled = StringField("enabled")
+    enabled = HiddenField("enabled")
+    hasdisplay = HiddenField("hasdisplay")  # will be filled by box information in template
     length = IntegerField("Length", [_skip_if_not_enabled, validators.InputRequired(), validators.NumberRange(min=1, max=7*24*60)])
     stimulus = RadioField("Stimulus", choices=[('off', 'Off'), ('on', 'On'), ('rand', 'Random choice')], validators=[_skip_if_not_enabled, validators.InputRequired()])
     imgoptions = [""] + _bgimgs()
-    background = SelectField("Background Image", default="", choices=zip(imgoptions, imgoptions), validators=[_skip_if_not_enabled, validators.InputRequired()])
+    background = SelectField("Background Image", default="", choices=zip(imgoptions, imgoptions), validators=[_skip_if_not_enabled, _skip_if_no_display, validators.InputRequired()])
 
 
 class NewExperimentForm(Form):

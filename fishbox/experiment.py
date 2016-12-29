@@ -127,7 +127,8 @@ class Experiment(object):
             logging.warn("sensors module not loaded.")
 
         # Background image manager
-        self._background = display.Display()
+        if config.HAS_DISPLAY:
+            self._display = display.Display()
 
         # Evaluate experiment setup expression
         self._control = eval(conf['experiment']['controller'])
@@ -335,8 +336,9 @@ class Experiment(object):
             elif new_phase_data != phase_data:
                 phase_data = new_phase_data
                 logging.info("Starting phase: %s" % (str(phase_data)))
-                imgfile = os.path.join(config.IMGDIR, phase_data.background)
-                self._background.show_image(imgfile)
+                if config.HAS_DISPLAY:
+                    imgfile = os.path.join(config.IMGDIR, phase_data.background)
+                    self._display.show_image(imgfile)
 
             stim_msg = self._stim.msg_poll()
             if stim_msg == 'safety limit reached':
