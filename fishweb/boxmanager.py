@@ -14,14 +14,22 @@ import utils
 
 
 class Box(object):
-    def __init__(self, name, ip, port, appdir, hasdisplay, user="pi"):
+    def __init__(self, name, ip, port, properties):
         self.name = name   # name of remote box
         self.ip = ip       # IP address
         self.port = port   # port on which fishremote.py is accepting connections
-        self.hasdisplay = hasdisplay  # does this box have a display for "background images"
-        self.user = user   # username for SSH login to remote box
 
-        self.appdir = appdir  # path to track data directory on remote box
+        # information on git commit status for remote code
+        self.gitshort = properties[b'gitshort'].decode()
+        self.gitlong = properties[b'gitlong'].decode()
+
+        # does this box have a display for "background images"
+        self.hasdisplay = properties[b'hasdisplay']
+        # username for SSH login to remote box
+        self.user = properties[b'user'].decode()
+
+        # path to track data directory on remote box
+        self.appdir = properties[b'appdir'].decode()
         # build useful paths
         self.trackdir = os.path.join(self.appdir, config.TRACKDIR)
         self.archivedir = os.path.join(self.appdir, config.ARCHIVEDIR)
@@ -42,6 +50,8 @@ class Box(object):
             'user': self.user,
             'hasdisplay': self.hasdisplay,
             'connected': self.connected,
+            'gitshort': self.gitshort,
+            'gitlong': self.gitlong,
             'local': self.local,
             'error': self.error,
             # called via RPC, lock_data() doesn't return a real dict,
@@ -157,9 +167,7 @@ class BoxManager(object):
         newbox = Box(name=boxname,
                      ip=socket.inet_ntoa(info.address),
                      port=info.port,
-                     appdir=info.properties[b'appdir'].decode(),
-                     user=info.properties[b'user'].decode(),
-                     hasdisplay=info.properties[b'hasdisplay']
+                     properties=info.properties
                      )
         # connect in a separate thread so we don't have to wait for the connection here
         threading.Thread(target=newbox.connect).start()

@@ -14,9 +14,14 @@
     </div>
 
     <div class="col-lg-3 col-sm-4" ng-repeat="box in boxes | orderBy:'name'">
+      <div class="gitstatus" title="{{box.gitlong}}">
+        ver: {{box.gitshort}}
+      </div>
       <div class="panel" ng-class="{'panel-success': box.connected, 'panel-danger': !box.connected}">
         <div class="panel-heading">
-          <h2 class="panel-title" style="font-size: x-large">{{box.name}}</h2>
+          <h2 class="panel-title" style="font-size: x-large">
+            {{box.name}}
+          </h2>
           {{box.connected ? "connected" : "down"}}
           {{box.error ? "(" + box.error + ")" : ""}}
         </div>

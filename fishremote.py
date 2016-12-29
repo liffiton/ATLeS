@@ -94,6 +94,9 @@ def main():
 
     # register the service via MDNS/Bonjour
     boxname = platform.node()
+    gitstatus = utils.git_status()
+    gitshort = gitstatus[0]
+    gitlong = gitstatus[1]
     info = zeroconf.ServiceInfo(
         "_fishbox._tcp.local.",
         "%s._fishbox._tcp.local." % boxname,
@@ -103,6 +106,8 @@ def main():
             'appdir': os.getcwd(),
             'user': config.FISHREMOTE_USER,
             'hasdisplay': config.HAS_DISPLAY,
+            'gitshort': gitshort,
+            'gitlong': gitlong,
         }
     )
     zconf = zeroconf.Zeroconf([ip])

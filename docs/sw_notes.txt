@@ -53,6 +53,7 @@ If you need to install matplotlib on an RPi, you may have to work around an issu
 
  
 ### fishremote.py:
+    plumbum
     rpyc
     zeroconf
 

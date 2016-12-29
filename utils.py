@@ -4,6 +4,8 @@ import socket
 
 from contextlib import closing
 
+import plumbum
+
 
 # http://stackoverflow.com/a/166589
 # Create a UDP socket to the internet at large to get our routed IP
@@ -22,3 +24,17 @@ def mkdir(path):
             pass
         else:
             raise
+
+
+def git_status():
+    git = plumbum.local["git"]
+    desc = git('describe', '--contains', '--all').strip()
+    fulldesc = git('describe', '--all', '--long', '--dirty').strip()
+    fulldate = git('show', '-s', '--format=%ci').strip()
+    date = fulldate.split()[0]
+    mods = git['diff', '--no-ext-diff', '--quiet'] & plumbum.TF(1)
+
+    # short git description: date plus dirty marker
+    gitshort = "%s-%s%s" % (desc, date, '-*' if mods else '')
+    gitlong = "%s\n%s" % (fulldesc, fulldate)
+    return (gitshort, gitlong)
