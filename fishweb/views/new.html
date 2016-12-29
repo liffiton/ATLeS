@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set name='boxes' %}
-{% set title='New Experiment on %s' % box %}
+{% set title='New Experiment on %s' % box.name %}
 {% set scripts=['/static/angular-1.6.0.min.js'] %}
 
 {% block extrahead %}
@@ -14,7 +14,7 @@ $(function() {
   $("#clear_exp_button").click(function(e) {
     var go = confirm("Are you sure?  (Any running experiment will be terminated.)");
     if (! go) return;
-    $.post("/clear_experiment/{{box}}");
+    $.post("/clear_experiment/{{box.name}}");
   });
 
   // for handling dynamic form
@@ -32,7 +32,7 @@ $(function() {
   });
 
   // Update UI after everything is setup
-  checkProgress("{{box}}");
+  checkProgress("{{box.name}}");
   update_phase_ui();
   update_ini($("#inifile option:selected").text());
 });
@@ -41,7 +41,7 @@ $(function() {
 
 {% block body %}
 <div class="container">
-  <h1>New Experiment on <span class="hostname">{{box}}</span></h1>
+  <h1>New Experiment on <span class="hostname">{{box.name}}</span></h1>
 
   <div class="exp_progress_box row" style="display: none;" id="exp_progress">
     <div class="col-sm-6 col-sm-offset-1 alert alert-info">
@@ -68,7 +68,7 @@ $(function() {
 
   <div ng-app class="row" style="display: none;" id="exp_new">
     <div class="col-lg-7 col-md-7 col-sm-10">
-      <form id="new_exp_form" class="form-horizontal" action="/new/{{box}}" method="post">
+      <form id="new_exp_form" class="form-horizontal" action="/new/{{box.name}}" method="post">
         <div class="panel panel-default" id="experiment_form">
           <div class="panel-heading">
             <h3 class="panel-title">Experiment Setup</h3>
@@ -203,7 +203,7 @@ $(function() {
           <h3 class="panel-title">Current Camera View</h3>
         </div>
         <div class="panel-body">
-          <img class="center-block" src="/image/{{box}}/324" width=324 height=243>
+          <img class="center-block" src="/image/{{box.name}}/324" width=324 height=243>
         </div>
       </div>
 

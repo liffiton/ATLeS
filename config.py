@@ -15,3 +15,5 @@ STATICDIR = WEBAPPDIR + "static/"
 IMGDIR = STATICDIR + "bgimgs/"
 
 FISHREMOTE_USER = "pi"  # username for logging into remote Pi via SSH
+
+HAS_DISPLAY = False  # does the Pi have a display attached for "background" images

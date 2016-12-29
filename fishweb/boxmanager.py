@@ -14,10 +14,11 @@ import utils
 
 
 class Box(object):
-    def __init__(self, name, ip, port, appdir, user="pi"):
+    def __init__(self, name, ip, port, appdir, hasdisplay, user="pi"):
         self.name = name   # name of remote box
         self.ip = ip       # IP address
         self.port = port   # port on which fishremote.py is accepting connections
+        self.hasdisplay = hasdisplay  # does this box have a display for "background images"
         self.user = user   # username for SSH login to remote box
 
         self.appdir = appdir  # path to track data directory on remote box
@@ -39,6 +40,7 @@ class Box(object):
             'ip': self.ip,
             'port': self.port,
             'user': self.user,
+            'hasdisplay': self.hasdisplay,
             'connected': self.connected,
             'local': self.local,
             'error': self.error,
@@ -150,12 +152,15 @@ class BoxManager(object):
     def add_service(self, zeroconf, type, name):
         info = zeroconf.get_service_info(type, name)
         print("Service %s added, service info: %s" % (name, info))
-        boxname = name.split('.')[0]
+        boxname = info.properties[b'name'].decode()
+        assert boxname == name.split('.')[0]
         newbox = Box(name=boxname,
                      ip=socket.inet_ntoa(info.address),
                      port=info.port,
                      appdir=info.properties[b'appdir'].decode(),
-                     user=info.properties[b'user'].decode())
+                     user=info.properties[b'user'].decode(),
+                     hasdisplay=info.properties[b'hasdisplay']
+                     )
         # connect in a separate thread so we don't have to wait for the connection here
         threading.Thread(target=newbox.connect).start()
         with self._boxlock:

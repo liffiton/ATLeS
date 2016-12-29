@@ -97,7 +97,7 @@ def new_experiment_box(tgtbox, boxes=None):
     # first element must be visible
     form.phases[0].enabled.data = True
 
-    return template('new', dict(form=form, lock_exists=box.lock_exists(), box=tgtbox))
+    return template('new', dict(form=form, box=box))
 
 
 @post('/sync/<tgtbox>')
@@ -150,7 +150,7 @@ def post_new(tgtbox=None, boxes=None):
     # validate form data
     form = NewExperimentForm(request.forms)
     if not form.validate():
-        return template('new', form=form, lock_exists=box.lock_exists(), box=tgtbox)
+        return template('new', dict(form=form, box=box))
 
     expname = form.expname.data
     inifile = os.path.join(config.INIDIR, form.inifile.data)
