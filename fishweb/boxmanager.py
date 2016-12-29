@@ -154,8 +154,8 @@ class BoxManager(object):
         newbox = Box(name=boxname,
                      ip=socket.inet_ntoa(info.address),
                      port=info.port,
-                     appdir=info.properties['appdir'],
-                     user=info.properties['user'])
+                     appdir=info.properties[b'appdir'].decode(),
+                     user=info.properties[b'user'].decode())
         # connect in a separate thread so we don't have to wait for the connection here
         threading.Thread(target=newbox.connect).start()
         with self._boxlock:
