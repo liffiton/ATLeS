@@ -1,5 +1,5 @@
 bottle
-cherrypy
+cherrypy<9.0.0
 Jinja2
 wtforms
 python-daemon
