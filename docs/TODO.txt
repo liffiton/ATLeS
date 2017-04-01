@@ -1,6 +1,9 @@
 TODOs and Plans
 ===============
 
+Fishremote Image
+----------------
+ - https://github.com/Drewsif/PiShrink/
 
 Enclosure
 ---------
