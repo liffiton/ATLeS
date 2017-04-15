@@ -208,17 +208,17 @@ function update_buttons() {
   var count = sel_count();
   var track_rows = $("tr.track_row").filter(":visible");
   var row_count = track_rows.length;
-  $('#comparebutton').toggleClass('disabled', count != 2);
+  $('#comparebutton').prop('disabled', count != 2);
   $('#comparebutton').toggleClass('btn-primary', count == 2);
-  $('#statsbutton').toggleClass('disabled', count == 0);
+  $('#statsbutton').prop('disabled', count == 0);
   $('#statsbutton').toggleClass('btn-primary', count > 0);
-  $('#statscsvbutton').toggleClass('disabled', count == 0);
+  $('#statscsvbutton').prop('disabled', count == 0);
   $('#statscsvbutton').toggleClass('btn-primary', count > 0);
-  $('#downloadbutton').toggleClass('disabled', count == 0);
+  $('#downloadbutton').prop('disabled', count == 0);
   $('#downloadbutton').toggleClass('btn-primary', count > 0);
-  $('#replotselbutton').toggleClass('disabled', count == 0);
+  $('#replotselbutton').prop('disabled', count == 0);
   $('#replotselbutton').toggleClass('btn-primary', count > 0);
-  $('#archiveselbutton').toggleClass('disabled', count == 0);
+  $('#archiveselbutton').prop('disabled', count == 0);
   $('#archiveselbutton').toggleClass('btn-primary', count > 0);
   $('._selectallbutton').toggleClass('btn-default', count < row_count);
   $('._selectallbutton').toggleClass('btn-primary', count == row_count);
@@ -299,8 +299,8 @@ function num_phases_enabled() {
 function update_phase_ui() {
     var num_enabled = num_phases_enabled();
     $("#phasecount").val(num_enabled);
-    $("#btn_addPhase").toggleClass("disabled", (num_enabled >= 10));
-    $("#btn_delPhase").toggleClass("disabled", (num_enabled <= 1));
+    $("#btn_addPhase").prop("disabled", num_enabled >= 10);
+    $("#btn_delPhase").prop("disabled", num_enabled <= 1);
     $.each($(".phasediv"), function() {
         var enabled = $("#var_enabled", this).val();
         $(this).toggleClass('hidden', enabled != "True");
