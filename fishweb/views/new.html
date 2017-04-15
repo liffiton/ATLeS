@@ -67,7 +67,7 @@ $(function() {
   </div>
 
   <div ng-app class="row" style="display: none;" id="exp_new">
-    <div class="col-lg-7 col-md-7 col-sm-10">
+    <div class="col-md-7 col-sm-10">
       <form id="new_exp_form" class="form-horizontal" action="/new/{{box.name}}" method="post">
         <div class="panel panel-default" id="experiment_form">
           <div class="panel-heading">
@@ -148,7 +148,7 @@ $(function() {
                       {{ loop.index }}
                     </th>
                     <td {{ 'class="has-error"' if phase.length.errors }} width="30%">
-                      <div class="input-group col-sm-11">
+                      <div class="input-group">
                         {{ phase.length(class_="form-control") }}
                         <span class="input-group-addon">
                           minutes
@@ -201,7 +201,7 @@ $(function() {
       </form>
     </div>
 
-    <div class="col-lg-5 col-md-5 col-sm-10">
+    <div class="col-md-5 col-sm-10">
       <!-- Camera view -->
       <div class="panel panel-default" id="experiment_form">
         <div class="panel-heading">
