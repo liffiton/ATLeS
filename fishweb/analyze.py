@@ -69,7 +69,7 @@ class Grapher(object):
             delimiter=',',
             unpack=True,
             dtype={'names': ('time','status','x','y','numpts'), 'formats': ('f','S16','f','f','d')},
-            converters={2: lambda s: float(s) if s != '.' else -1, 3: lambda s: float(s) if s != '.' else -1}
+            converters={2: lambda s: float(s) if s != b'.' else -1, 3: lambda s: float(s) if s != b'.' else -1}
         )
 
         # calculate derivatives and other derived values
@@ -98,9 +98,9 @@ class Grapher(object):
         #self._angular_velocity = dtheta / dt
 
         # produce boolean arrays
-        self._valid = (status != 'lost') & (status != 'init') & (np.roll(status, 1) != 'lost') & (np.roll(status, 1) != 'init')  # valid if this index *and* previous are both not 'lost' or 'init'
-        self._lost = (status == 'lost') | (status == 'init')
-        self._missing = (status == 'missing')
+        self._valid = (status != b'lost') & (status != b'init') & (np.roll(status, 1) != b'lost') & (np.roll(status, 1) != b'init')  # valid if this index *and* previous are both not 'lost' or 'init'
+        self._lost = (status == b'lost') | (status == b'init')
+        self._missing = (status == b'missing')
         self._in_top = (y > 0.5)
         self._in_bottom = (y <= 0.5)
         self._in_left25 = (x < 0.25)
@@ -288,7 +288,7 @@ class Grapher(object):
             width_ratios=[last_width, 1-last_width],  # all but last will span both columns
         )
 
-        for i in xrange(numplots):
+        for i in range(numplots):
             # all plots but last span both columns,
             # last plot only in the first column, to get the correct width
             if i == numplots - 1:
@@ -353,8 +353,8 @@ class Grapher(object):
         plt.close('all')
         plt.figure(figsize=(4*numplots, 4))
         for i in range(numplots):
-            start = i * len(self._x) / numplots
-            end = (i+1) * len(self._x) / numplots
+            start = i * len(self._x) // numplots
+            end = (i+1) * len(self._x) // numplots
             ax = plt.subplot(1, numplots, i+1)
             ax.set_yscale('log')
             ax.set_ylim([0.1,1000])
@@ -367,7 +367,7 @@ class Grapher(object):
             fft = np.fft.rfft(self._x[start:end] * window)
             freq = np.fft.rfftfreq(n=end-start, d=1.0/10)
 
-            ax.plot(freq[:len(freq)/2], abs(fft[:len(fft)/2]))
+            ax.plot(freq[:len(freq)//2], abs(fft[:len(fft)//2]))
 
 #            # imshow expects y,x for the image, but x,y for the extents,
 #            # so we have to manage that here...
@@ -396,8 +396,8 @@ class Grapher(object):
         plt.figure(figsize=(4*min(numplots, 10), 4*numrows))
         plt.title(title)
         for i in range(numplots):
-            start = i * len(self._x) / numplots
-            end = (i+1) * len(self._x) / numplots
+            start = i * len(self._x) // numplots
+            end = (i+1) * len(self._x) // numplots
             ax = plt.subplot(numrows, min(numplots, 10), i+1)
             if numplots > 1:
                 ax.axes.get_xaxis().set_visible(False)
@@ -566,7 +566,7 @@ def main():
     for key, val in stats.items():
         if type(val) is np.float32 or type(val) is np.float64:
             val = "%0.3f" % val
-        print ("%*s: %s") % (maxlen, key, str(val))
+        print("%*s: %s" % (maxlen, key, str(val)))
 
     if args.heat:
         g.plot_heatmap(args.heat_num)

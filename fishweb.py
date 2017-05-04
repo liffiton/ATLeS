@@ -78,4 +78,4 @@ if __name__ == '__main__':
             boxmanager = boxmanager.BoxManagerPlugin()
             app.install(boxmanager)
 
-        app.run(server='cherrypy', host=host, port=8080, debug=args.testing, reloader=args.testing)
+        app.run(host=host, port=8080, debug=args.testing, reloader=args.testing)
