@@ -31,3 +31,5 @@ gems:
 exclude:
   - Gemfile
   - Gemfile.lock
+  - old/
+  - dev/
