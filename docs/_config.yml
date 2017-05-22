@@ -16,7 +16,7 @@
 title: [TBD]
 email: tbd@iwu.edu
 description: > # this means to ignore newlines until "baseurl:"
-The goal of the [whatever] project is to create an inexpensive, open-source system for automated, high-throughput, realtime observation and conditioning experiments of small model organisms (specifically Zebrafish, <i>danio rerio</i>, are the initial target).
+ The goal of the [whatever] project is to create an inexpensive, open-source system for automated, high-throughput, realtime observation and conditioning experiments of small model organisms (specifically Zebrafish, <i>danio rerio</i>, are the initial target).
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 #twitter_username: jekyllrb
@@ -27,7 +27,7 @@ repository: liffiton/something
 markdown: kramdown
 theme: minima
 gems:
-  - jekyll-feed
+#  - jekyll-feed
 exclude:
   - Gemfile
   - Gemfile.lock
