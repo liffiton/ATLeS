@@ -1,18 +1,17 @@
 ---
-layout: page
 title: (Manual) Box Software Setup
 ---
 
 Most people will not need to use the following instructions.
 They are provided for anyone who wants to set up the [whatever] box software environment themselves.
-The easiest way to install and use the software is to [install a provided OS image](box_setup).
+The easiest way to install and use the software is to [install a provided OS image](box_sw_install).
 
-## Installing FishyCam from Scratch
+# Installing FishyCam from Scratch
 
 If you are comfortable working in a Linux deveopment environment, you can install the needed software yourself.
 Start with a clean install of [Raspbian](https://www.raspberrypi.org/downloads/raspbian/).
 
-### Python Package Dependencies
+## Python Package Dependencies
 
 Before installing the python modules themselves, install the required tools:
 
@@ -26,7 +25,7 @@ Many python packages are most easily installed via pip.  If you need to install 
 
 Each of the fishbox scripts relies on a specific set of python modules.
 
-#### fishweb.py
+### fishweb.py
 
 Depends on:
  * bottle
@@ -48,7 +47,7 @@ If you need to install matplotlib on an RPi, you may have to work around an issu
     $ pip install --user --no-cache-dir matplotlib
 
  
-#### fishremote.py
+### fishremote.py
 
 Depends on:
  * plumbum
@@ -60,9 +59,9 @@ Install by running:
     $ pip install --user -U -r requirements_fishremote.txt
 
 
-#### fishbox.py:
+### fishbox.py
 
-depends on:
+Depends on:
  * cv2         (for OpenCV)
  * smbus       (for reading sensor values)
  * wiringpi    (for controlling light bar via PWM)
@@ -74,7 +73,7 @@ To install smbus:
     $ sudo apt-get install python-smbus
 
 
-### Runtime Dependencies
+## Runtime Dependencies
 
 Additional packages required to run the fishbox/fishremote software:
 

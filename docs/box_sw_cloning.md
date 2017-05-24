@@ -1,7 +1,8 @@
 ---
-layout: page
 title: Box Software Cloning
 ---
+
+# Box Software Cloning
 
 These instructions are for developers who wish to create a new base OS image to install on [whatever] box Raspberry Pis.
 

@@ -1,11 +1,10 @@
 ---
-layout: page
 title: Box Software Usage Notes
 ---
 
-## Notes on Running FishyCam
+# Notes on Running FishyCam
 
-### Framerate
+## Framerate
 
 The capture framerate is sensitive to many things.
 
@@ -15,7 +14,7 @@ Secondly, the capture size obviously makes a difference.  There is currently som
 
 Also, it is important to note that terminal output, displayed on the rpi's X server, uses a large amount of the CPU as well.  Simply switching to a different tab while FPS output is enabled in camtest.py drops the CPU usage significantly.  Keep this in mind particularly during testing, where debugging output may significantly harm performance.
 
-### Exposure and white balance
+## Exposure and white balance
 
 Auto white balance can be disabled with:
 
@@ -33,7 +32,7 @@ Exposure can be adjusted with:
 "auto_exposure=1" disables auto exposure (don't ask me...).
 "exposure_time_absolute" is given in multiples of 0.1ms.  It needs to be adjusted along with the frame rate (-p) so that they match.  A higher frame rate will clip the exposure to make that frame rate possible.
 
-### Display
+## Display
 
 In X, pygame will make a fullscreen view, but it won't (as far as I've found so far) scale the image.  So if I request 640x480, I get a 640x480 surface in the middle of my monitor.
 

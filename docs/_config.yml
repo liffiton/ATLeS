@@ -13,10 +13,10 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: [TBD]
+title: TBD
 email: tbd@iwu.edu
 description: > # this means to ignore newlines until "baseurl:"
- The goal of the [whatever] project is to create an inexpensive, open-source system for automated, high-throughput, realtime observation and conditioning experiments of small model organisms (specifically Zebrafish, <i>danio rerio</i>, are the initial target).
+ An inexpensive, open-source system for automated, high-throughput, realtime observation and conditioning experiments of small organisms.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 #twitter_username: jekyllrb
@@ -25,7 +25,7 @@ repository: liffiton/something
 
 # Build settings
 markdown: kramdown
-theme: minima
+theme: jekyll-theme-leap-day
 gems:
 #  - jekyll-feed
 exclude:
