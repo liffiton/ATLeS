@@ -90,28 +90,30 @@ blockquote {
   font-style:italic;
 }
 
-code {
+code, pre {
   font-family: 'Lucida Sans', Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal;
-  font-size:13px;
-  color:#efefef;
-  text-shadow: 0px 1px 0px #000;
+  font-size: 14px;
+  color: #222;
+  background: #eee;
+  border: 1px solid #ddd;
+}
+
+code {
   margin: 0 4px;
-  padding: 2px 6px;
-  background: #333;
-  border-radius: 2px;
+  padding: 2px 4px;
+  border-radius: 3px;
 }
 
 pre {
-  padding:8px 15px;
-  background: #333333;
-  border-radius: 3px;
-  border:1px solid #c7c7c7;
+  padding: 6px 8px;
+  border-radius: 5px;
   overflow: auto;
   overflow-y: hidden;
 
   code {
     margin: 0px;
     padding: 0px;
+    border: none;
   }
 }
 
@@ -152,19 +154,13 @@ dt {
 }
 
 header {
-  padding: 25px 20px 40px 20px;
+  padding: 25px 20px;
   margin: 0;
-  position: fixed;
-  top: 0;
-  left:0;
-  right:0;
-  width: 100%;
   text-align: center;
   background: url(../images/background.png) #4276b6;
   box-shadow: 1px 0px 2px rgba(0,0,0,.75);
   z-index:99;
   -webkit-font-smoothing:antialiased;
-  min-height: 76px;
 
   h1 {
     font: 40px/48px 'Copse', "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -188,17 +184,14 @@ header {
 
 #banner {
   z-index: 100;
-  left:0;
-  right:50%;
-  height: 50px;
-  margin-right:-382px;
-  position: fixed;
-  top: 115px;
+  left:10%;
+  width: 80%;
+  position: relative;
+  top: -20px;
   background: #ffcc00;
   border: 1px solid #f0b500;
   box-shadow: 0px 1px 3px rgba(0,0,0,.25);
   border-radius: 0px 2px 2px 0px;
-  padding-right: 10px;
 
   .button {
     border: 1px solid #dba500;
@@ -206,9 +199,8 @@ header {
     border-radius: 2px;
     box-shadow: inset 0px 1px 0px rgba(255,255,255,.4), 0px 1px 1px rgba(0,0,0,.1);
     background-color: #FFE788;
-    margin-left: 5px;
+    margin: 6px;
     padding: 10px 12px;
-    margin-top: 6px;
     line-height:14px;
     font-size:14px;
     color:#333;
@@ -222,29 +214,16 @@ header {
     }
   }
 
-  .fork {
-    position:fixed;
-    left:50%;
-    margin-left:-325px;
-    padding: 10px 12px;
-    margin-top: 6px;
-    line-height:14px;
-    font-size:14px;
-    background-color: #FFE788;
+  .projectlinks {
+    float: right;
   }
 
-  .downloads {
-    float: right;
-    margin:0 45px 0 0;
-
-    span {
-      float:left;
-      line-height:52px;
-      font-size:90%;
-      color:#9d7f0d;
-      text-transform:uppercase;
-      text-shadow:rgba(#fff, 0.2) 0 1px 0;
-    }
+  span.downloads {
+	line-height:52px;
+	font-size:90%;
+	color:#9d7f0d;
+	text-transform:uppercase;
+	text-shadow:rgba(#fff, 0.2) 0 1px 0;
   }
 
   ul {
@@ -275,10 +254,9 @@ header {
 }
 
 section {
-  width:590px;
+  width:690px;
   padding: 30px 30px 50px 30px;
-  margin: 20px 0;
-  margin-top: 190px;
+  margin: 0;
   position:relative;
   background: #fbfbfb;
   border-radius: 3px;
@@ -380,13 +358,8 @@ footer {
 
   #banner {
     width: 100%;
-
-    .downloads {
-        margin-right: 60px;
-      }
-
-    .fork {
-    }
+	left: 0;
+    right: 0;
 
     #logo {
       margin-right: 15px;
@@ -394,10 +367,8 @@ footer {
   }
 
   section {
-    border:1px solid #e5e5e5;
-    border-width:1px 0;
     padding:20px auto;
-    margin: 190px auto 20px;
+    margin: 0 auto;
     max-width: 600px;
   }
 
@@ -417,7 +388,7 @@ footer {
   }
 
   header {
-    padding:20px 20px;
+    padding:20px 10px;
     margin: 0;
 
     h1 {
@@ -433,21 +404,10 @@ footer {
   }
 
   #banner {
-    top: 80px;
-
-    .fork {
-      float: left;
-      display: inline-block;
-      margin-left: 0px;
-    position:fixed;
-    left:20px;
-
-      }
+    top: 0;
   }
 
   section {
-    margin-top: 130px;
-    margin-bottom: 0px;
     width: auto;
   }
 
@@ -463,7 +423,6 @@ footer {
   header{
     position: relative;
     padding: 5px 0px;
-    min-height: 0px;
 
     h1 {
       font-size: 24px;
@@ -475,10 +434,11 @@ footer {
     }
   }
   section {
-    margin-top: 5px;
   }
 
-  #banner { display: none;}
+  #banner {
+    top: 0;
+  }
   header ul {
     display:none;
   }

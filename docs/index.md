@@ -25,8 +25,8 @@ Because the entire system is open-source, from the code to the physical design, 
 
 *In Progress:* The documentation is not yet fully written nor organized, and for now, the following notes are available:
  * [Box software installation](box_sw_install)
- * [Box software usage notes](box_sw_notes)
 
 For developers:
- * [(Manual) box software setup](box_sw_manual_install)
+ * [(Manual) box software installation](box_sw_manual_install)
  * [Box software image cloning](box_sw_cloning)
+ * [Box software usage notes](box_sw_notes)
