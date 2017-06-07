@@ -1,6 +1,4 @@
-"Dev" RPi 2 B+:
- - 10.2.6.31  [in Mark's office]
-
+"Dev" RPi 2 B+: 10.2.6.35  [in Mark's office]
 fishhead: 10.2.6.44
 
 
