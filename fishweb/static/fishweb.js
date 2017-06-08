@@ -186,9 +186,10 @@ function toggle_select_all() {
   track_rows.each(function() {
     var sel_button = $(this).find(".selectbutton");
     if (notall != sel_button.hasClass('btn-primary')) {
-      togglesel(this);
+      sel_button.toggleClass('btn-primary');
     }
   });
+  update_selection();
 }
 function update_selection() {
   selection = Object.create(null);  // reset
