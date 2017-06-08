@@ -148,12 +148,16 @@ def post_download():
     # write the archive into a temporary in-memory file-like object
     temp = tempfile.SpooledTemporaryFile()
     with zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED) as archive:
-        for track in tracks:
-            archive.write(track)
+        for trackpath in tracks:
+            basename = trackpath.replace("-track.csv", "")
+            paths = glob.glob(basename + "*")
+            for path in paths:
+                archive.write(path)
+
     temp.seek(0)
 
     # force a download; give it a filename and mime type
-    response.set_header('Content-Disposition', 'attachment; filename="tracks.zip"')
+    response.set_header('Content-Disposition', 'attachment; filename="data.zip"')
     response.set_header('Content-Type', 'application/zip')
 
     # relying on garbage collector to delete tempfile object
