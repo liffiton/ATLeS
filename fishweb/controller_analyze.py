@@ -11,7 +11,7 @@ except ImportError:
 # before the analyze module pulls it in.
 import matplotlib
 matplotlib.use('Agg')
-from . import analyze
+from analysis import analyze
 
 from bottle import get, post, redirect, request, response, jinja2_template as template
 
@@ -113,6 +113,7 @@ def _analyze_selection(trackfiles):
         except ValueError as e:
             # often 'wrong number of columns' due to truncated file from killed experiment
             return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackfile, exception=traceback.format_exc())
+
 
 @post('/analyze_selection/')
 def post_analyze_selection():

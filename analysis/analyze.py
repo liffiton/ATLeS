@@ -6,10 +6,11 @@ try:
 except ImportError:
     from configparser import RawConfigParser, MissingSectionHeaderError
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import collections, gridspec, lines, patches
 import numpy as np
+
+from analysis import heatmaps
 
 _entry_wait = 2  # min seconds between counted entries to top
 _freeze_min_time = 2  # min seconds to count lack of motion as a "freeze"
@@ -369,19 +370,6 @@ class Grapher(object):
 
             ax.plot(freq[:len(freq)//2], abs(fft[:len(fft)//2]))
 
-#            # imshow expects y,x for the image, but x,y for the extents,
-#            # so we have to manage that here...
-#            nbins = 50
-#            #heatmap, yedges, xedges = np.histogram2d(self._y[start:end], self._x[start:end], bins=nbins)
-#            bins = np.concatenate( (np.arange(0,1.0,1.0/nbins), [1.0]) )
-#            fft_binned, edges = np.histogram(fft, bins=bins)
-#            extent = [xedges[0],xedges[-1], yedges[0], yedges[-1]]
-#            # make sure we always show the full extent of the tank and the full extent of the data,
-#            # whichever is wider.
-#            ax.set_xlim(min(0, xedges[0]), max(1, xedges[-1]))
-#            ax.set_ylim(min(0, yedges[0]), max(1, yedges[-1]))
-#            ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest')
-
     def plot_invalidheatmap(self):
         plt.close('all')
         title = "Map of shame (loc of invalid data)"
@@ -392,19 +380,10 @@ class Grapher(object):
         ax = plt.subplot(1, 1, 1)
         self._format_axis(ax)
 
-        # imshow expects y,x for the image, but x,y for the extents,
-        # so we have to manage that here...
         nbins = 50
-        #heatmap, yedges, xedges = np.histogram2d(self._y[start:end], self._x[start:end], bins=nbins)
-        bins = np.concatenate( (np.arange(0,1.0,1.0/nbins), [1.0]) )
+
         badpoints = (self._valid != True)
-        heatmap, yedges, xedges = np.histogram2d(self._y[badpoints], self._x[badpoints], bins=bins)
-        extent = [xedges[0],xedges[-1], yedges[0], yedges[-1]]
-        # make sure we always show the full extent of the tank and the full extent of the data,
-        # whichever is wider.
-        ax.set_xlim(min(0, xedges[0]), max(1, xedges[-1]))
-        ax.set_ylim(min(0, yedges[0]), max(1, yedges[-1]))
-        ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest')
+        heatmaps.plot_heatmap(ax, self._x[badpoints], self._y[badpoints], nbins=nbins)
 
     def plot_heatmap(self, numplots=1):
         plt.close('all')
@@ -428,18 +407,9 @@ class Grapher(object):
                 ax.axes.get_yaxis().set_visible(False)
             else:
                 self._format_axis(ax)
-            # imshow expects y,x for the image, but x,y for the extents,
-            # so we have to manage that here...
+
             nbins = 50
-            #heatmap, yedges, xedges = np.histogram2d(self._y[start:end], self._x[start:end], bins=nbins)
-            bins = np.concatenate( (np.arange(0,1.0,1.0/nbins), [1.0]) )
-            heatmap, yedges, xedges = np.histogram2d(self._y[start:end], self._x[start:end], bins=bins)
-            extent = [xedges[0],xedges[-1], yedges[0], yedges[-1]]
-            # make sure we always show the full extent of the tank and the full extent of the data,
-            # whichever is wider.
-            ax.set_xlim(min(0, xedges[0]), max(1, xedges[-1]))
-            ax.set_ylim(min(0, yedges[0]), max(1, yedges[-1]))
-            ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest')
+            heatmaps.plot_heatmap(ax, self._x[start:end], self._y[start:end], nbins=nbins)
 
     def _subplot(self, ax, start, end, median_speed):
         time = self._time[start:end]
