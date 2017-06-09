@@ -9,10 +9,16 @@
   <h1>Boxes</h1>
 
   <div class="row">
-    <div class="col-sm-6 col-sm-offset-1 text-muted" ng-show="boxes !== null && !boxes.length">
+    <div class="col-sm-10 col-sm-offset-1 text-muted" ng-show="boxes !== null && !boxes.length">
       <p>No boxes currently connected.  When <code>fishremote.py</code> is run on a box, it will appear here.</p>
     </div>
 
+    <div class="col-sm-10 col-sm-offset-1 text-muted" ng-show="boxes === 'error'">
+      <p>Error receiving data from server.  <code>fishweb.py</code> may not be running.</p>
+    </div>
+  </div>
+
+  <div class="row" ng-show="boxes.length && boxes !== 'error'">
     <div class="col-lg-3 col-sm-4" ng-repeat="box in boxes | orderBy:'name'">
       <div class="gitstatus" title="{{box.gitlong}}">
         ver: {{box.gitshort}}

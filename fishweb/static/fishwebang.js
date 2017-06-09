@@ -8,7 +8,11 @@ angular.module('BoxesApp', ['ngResource'])
     $scope.boxes = null;  // give ng-show something to go on until boxes is an array
     $scope.syncing = new Set();  // maintained outside of boxes so it persists
     function update() {
-      BoxesService.query({}, function(data) { $scope.boxes = toArrayFilter(data.toJSON()); });  // toJSON to strip $promise and $resolved so toArray works
+      BoxesService.query(
+              {},
+              function(data) { $scope.boxes = toArrayFilter(data.toJSON()); },  // toJSON to strip $promise and $resolved so toArray works
+              function(data) { $scope.boxes = "error"; }  // error-handler; signal page via "error" string
+              );
     };
     $interval(update, 2000);
     update(); // call once to start
