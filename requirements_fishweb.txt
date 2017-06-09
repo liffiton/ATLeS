@@ -5,5 +5,5 @@ wtforms
 python-daemon
 matplotlib
 numpy
-rpyc
+rpyc!=3.4
 zeroconf
