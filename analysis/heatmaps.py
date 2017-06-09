@@ -19,14 +19,18 @@ def read_data(paths):
     return data
 
 
-def _plot_heatmap(ax, data, label, start_time, end_time, nbins, maxcount):
-    ''' Plot a single heatmap on the given axes for given time range across all given dataframes. '''
-    ax.clear()
+def get_timeslice(dataframes, start_time, end_time):
     xpoints = []
     ypoints = []
-    for df in data:
+    for df in dataframes:
         xpoints.extend(df.loc[start_time:end_time]['x'])
         ypoints.extend(df.loc[start_time:end_time]['y'])
+
+    return xpoints, ypoints
+
+
+def plot_heatmap(ax, xpoints, ypoints, nbins, title=None, maxcount=None):
+    ''' Plot a single heatmap on the given axes for given time range across all given dataframes. '''
     # imshow expects y,x for the image, but x,y for the extents,
     # so we have to manage that here...
     bins = np.concatenate( (np.arange(0,1.0,1.0/nbins), [1.0]) )
@@ -36,14 +40,18 @@ def _plot_heatmap(ax, data, label, start_time, end_time, nbins, maxcount):
     # whichever is wider.
     ax.set_xlim(min(0, xedges[0]), max(1, xedges[-1]))
     ax.set_ylim(min(0, yedges[0]), max(1, yedges[-1]))
-    norm = Normalize(0, maxcount)
-    ax.set_title(label)
+    if title:
+        ax.set_title(title)
+    if maxcount is not None:
+        norm = Normalize(0, maxcount)
+    else:
+        norm = None
     return ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest', norm=norm)
 
 
 def make_animation(datasets):
     ''' Create and return a side-by-side heatmap animation for the given sets of data.
-        Data sets specified as a dictionary with key=label, value=list of dataframes.
+        Data sets specified as a dictionary with key=title, value=list of dataframes.
     '''
     numplots = len(datasets)
     fig, ax = plt.subplots(1, numplots)
@@ -53,7 +61,7 @@ def make_animation(datasets):
     maxtime = dataframes[0].index.max()
     sec_per_frame = 60
     frame_overlap_percent = 150
-    frames = math.ceil(maxtime / sec_per_frame)
+    frames = int(math.ceil(maxtime / sec_per_frame))
 
     nbins = 50
 
@@ -64,7 +72,9 @@ def make_animation(datasets):
         end_time = start_time + sec_per_frame*(frame_overlap_percent/100)
         artists = []
         for i, label in enumerate(datasets):
-            artist = _plot_heatmap(ax[i], datasets[label], label, start_time, end_time, nbins, maxcount)
+            ax[i].clear()
+            x, y = get_timeslice(datasets[label], start_time, end_time)
+            artist = plot_heatmap(ax[i], x, y, nbins, title=label, maxcount=maxcount)
             artists.append(artist)
         return artists
 
