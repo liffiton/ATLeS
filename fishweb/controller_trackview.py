@@ -144,7 +144,7 @@ def _get_all_track_data(db):
         aml = (row['acquired'], row['missing'], row['lost'])
         heat = row['heat']
         vel = (row['avgvel'], row['maxvel'])
-        tracks.append( (trackfile, trackrel, lines, ('{}'.format(x) for x in aml), heat, ('{}'.format(x) for x in vel), _imgs(trackrel), _dbgframes(trackrel), _setupfile(trackfile)) )
+        tracks.append( (trackfile, trackrel, lines, ['{}'.format(x) for x in aml], heat, ['{}'.format(x) for x in vel], _imgs(trackrel), _dbgframes(trackrel), _setupfile(trackfile)) )
 
     return tracks
 
