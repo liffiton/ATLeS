@@ -1,5 +1,6 @@
 import errno
 import os
+import sqlite3
 import socket
 
 from contextlib import closing
@@ -38,3 +39,14 @@ def git_status():
     gitshort = "%s-%s%s" % (branch, date, '-*' if mods else '')
     gitlong = "%s\n%s" % (fulldesc, fulldate)
     return (gitshort, gitlong)
+
+
+def init_db(dbfile, schemafile):
+    ''' Check if database exists.  If not, create it using given schema. '''
+    if os.path.exists(dbfile):
+        return
+    con = sqlite3.connect(dbfile)
+    with open(schemafile) as f:
+        with con:
+            con.executescript(f.read())
+    con.close()

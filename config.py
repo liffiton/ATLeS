@@ -1,4 +1,6 @@
 DATADIR = "data/"
+DBFILE = DATADIR + "tracks.db"
+DBSCHEMAFILE = "tracks_schema.sql"
 TRACKDIR = DATADIR + "tracks/"
 LOCKFILE = DATADIR + "current_experiment.lock"
 PLOTDIR = DATADIR + "plots/"

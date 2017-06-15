@@ -2,6 +2,7 @@ import argparse
 import os
 
 import bottle
+from bottle.ext import sqlite
 
 import config
 import utils
@@ -34,6 +35,9 @@ if __name__ == '__main__':
     utils.mkdir(config.DBGFRAMEDIR)
     utils.mkdir(config.ARCHIVEDIR)
 
+    # Setup db if not already there
+    utils.init_db(config.DBFILE, config.DBSCHEMAFILE)
+
     # let bottle know where to find our templates
     bottle.TEMPLATE_PATH.insert(0, config.TEMPLATEDIR)
 
@@ -41,6 +45,10 @@ if __name__ == '__main__':
 
     # set app config
     app.config['fishweb.local'] = args.local
+
+    # install sqlite plugin
+    sqliteplugin = sqlite.Plugin(dbfile=config.DBFILE)
+    app.install(sqliteplugin)
 
     # setup error handlers
     bottle.load("fishweb.error_handlers")
@@ -78,4 +86,5 @@ if __name__ == '__main__':
             boxmanager = boxmanager.BoxManagerPlugin()
             app.install(boxmanager)
 
-        app.run(host=host, port=8080, server='cherrypy', debug=args.testing, reloader=args.testing)
+        #app.run(host=host, port=8080, server='cherrypy', debug=args.testing, reloader=args.testing)
+        app.run(host=host, port=8080, server='cherrypy', debug=True, reloader=False)

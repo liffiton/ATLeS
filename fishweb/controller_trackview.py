@@ -89,7 +89,7 @@ def _get_track_data(track):
     if lines:
         aml = ["%0.3f" % (states[key] / float(lines)) for key in ('acquired', 'missing', 'lost')]
     else:
-        aml = []
+        aml = [0, 0, 0]
     if heatmap:
         maxheat = max(heatmap.values())
         # convert counts to 2-digit hex integer in range 0-255
@@ -100,31 +100,58 @@ def _get_track_data(track):
         veldata = [sum(velocities) / len(velocities), max(velocities)]
         veldata = ["%0.3f" % datum for datum in veldata]
     else:
-        veldata = []
+        veldata = [0, 0]
 
     return lines, aml, heatstr, veldata
 
 
-# Cache computed a/m/l and heatmap data to avoid recomputation
-track_data_cache = {}
-
-
-@route('/tracks/')
-def tracks():
-    global track_data_cache
+def _get_all_track_data(db):
+    ''' Load all track data for present track files.
+        Uses the database (for any data previously computed/stored). '''
+    # First, load all track data from db into a dictionary
+    cur = db.execute("SELECT * FROM Tracks")
+    rows = cur.fetchall()
+    track_data = {}
+    for row in rows:
+        track_data[row['key']] = {
+            x: row[x] for x in ('lines', 'acquired', 'missing', 'lost', 'heat', 'avgvel', 'maxvel')
+        }
 
     tracks = []
+
+    # Go through all track files, loading track data from DB if present
+    # or computing and storing in DB if not yet.
     for trackfile in _tracks():
         mtime = os.stat(trackfile).st_mtime
         trackrel = os.path.relpath(trackfile, config.TRACKDIR)
         key = "%f|%s" % (mtime, trackrel)
-        if key in track_data_cache:
-            lines, aml, heat, vel = track_data_cache[key]
+        if key in track_data:
+            row = track_data[key]
         else:
             lines, aml, heat, vel = _get_track_data(trackfile)
-            track_data_cache[key] = (lines, aml, heat, vel)
-        tracks.append( (trackfile, trackrel, lines, aml, heat, vel, _imgs(trackrel), _dbgframes(trackrel), _setupfile(trackfile)) )
+            db.execute("INSERT INTO Tracks(key, lines, acquired, missing, lost, heat, avgvel, maxvel) "
+                       "VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+                       (
+                           key,
+                           lines,
+                           aml[0], aml[1], aml[2],
+                           heat,
+                           vel[0], vel[1]
+                       ))
+            cur = db.execute("SELECT * FROM Tracks WHERE key=?", (key, ))
+            row = cur.fetchone()
+        lines = row['lines']
+        aml = (row['acquired'], row['missing'], row['lost'])
+        heat = row['heat']
+        vel = (row['avgvel'], row['maxvel'])
+        tracks.append( (trackfile, trackrel, lines, ('{}'.format(x) for x in aml), heat, ('{}'.format(x) for x in vel), _imgs(trackrel), _dbgframes(trackrel), _setupfile(trackfile)) )
 
+    return tracks
+
+
+@route('/tracks/')
+def tracks(db):
+    tracks = _get_all_track_data(db)
     local = request.app.config['fishweb.local']
     return template('tracks', tracks=tracks, local=local, node=platform.node())
 
