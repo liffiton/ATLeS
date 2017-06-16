@@ -1,6 +1,5 @@
 bottle
 bottle-sqlite
-cherrypy<9.0.0
 Jinja2
 wtforms
 python-daemon
@@ -8,4 +7,5 @@ matplotlib
 numpy
 pandas
 rpyc!=3.4
+waitress
 zeroconf
