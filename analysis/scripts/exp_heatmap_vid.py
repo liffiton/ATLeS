@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 
-import argparse
 import configparser
 import glob
 import matplotlib.pyplot as plt
 
 from collections import defaultdict
 
-import heatmaps
+from .. import heatmaps
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'))
-    args = parser.parse_args()
+name = "exp_heatmap_vid"
+help = "Generate side-by-side heatmap videos for all left-stimulus tracks and all right-stimulus tracks."
 
+
+def register_arguments(parser):
+    pass
+
+
+def run(args):
     tracks = defaultdict(list)
 
-    all_setup = glob.glob("../data/tracks/*/*LDr*-setup.txt")
+    all_setup = glob.glob("data/tracks/*/*LDr*-setup.txt")
+    print("Reading data linked to {}...".format(all_setup))
     for setupfile in all_setup:
         config = configparser.ConfigParser()
         config.read(setupfile)
@@ -48,14 +52,9 @@ def main():
                 df['x'] = 1 - df['x']
         datasets[label].extend(data)
 
-    ani = heatmaps.make_animation(datasets)
-
-    if args.outfile:
-        print("Saving video to {}...".format(args.outfile.name))
-        ani.save(args.outfile.name)
-    else:
-        plt.show()
+    return heatmaps.make_animation(datasets)
 
 
-if __name__ == '__main__':
-    main()
+show = plt.show
+
+save = None  # use save() method of run() return value
