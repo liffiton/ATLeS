@@ -11,12 +11,12 @@ except ImportError:
 # before the analyze module pulls it in.
 import matplotlib
 matplotlib.use('Agg')
-from analysis import analyze
+from analysis import process, plot  # noqa: E402
 
-from bottle import get, post, redirect, request, response, jinja2_template as template
+from bottle import get, post, redirect, request, response, jinja2_template as template  # noqa: E402
 
-import config
-import utils
+import config  # noqa: E402
+import utils   # noqa: E402
 
 
 @get('/stats/')
@@ -30,15 +30,15 @@ def get_stats():
         curstats['Track file'] = track
 
         try:
-            g = analyze.Grapher(track)
+            processor = process.TrackProcessor(track)
         except ValueError as e:
             # often 'wrong number of columns' due to truncated file from killed experiment
             return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % track, exception=traceback.format_exc())
 
-        curstats.update(g.read_setup(['experiment', 'at_runtime']))
-        curstats.update(g.get_stats())
-        for i in range(g.len_minutes):
-            curstats.update(g.get_stats(minute=i))
+        curstats.update(processor.read_setup(['experiment', 'at_runtime']))
+        curstats.update(processor.get_stats())
+        for i in range(processor.len_minutes):
+            curstats.update(processor.get_stats(minute=i))
             all_keys.update(curstats.keys())
         stats.append(curstats)
     for i in range(len(stats)):
@@ -78,21 +78,22 @@ def _do_analyze(trackfile):
     trackreldir = os.path.dirname(trackrel)
     utils.mkdir(os.path.join(config.PLOTDIR, trackreldir))
 
-    g = analyze.Grapher(trackfile)
-    g.plot_heatmap()
-    g.savefig(config.PLOTDIR + "%s.10.heat.png" % trackrel)
-    g.plot_invalidheatmap()
-    g.savefig(config.PLOTDIR + "%s.12.heat.invalid.png" % trackrel)
-    g.plot_heatmap(numplots='perminute')
-    g.savefig(config.PLOTDIR + "%s.15.heat.perminute.png" % trackrel)
-    g.plot_leftright()
-    g.savefig(config.PLOTDIR + "%s.52.leftright.png" % trackrel)
-    g.plot()
-    g.savefig(config.PLOTDIR + "%s.20.plot.png" % trackrel)
-    g.plot_x_fft()
-    g.savefig(config.PLOTDIR + "%s.50.x_fft.png" % trackrel)
-    g.plot_x_fft(10)
-    g.savefig(config.PLOTDIR + "%s.51.x_fft.10.png" % trackrel)
+    processor = process.TrackProcessor(trackfile)
+    plotter = plot.TrackPlotter(processor)
+    plotter.plot_heatmap()
+    plot.savefig(config.PLOTDIR + "%s.10.heat.png" % trackrel)
+    plotter.plot_invalidheatmap()
+    plot.savefig(config.PLOTDIR + "%s.12.heat.invalid.png" % trackrel)
+    plotter.plot_heatmap(numplots='perminute')
+    plot.savefig(config.PLOTDIR + "%s.15.heat.perminute.png" % trackrel)
+    plotter.plot_leftright()
+    plot.savefig(config.PLOTDIR + "%s.52.leftright.png" % trackrel)
+    plotter.plot_trace()
+    plot.savefig(config.PLOTDIR + "%s.20.plot.png" % trackrel)
+    plotter.plot_x_fft()
+    plot.savefig(config.PLOTDIR + "%s.50.x_fft.png" % trackrel)
+    plotter.plot_x_fft(10)
+    plot.savefig(config.PLOTDIR + "%s.51.x_fft.10.png" % trackrel)
 
 
 @post('/analyze/')
@@ -126,10 +127,12 @@ def post_analyze_selection():
 def post_compare():
     track1 = request.query.p1
     track2 = request.query.p2
-    g1 = analyze.Grapher(track1)
-    g2 = analyze.Grapher(track2)
-    g1.plot_leftright()
-    g2.plot_leftright(addplot=True)
+    processor1 = process.TrackProcessor(track1)
+    processor2 = process.TrackProcessor(track2)
+    plotter1 = plot.TrackPlotter(processor1)
+    plotter2 = plot.TrackPlotter(processor2)
+    plotter1.plot_leftright()
+    plotter2.plot_leftright(addplot=True)
     # XXX: Note that this ignores directory names...
     # *May* inadvertently overwrite an existing plot if, e.g.,
     # We have box1/test-track.csv and box2/test-track.csv,
@@ -140,5 +143,5 @@ def post_compare():
     matplotlib.pyplot.legend([name1 + " Left", name2 + " Left", name1 + " Right", name2 + " Right"], fontsize=8, loc=2)
 
     imgname = config.PLOTDIR + "%s_%s_leftrights.png" % (name1, name2)
-    g1.savefig(imgname)
+    plot.savefig(imgname)
     redirect("/" + imgname)
