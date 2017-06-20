@@ -37,9 +37,10 @@ def get_stats():
 
         curstats.update(processor.read_setup(['experiment', 'at_runtime']))
         curstats.update(processor.get_stats())
-        for i in range(processor.len_minutes):
-            curstats.update(processor.get_stats(minute=i))
-            all_keys.update(curstats.keys())
+        #for i in range(processor.len_minutes):
+        #    curstats.update(processor.get_stats(minute=i))
+        #    all_keys.update(curstats.keys())
+        all_keys.update(curstats.keys())
         stats.append(curstats)
     for i in range(len(stats)):
         stat = stats[i]
