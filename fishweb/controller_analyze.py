@@ -83,7 +83,7 @@ def _do_analyze(trackfile):
     # look for debug frames to create links in the trace plot
     trackname = os.path.basename(trackfile).replace('-track.csv', '')
     dbgframedir = os.path.join(config.DBGFRAMEDIR, trackname)
-    dbgframes = glob.glob(dbgframedir + "/*.png")
+    dbgframes = glob.glob(dbgframedir + "/subframe*.png")
 
     processor = process.TrackProcessor(trackfile)
     plotter = plot.TrackPlotter(processor, dbgframes)
