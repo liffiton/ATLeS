@@ -240,34 +240,31 @@ class TrackPlotter(object):
 
     def plot_heatmap(self, numplots=1):
         if numplots == 'perminute':
-            title = "Per-minute heatmap"
             numplots = int(math.ceil(self._track.time[-1] / 60.0))
+            numrows = int(math.ceil(numplots / 10.0))
+            plt.figure(figsize=(2*min(numplots, 10), 2*numrows))
+            title = "Per-minute heatmap"
         else:
+            numplots = 1
+            numrows = 1
+            plt.figure(figsize=(4, 4))
             title = "Overall heatmap"
 
-        numrows = int(math.ceil(numplots / 10.0))
-
-        plt.figure(figsize=(4*min(numplots, 10), 4*numrows))
-        ax = plt.gca()
-
-        ax.set_title(title)
         for i in range(numplots):
             start = i * len(self._track.x) // numplots
             end = (i+1) * len(self._track.x) // numplots
             ax = plt.subplot(numrows, min(numplots, 10), i+1)
-            if numplots > 1:
-                ax.axes.get_xaxis().set_visible(False)
-                ax.axes.get_yaxis().set_visible(False)
-            else:
-                _format_axis(ax)
+            _format_axis(ax)
+            if i == 0:
+                ax.set_title(title)
 
             nbins = 50
             heatmaps.plot_heatmap(ax, self._track.x[start:end], self._track.y[start:end], nbins=nbins)
 
     def _plot_trace_portion(self, ax, start, end, median_speed):
         time = self._track.time[start:end]
-        theta = self._track.theta[start:end]
-        speed = self._track.speed[start:end]
+        #theta = self._track.theta[start:end]
+        #speed = self._track.speed[start:end]
         #valid = self._track.valid[start:end]
         lost = self._track.lost[start:end]
         missing = self._track.missing[start:end]
@@ -354,16 +351,16 @@ class TrackPlotter(object):
         ax.plot(time, -1.0+(numpts/10.0), color='purple', linewidth=1, label='# detected points')
 
         # Add stick plot of movement (where valid)
-        ax.quiver(
-            time, [0] * len(time),
-            speed*np.cos(theta), speed*np.sin(theta),
-            color=[self._speed2color(s) for s in speed],
-            scale=1,  # scale all to a speed of 1, which should be close to max (tank is 1.0x1.0)
-            scale_units='y',
-            width=0.01,
-            units='inches',
-            headlength=0, headwidth=0, headaxislength=0     # no arrowheads
-        )
+#        ax.quiver(
+#            time, [0] * len(time),
+#            speed*np.cos(theta), speed*np.sin(theta),
+#            color=[self._speed2color(s) for s in speed],
+#            scale=1,  # scale all to a speed of 1, which should be close to max (tank is 1.0x1.0)
+#            scale_units='y',
+#            width=0.01,
+#            units='inches',
+#            headlength=0, headwidth=0, headaxislength=0     # no arrowheads
+#        )
 
         # Add markers/links to debugframes if given
         for dbgframe in self._dbgframes:
@@ -371,8 +368,8 @@ class TrackPlotter(object):
             framenum = int(nameparts[1])
             if start <= framenum < end:
                 frametime = self._track.time[framenum]
-                marker = matplotlib.patches.RegularPolygon(
-                    (frametime, -1.5), numVertices=3, radius=0.05,
+                marker = matplotlib.patches.RegularPolygon(  # numVertices=3 -> triangle
+                    (frametime, -1.08), numVertices=3, radius=0.08,
                     color='#337AB7',
                     clip_on=False,
                     url='/' + dbgframe

@@ -88,19 +88,19 @@ def _do_analyze(trackfile):
     processor = process.TrackProcessor(trackfile)
     plotter = plot.TrackPlotter(processor, dbgframes)
     plotter.plot_heatmap()
-    plot.savefig(config.PLOTDIR + "%s.10.heat.svg" % trackrel)
+    plot.savefig(config.PLOTDIR + "%s.10.heat.png" % trackrel)
     plotter.plot_invalidheatmap()
-    plot.savefig(config.PLOTDIR + "%s.12.heat.invalid.svg" % trackrel)
+    plot.savefig(config.PLOTDIR + "%s.12.heat.invalid.png" % trackrel)
     plotter.plot_heatmap(numplots='perminute')
-    plot.savefig(config.PLOTDIR + "%s.15.heat.perminute.svg" % trackrel)
+    plot.savefig(config.PLOTDIR + "%s.15.heat.perminute.png" % trackrel)
     plotter.plot_trace()
     plot.savefig(config.PLOTDIR + "%s.20.plot.svg" % trackrel)
     #plotter.plot_x_fft()
-    #plot.savefig(config.PLOTDIR + "%s.50.x_fft.svg" % trackrel)
+    #plot.savefig(config.PLOTDIR + "%s.50.x_fft.png" % trackrel)
     #plotter.plot_x_fft(10)
-    #plot.savefig(config.PLOTDIR + "%s.51.x_fft.10.svg" % trackrel)
+    #plot.savefig(config.PLOTDIR + "%s.51.x_fft.10.png" % trackrel)
     #plotter.plot_leftright()
-    #plot.savefig(config.PLOTDIR + "%s.52.leftright.svg" % trackrel)
+    #plot.savefig(config.PLOTDIR + "%s.52.leftright.png" % trackrel)
 
 
 @post('/analyze/')
@@ -149,6 +149,6 @@ def post_compare():
     # XXX: bit of a hack doing pyplot stuff outside of Grapher...
     matplotlib.pyplot.legend([name1 + " Left", name2 + " Left", name1 + " Right", name2 + " Right"], fontsize=8, loc=2)
 
-    imgname = config.PLOTDIR + "%s_%s_leftrights.svg" % (name1, name2)
+    imgname = config.PLOTDIR + "%s_%s_leftrights.png" % (name1, name2)
     plot.savefig(imgname)
     redirect("/" + imgname)
