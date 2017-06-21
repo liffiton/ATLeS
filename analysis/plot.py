@@ -254,7 +254,13 @@ class TrackPlotter(object):
             start = i * len(self._track.x) // numplots
             end = (i+1) * len(self._track.x) // numplots
             ax = plt.subplot(numrows, min(numplots, 10), i+1)
+
+            if numplots > 1:
+                ax.axes.get_xaxis().set_visible(False)
+                ax.axes.get_yaxis().set_visible(False)
+
             _format_axis(ax)
+
             if i == 0:
                 ax.set_title(title)
 
@@ -363,11 +369,13 @@ class TrackPlotter(object):
 #        )
 
         # Add markers/links to debugframes if given
+        # Get [tracking]:start_frame for proper offset of debug frame numbers into track data here
+        start_frame = int(self._track.read_setup(['tracking'])["tracking__start_frame"])
         for dbgframe in self._dbgframes:
             nameparts = os.path.basename(dbgframe).split('_')
-            framenum = int(nameparts[1])
-            if start <= framenum < end:
-                frametime = self._track.time[framenum]
+            frameindex = max(0, int(nameparts[1]) - start_frame)  # restrict to index 0 at minimum
+            if start <= frameindex < end:
+                frametime = self._track.time[frameindex]
                 marker = matplotlib.patches.RegularPolygon(  # numVertices=3 -> triangle
                     (frametime, -1.08), numVertices=3, radius=0.08,
                     color='#337AB7',
