@@ -36,33 +36,49 @@
           // get position on page of SVG (to shift mouse position, which
           // is given relative to the SVG element).
           var rect = el.getBoundingClientRect();
-          var svg_x = rect.left;
-          var svg_y = rect.top;
+          var svg_x = rect.left + window.scrollX;
+          var svg_y = rect.top + window.scrollY;
 
-          var svg = el.contentDocument;
-          var links = svg.querySelectorAll('a');
-          links.forEach(function(link) {
-            var imgURL = link.href.baseVal;
-            // Make an img element to be positioned by the mouse cursor
-            // on mouseover of the link.
-            var popup = document.createElement('img');
-            popup.src = imgURL;
-            popup.style.position = "absolute";
-            popup.style.display = "none";
-            popup.style.padding = "0";
-            popup.style.border = "3px solid #012";
-            popup.classList.add("brighter");  // brightened by default
-            document.body.appendChild(popup);
-            // Handle mouseover/mouseout events: show/hide the popup img.
-            link.addEventListener("mouseover", function(e) {
-              popup.style.left = (e.pageX+svg_x-150) + "px";
-              popup.style.top = (e.pageY+svg_y+20) + "px";
-              popup.style.display = "block";
-            });
-            link.addEventListener("mouseout", function(e) {
+          var addPopups = function(e) {
+            var svg = el.contentDocument;
+            var links = svg.querySelectorAll('a');
+            links.forEach(function(link) {
+              var imgURL = link.href.baseVal;
+              // get position within SVG of the link
+              var rect = link.getBoundingClientRect();
+              var link_x = rect.left;
+              var link_y = rect.top;
+              var popup_x = Math.min(Math.max(svg_x + link_x - 150, 20), window.innerWidth - 320);
+              var popup_y = (svg_y + link_y + 30);
+              // Make an img element to be positioned by the link
+              // on mouseover of the link.
+              var popup = document.createElement('img');
+              popup.src = imgURL;
               popup.style.display = "none";
+              popup.style.padding = "0";
+              popup.style.border = "3px solid #012";
+              popup.classList.add("brighter");  // brightened by default
+              popup.style.width = "300px";
+              popup.style.position = "absolute";
+              popup.style.left = popup_x + "px";
+              popup.style.top = popup_y + "px";
+              document.body.appendChild(popup);
+              // Handle mouseover/mouseout events: show/hide the popup img.
+              link.addEventListener("mouseover", function(e) {
+                popup.style.display = "block";
+              });
+              link.addEventListener("mouseout", function(e) {
+                popup.style.display = "none";
+              });
             });
-          });
+          };
+          // if SVG already loaded, add popups
+          if (el.contentDocument) {
+            addPopups();
+          }
+          // add event listener for case if not loaded yet and to
+          // run on page reload (e.g., on navigate back to page)
+          el.addEventListener("load", addPopups);
         });
       });
     </script>
