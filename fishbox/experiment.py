@@ -191,8 +191,8 @@ class Experiment(object):
         # Setup printing stats on exit
         atexit.register(self._print_stats)
 
-        # Record when we last saved a debug frame (-1000000 is effectively "never")
-        self._prev_dbg_frame = -1000000
+        # Record status of previous frame to know when tracking is first lost.
+        self._prev_status = None
 
     def _write_data(self, data, frametime=None):
         '''Write a piece of data to the track file.
@@ -220,14 +220,15 @@ class Experiment(object):
         '''
         return frame[self._ty1:self._ty2, self._tx1:self._tx2, channel]
 
-    def _save_debug_frame(self, frame, subframe, frame_num, status):
+    def _save_debug_frame(self, frame, subframe, frame_num, status, save_full=False):
         ''' Save a copy of the current frame for debugging. '''
         # Save as world-writable so rsync can delete them.
         oldmask = os.umask(0)
-        imgfile = "%s/frame_%05d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
-        cv2.imwrite(imgfile, frame)
         subimgfile = "%s/subframe_%05d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
         cv2.imwrite(subimgfile, subframe)
+        if save_full:
+            imgfile = "%s/frame_%05d_%s.png" % (self._conf['debugframe_dir'], frame_num, status)
+            cv2.imwrite(imgfile, frame)
         os.umask(oldmask)
         logging.info("Saved frame %d." % frame_num)
 
@@ -248,7 +249,7 @@ class Experiment(object):
         self._proc.new_frame(filtered)
 
         if frame_num == 1:
-            self._save_debug_frame(frame, subframe, frame_num, 'start')
+            self._save_debug_frame(frame, subframe, frame_num, 'start', save_full=True)
 
         # Wait for the background subtractor to learn/stabilize
         # before logging or using data.
@@ -286,10 +287,13 @@ class Experiment(object):
         else:
             self._write_data(data)
 
-        if self._args.debug_frames and status in {'lost', 'missing', 'init'}:
-            if frame_num - self._prev_dbg_frame >= self._args.debug_frames:
+        if self._args.debug_frames:
+            if status in {'lost', 'missing', 'init'} and self._prev_status == 'acquired':
+                # save a frame whenever we first lose tracking (transition from acquired to not)
                 self._save_debug_frame(frame, subframe, frame_num, status)
-                self._prev_dbg_frame = frame_num
+            if frame_num % self._args.debug_frames == 0:
+                # save a frame every "debug_frames" frames
+                self._save_debug_frame(frame, subframe, frame_num, status)
 
         if status != 'lost' and self._trigger(pos_tank):
             # Only provide a stimulus if we know where the fish is

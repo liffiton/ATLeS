@@ -1,5 +1,7 @@
 import math
+import os
 import re
+
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import collections, gridspec, lines, patches
@@ -97,8 +99,9 @@ def savefig(outfile):
 
 
 class TrackPlotter(object):
-    def __init__(self, track_processor):
+    def __init__(self, track_processor, dbgframes=None):
         self._track = track_processor
+        self._dbgframes = dbgframes
 
     @staticmethod
     def _speed2color(speed):
@@ -157,18 +160,23 @@ class TrackPlotter(object):
         # Make a legend with proxy artists
         xpos_artist = lines.Line2D([],[], color='orange')
         ypos_artist = lines.Line2D([],[], color='limegreen')
-        numpts_artist = lines.Line2D([],[], color='orange')
-        inleft25_artist = patches.Rectangle((0,0), 1, 1, fc='purple', ec='None')
-        inright25_artist = patches.Rectangle((0,0), 1, 1, fc='pink', ec='None')
+        numpts_artist = lines.Line2D([],[], color='purple', linewidth=1)
+        #inleft25_artist = patches.Rectangle((0,0), 1, 1, fc='purple', ec='None')
+        #inright25_artist = patches.Rectangle((0,0), 1, 1, fc='pink', ec='None')
         intop_artist = patches.Rectangle((0,0), 1, 1, fc='blue', ec='None')
         frozen_artist = patches.Rectangle((0,0), 1, 1, fc='lightblue', ec='None')
         missing_artist = patches.Rectangle((0,0), 1, 1, fc='yellow', ec='None')
         lost_artist = patches.Rectangle((0,0), 1, 1, fc='red', ec='None')
         # Place it in center of top "subplot" area
         legend_ax.legend(
-            [xpos_artist, ypos_artist, numpts_artist, inleft25_artist, inright25_artist, intop_artist, frozen_artist, missing_artist, lost_artist],
-            ['x-pos', 'y-pos', '# Detection pts', 'In left 25%', 'In right 25%', 'In top 50%', 'Frozen', 'Missing', 'Lost'],
+            [xpos_artist, ypos_artist, numpts_artist,
+                #inleft25_artist, inright25_artist,
+                intop_artist, frozen_artist, missing_artist, lost_artist],
+            ['x-pos', 'y-pos', '# Detection pts',
+                #'In left 25%', 'In right 25%',
+                'In top 50%', 'Frozen', 'Missing', 'Lost'],
             loc='center',
+            fontsize=12,
             ncol=4,
         )
         legend_ax.axis('off')
@@ -264,8 +272,8 @@ class TrackPlotter(object):
         lost = self._track.lost[start:end]
         missing = self._track.missing[start:end]
         frozen = self._track.frozen[start:end]
-        in_left25 = self._track.in_left25[start:end]
-        in_right25 = self._track.in_right25[start:end]
+        #in_left25 = self._track.in_left25[start:end]
+        #in_right25 = self._track.in_right25[start:end]
         in_top = self._track.in_top[start:end]
         x = self._track.x[start:end]
         y = self._track.y[start:end]
@@ -276,7 +284,7 @@ class TrackPlotter(object):
         ax.axes.get_yaxis().set_visible(False)
 
         # Get set axes (specifically, we don't want the y-axis to be autoscaled for us)
-        ax.axis([time[0], time[-1], -1, 1])
+        ax.axis([time[0], time[-1], -1.0, 1.0])
 
         # Mark lost/missing sections
         lost_collection = collections.BrokenBarHCollection.span_where(
@@ -316,25 +324,25 @@ class TrackPlotter(object):
         )
         ax.add_collection(intop_collection)
 
-        # Mark in-left25 sections
-        inleft25_collection = collections.BrokenBarHCollection.span_where(
-            time,
-            -0.65, -0.6,
-            in_left25,
-            edgecolors='none',
-            facecolors='purple',
-        )
-        ax.add_collection(inleft25_collection)
-
-        # Mark in-right25 sections
-        inright25_collection = collections.BrokenBarHCollection.span_where(
-            time,
-            -0.65, -0.6,
-            in_right25,
-            edgecolors='none',
-            facecolors='pink',
-        )
-        ax.add_collection(inright25_collection)
+#        # Mark in-left25 sections
+#        inleft25_collection = collections.BrokenBarHCollection.span_where(
+#            time,
+#            -0.65, -0.6,
+#            in_left25,
+#            edgecolors='none',
+#            facecolors='purple',
+#        )
+#        ax.add_collection(inleft25_collection)
+#
+#        # Mark in-right25 sections
+#        inright25_collection = collections.BrokenBarHCollection.span_where(
+#            time,
+#            -0.65, -0.6,
+#            in_right25,
+#            edgecolors='none',
+#            facecolors='pink',
+#        )
+#        ax.add_collection(inright25_collection)
 
         # Plot horizontal position
         ax.plot(time, x*2-1, color='orange', label='x position of fish')
@@ -342,8 +350,8 @@ class TrackPlotter(object):
         # Plot height
         ax.plot(time, y*2-1, color='limegreen', label='y position of fish')
 
-        # Plot numpts (scaled so 0 = bottom, 20 = top of subplot)
-        ax.plot(time, -1+(numpts/10.0), color='orange', label='# detected points')
+        # Plot numpts (scaled so 0 = -1.0 (plot bottom), 20 = 1.0 (top))
+        ax.plot(time, -1.0+(numpts/10.0), color='purple', linewidth=1, label='# detected points')
 
         # Add stick plot of movement (where valid)
         ax.quiver(
@@ -356,3 +364,17 @@ class TrackPlotter(object):
             units='inches',
             headlength=0, headwidth=0, headaxislength=0     # no arrowheads
         )
+
+        # Add markers/links to debugframes if given
+        for dbgframe in self._dbgframes:
+            nameparts = os.path.basename(dbgframe).split('_')
+            framenum = int(nameparts[1])
+            if start <= framenum < end:
+                frametime = self._track.time[framenum]
+                marker = matplotlib.patches.RegularPolygon(
+                    (frametime, -1.5), numVertices=3, radius=0.05,
+                    color='#337AB7',
+                    clip_on=False,
+                    url='/' + dbgframe
+                )
+                ax.add_artist(marker)

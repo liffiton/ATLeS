@@ -11,19 +11,59 @@
         img {
             padding: 1em;
         }
-        img.brighter {
+        .brighter {
             filter: brightness(500%);
             -webkit-filter: brightness(500%);
         }
     </style>
     <script type="text/javascript">
+      // Brighten all images and objects (SVG) on '+' keypress.
       document.addEventListener("keypress", function(e) {
         if (String.fromCharCode(e.which) == '+') {
-          imgs = document.getElementsByTagName("img");
+          var imgs = document.querySelectorAll('img,object');
           for (var i = 0 ; i < imgs.length ; i++) {
             imgs[i].classList.add("brighter");
           }
         }
+      });
+      // Build popup images for debug frames to be shown
+      // on mouseover of links to each frame w/in trace plot SVG
+      window.addEventListener("load", function(e) {
+        var objs = document.querySelectorAll('object');
+        // .forEach not very compatible:
+        //   https://developer.mozilla.org/en-US/docs/Web/API/NodeList/forEach#Browser_Compatibility
+        objs.forEach(function(el) {
+          // get position on page of SVG (to shift mouse position, which
+          // is given relative to the SVG element).
+          var rect = el.getBoundingClientRect();
+          var svg_x = rect.left;
+          var svg_y = rect.top;
+
+          var svg = el.contentDocument;
+          var links = svg.querySelectorAll('a');
+          links.forEach(function(link) {
+            var imgURL = link.href.baseVal;
+            // Make an img element to be positioned by the mouse cursor
+            // on mouseover of the link.
+            var popup = document.createElement('img');
+            popup.src = imgURL;
+            popup.style.position = "absolute";
+            popup.style.display = "none";
+            popup.style.padding = "0";
+            popup.style.border = "3px solid #012";
+            popup.classList.add("brighter");  // brightened by default
+            document.body.appendChild(popup);
+            // Handle mouseover/mouseout events: show/hide the popup img.
+            link.addEventListener("mouseover", function(e) {
+              popup.style.left = (e.pageX+svg_x-150) + "px";
+              popup.style.top = (e.pageY+svg_y+20) + "px";
+              popup.style.display = "block";
+            });
+            link.addEventListener("mouseout", function(e) {
+              popup.style.display = "none";
+            });
+          });
+        });
       });
     </script>
 </head>
@@ -32,7 +72,11 @@
     <h1>Track <a href="/{{trackfile}}">{{trackrel}}</a></h1>
     <div class="text-center">
         {% for img in imgs: %}
-            <a href="/{{img}}"><img style='max-width: 100%;' src="/{{img}}"></a>
+            {% if img.endswith('.svg'): %}
+                <object data="/{{img}}" type="image/svg+xml" style='max-width: 100%;'></object>
+            {% else: %}
+                <a href="/{{img}}"><img style='max-width: 100%;' src="/{{img}}"></a>
+            {% endif %}
         {% endfor %}
     </div>
 </div>
