@@ -26,9 +26,6 @@ $(function() {
   console.time('heatmaps');
   $("canvas.heatmap").each(makeHeatMap);
   console.timeEnd('heatmaps');
-  console.time('velocities');
-  $("canvas.velocity").each(makeVelocityPlot);
-  console.timeEnd('velocities');
 });
 </script>
 {% endblock %}
@@ -59,12 +56,11 @@ $(function() {
             <th class="number_cell">Points</th>
             <th class="chart_cell"><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
             <th class="chart_cell">Position</th>
-            <th class="chart_cell">Velocity</th>
             <th>View</th>
             <th>Actions</th>
           </tr>
         </thead>
-        {% for trackpath, relpath, points, aml, heat, vel, imgs, dbgframes, setupfile in tracks: %}
+        {% for trackpath, relpath, points, aml, heat, imgs, dbgframes, setupfile in tracks: %}
         <tr class="undo_row" id="row_{{loop.index0}}_undo">
           <td></td>
           <td>{{relpath}}</td>
@@ -90,11 +86,6 @@ $(function() {
           <td class="chart_cell">
             {% if heat: %}
             <canvas class="heatmap" data-values="{{heat}}" title="Position heatmap"></canvas>
-            {% endif %}
-          </td>
-          <td class="chart_cell">
-            {% if vel: %}
-            <canvas class="velocity" data-values="{{','.join(vel)}}" title="Avg: {{vel[0]}}  Max: {{vel[1]}}"></canvas>
             {% endif %}
           </td>
           <td>
