@@ -91,7 +91,7 @@ def get_args():
     parser.add_argument('-w', '--watch', action='store_true',
                         help='create a window to see the camera view and tracking information')
     parser.add_argument('--debug-frames', type=int, default=100, metavar='N',
-                        help='save an image of the current frame every N frames (default: 100; 0 means no debug frames will be written)')
+                        help='save an image of the current frame every N frames - also saves a frame any time tracking is lost (default: 100; 0 means no debug frames will be written, including tracking-lost frames)')
 
 #    exp_group = parser.add_argument_group('experiment settings')
 #    exp_group.add_argument('-t', '--time', type=int, default=None,
