@@ -114,6 +114,8 @@ function putPixel(imgdata, x, y, r, g, b) {
 }
 
 function makeHeatMap() {
+    var is_invalid = $(this).hasClass("invalid");
+
     var rows = $(this).data("values").split('|');
 
     // get number of buckets from received data
@@ -130,9 +132,15 @@ function makeHeatMap() {
             var amtstr = rows[y].substr(x*2, 2);
             var amt = parseInt(amtstr, 16)/255;
             amt = Math.sqrt(amt);
-            var r = Math.floor(240-240*amt);
-            var g = Math.floor(240-200*amt);
-            var b = Math.floor(240-120*amt);
+            if (is_invalid) {
+                var r = Math.floor(240-120*amt);
+                var g = Math.floor(240-240*amt);
+                var b = Math.floor(240-240*amt);
+            } else {
+                var r = Math.floor(240-240*amt);
+                var g = Math.floor(240-200*amt);
+                var b = Math.floor(240-120*amt);
+            }
             // _height-1-y because heatmap data is given w/ y=0 = bottom
             putPixel(imgdata, x, _height-1-y, r, g, b);
         }

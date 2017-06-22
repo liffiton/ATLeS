@@ -4,5 +4,6 @@ CREATE TABLE Tracks (
     acquired real,
     missing real,
     lost real,
-    heat text
+    heat text,
+    invalid_heat text
 )

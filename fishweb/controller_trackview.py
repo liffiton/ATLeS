@@ -38,12 +38,13 @@ def _setupfile(trackpath):
 
 
 def _get_track_data(track):
-    # configuration: # buckets for x/y in heatmap
+    # configuration: # buckets for x/y in heatmaps
     xbuckets = 30
     ybuckets = 15
 
     states = collections.Counter()
     heatmap = collections.Counter()
+    invalid_heatmap = collections.Counter()
     with open(track) as f:
         lines = 0
         for line in f:
@@ -67,6 +68,8 @@ def _get_track_data(track):
                 bucket_y = int(y * ybuckets)
                 if state != "lost":
                     heatmap[(bucket_x, bucket_y)] += 1
+                if state != "acquired":
+                    invalid_heatmap[(bucket_x, bucket_y)] += 1
             except ValueError:
                 pass  # not super important if we can't parse x,y
 
@@ -74,27 +77,28 @@ def _get_track_data(track):
         aml = ["%0.3f" % (states[key] / float(lines)) for key in ('acquired', 'missing', 'lost')]
     else:
         aml = [0, 0, 0]
-    if heatmap:
-        maxheat = max(heatmap.values())
-        # convert counts to 2-digit hex integer in range 0-255
-        heatstr = '|'.join(''.join("%02x" % int(255 * float(heatmap[hx,hy])/maxheat) for hx in range(xbuckets)) for hy in range(ybuckets))
-    else:
-        heatstr = ""
 
-    return lines, aml, heatstr
+    def normalize_stringify(heatdata):
+        maxheat = max(heatdata.values())
+        # convert counts to 2-digit hex integer in range 0-255
+        ret = '|'.join(''.join("%02x" % int(255 * float(heatdata[hx,hy])/maxheat) for hx in range(xbuckets)) for hy in range(ybuckets))
+        return ret
+
+    heatstr = normalize_stringify(heatmap) if heatmap else ""
+    invalid_heatstr = normalize_stringify(invalid_heatmap) if invalid_heatmap else ""
+
+    return lines, aml, heatstr, invalid_heatstr
 
 
 def _get_all_track_data(db):
     ''' Load all track data for present track files.
         Uses the database (for any data previously computed/stored). '''
     # First, load all track data from db into a dictionary
+    # to avoid thousands of individual database queries.
     cur = db.execute("SELECT * FROM Tracks")
     rows = cur.fetchall()
-    track_data = {}
-    for row in rows:
-        track_data[row['key']] = {
-            x: row[x] for x in ('lines', 'acquired', 'missing', 'lost', 'heat')
-        }
+    # Make a dictionary so it's indexable by key.
+    track_data = {row['key']: row for row in rows}
 
     tracks = []
 
@@ -107,26 +111,29 @@ def _get_all_track_data(db):
         if key in track_data:
             row = track_data[key]
         else:
-            lines, aml, heat = _get_track_data(trackfile)
-            db.execute("INSERT INTO Tracks(key, lines, acquired, missing, lost, heat) "
-                       "VALUES(?, ?, ?, ?, ?, ?)",
+            lines, aml, heat, invalid_heat = _get_track_data(trackfile)
+            db.execute("INSERT INTO Tracks(key, lines, acquired, missing, lost, heat, invalid_heat) "
+                       "VALUES(?, ?, ?, ?, ?, ?, ?)",
                        (
                            key,
                            lines,
                            aml[0], aml[1], aml[2],
                            heat,
+                           invalid_heat,
                        ))
             cur = db.execute("SELECT * FROM Tracks WHERE key=?", (key, ))
             row = cur.fetchone()
         lines = row['lines']
         aml = (row['acquired'], row['missing'], row['lost'])
         heat = row['heat']
+        invalid_heat = row['invalid_heat']
         tracks.append(
             (trackfile,
              trackrel,
              lines,
              ['{}'.format(x) for x in aml],
              heat,
+             invalid_heat,
              _imgs(trackrel),
              _dbgframes(trackrel),
              _setupfile(trackfile)

@@ -56,11 +56,12 @@ $(function() {
             <th class="number_cell">Points</th>
             <th class="chart_cell"><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
             <th class="chart_cell">Position</th>
+            <th class="chart_cell">Invalid</th>
             <th>View</th>
             <th>Actions</th>
           </tr>
         </thead>
-        {% for trackpath, relpath, points, aml, heat, imgs, dbgframes, setupfile in tracks: %}
+        {% for trackpath, relpath, points, aml, heat, invalid_heat, imgs, dbgframes, setupfile in tracks: %}
         <tr class="undo_row" id="row_{{loop.index0}}_undo">
           <td></td>
           <td>{{relpath}}</td>
@@ -86,6 +87,11 @@ $(function() {
           <td class="chart_cell">
             {% if heat: %}
             <canvas class="heatmap" data-values="{{heat}}" title="Position heatmap"></canvas>
+            {% endif %}
+          </td>
+          <td class="chart_cell">
+            {% if invalid_heat: %}
+            <canvas class="heatmap invalid" data-values="{{invalid_heat}}" title="Lost tracking heatmap"></canvas>
             {% endif %}
           </td>
           <td>
