@@ -1,7 +1,6 @@
 import collections
 import fnmatch
 import glob
-import math
 import os
 import platform
 import tempfile
@@ -45,11 +44,8 @@ def _get_track_data(track):
 
     states = collections.Counter()
     heatmap = collections.Counter()
-    velocities = []
     with open(track) as f:
         lines = 0
-        prev_x = None
-        prev_y = None
         for line in f:
             vals = line.split(',')
             try:
@@ -63,26 +59,14 @@ def _get_track_data(track):
                 state = "lost"
             states[state] += 1
             try:
-                if state != "lost":
-                    x = float(x)
-                    y = float(y)
-                    if prev_x is not None:
-                        dx = x - prev_x
-                        dy = y - prev_y
-                        velocities.append(math.sqrt(dx*dx+dy*dy))
-                    else:
-                        velocities.append(0)
-                    prev_x = x
-                    prev_y = y
+                x = float(x)
+                y = float(y)
 
-                    # place this sample in a heatmap bucket
-                    bucket_x = int(x * xbuckets)
-                    bucket_y = int(y * ybuckets)
+                # place this sample in a heatmap bucket
+                bucket_x = int(x * xbuckets)
+                bucket_y = int(y * ybuckets)
+                if state != "lost":
                     heatmap[(bucket_x, bucket_y)] += 1
-                else:
-                    velocities.append(0)
-                    prev_x = None
-                    prev_y = None
             except ValueError:
                 pass  # not super important if we can't parse x,y
 
@@ -96,13 +80,8 @@ def _get_track_data(track):
         heatstr = '|'.join(''.join("%02x" % int(255 * float(heatmap[hx,hy])/maxheat) for hx in range(xbuckets)) for hy in range(ybuckets))
     else:
         heatstr = ""
-    if velocities:
-        veldata = [sum(velocities) / len(velocities), max(velocities)]
-        veldata = ["%0.3f" % datum for datum in veldata]
-    else:
-        veldata = [0, 0]
 
-    return lines, aml, heatstr, veldata
+    return lines, aml, heatstr
 
 
 def _get_all_track_data(db):
@@ -114,7 +93,7 @@ def _get_all_track_data(db):
     track_data = {}
     for row in rows:
         track_data[row['key']] = {
-            x: row[x] for x in ('lines', 'acquired', 'missing', 'lost', 'heat', 'avgvel', 'maxvel')
+            x: row[x] for x in ('lines', 'acquired', 'missing', 'lost', 'heat')
         }
 
     tracks = []
@@ -128,29 +107,26 @@ def _get_all_track_data(db):
         if key in track_data:
             row = track_data[key]
         else:
-            lines, aml, heat, vel = _get_track_data(trackfile)
-            db.execute("INSERT INTO Tracks(key, lines, acquired, missing, lost, heat, avgvel, maxvel) "
-                       "VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+            lines, aml, heat = _get_track_data(trackfile)
+            db.execute("INSERT INTO Tracks(key, lines, acquired, missing, lost, heat) "
+                       "VALUES(?, ?, ?, ?, ?, ?)",
                        (
                            key,
                            lines,
                            aml[0], aml[1], aml[2],
                            heat,
-                           vel[0], vel[1]
                        ))
             cur = db.execute("SELECT * FROM Tracks WHERE key=?", (key, ))
             row = cur.fetchone()
         lines = row['lines']
         aml = (row['acquired'], row['missing'], row['lost'])
         heat = row['heat']
-        #vel = (row['avgvel'], row['maxvel'])
         tracks.append(
             (trackfile,
              trackrel,
              lines,
              ['{}'.format(x) for x in aml],
              heat,
-             #['{}'.format(x) for x in vel],
              _imgs(trackrel),
              _dbgframes(trackrel),
              _setupfile(trackfile)
