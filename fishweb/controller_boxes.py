@@ -125,16 +125,27 @@ def get_image(tgtbox=None, width=648, boxes=None):
     box = _get_box(tgtbox, boxes)
 
     if box.lock_exists():
+        # must yield then return in a generator function
+        yield template('error', errormsg="It looks like an experiment is currently running on this box.  Image capture only works while the box is idle.")
         return
 
-    response.set_header('Content-type', 'multipart/x-mixed-replace; boundary=fishboxframe')
     try:
-        box.start_img_stream(width)
+        try:
+            box.start_img_stream(width)
+        except OSError as e:
+            # must yield then return in a generator function
+            yield template('error', errormsg="Failed to start image stream capture.", exception=e)
+            return
+
+        # all set; carry on
+        response.set_header('Content-type', 'multipart/x-mixed-replace; boundary=fishboxframe')
         while True:
             if box.lock_exists():
                 return
             time.sleep(0.5)
             imgdata = box.get_image()
+            if imgdata is None:
+                return
             yield "--fishboxframe\nContent-Type: image/jpeg\n\n%s\n" % imgdata
     finally:
         box.stop_img_stream()
