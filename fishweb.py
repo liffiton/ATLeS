@@ -6,7 +6,7 @@ from bottle.ext import sqlite
 
 import config
 import utils
-from fishweb import boxmanager
+from fishweb import bottle_plugin_boxes
 
 
 def parse_args():
@@ -75,15 +75,15 @@ if __name__ == '__main__':
             )
             with context:
                 if not args.local:
-                    boxmanager = boxmanager.BoxManagerPlugin()
-                    app.install(boxmanager)
+                    boxes_plugin = bottle_plugin_boxes.BoxesPlugin()
+                    app.install(boxes_plugin)
 
                 app.run(host=host, port=8080, server='waitress', debug=False, reloader=False)
 
     else:
         # add our boxmanager plugin if not running locally
         if not args.local:
-            boxmanager = boxmanager.BoxManagerPlugin()
-            app.install(boxmanager)
+            boxes_plugin = bottle_plugin_boxes.BoxesPlugin()
+            app.install(boxes_plugin)
 
         app.run(host=host, port=8080, server='waitress', debug=args.testing, reloader=args.testing)

@@ -185,12 +185,12 @@ class BoxManager(object):
             return copy.copy(self._boxes)
 
 
-class BoxManagerPlugin(object):
+class BoxesPlugin(object):
     ''' A plugin to inject a box list from a global BoxManager into any Bottle
     routes that need it (indicated via a "boxes" keyword (customizable)).
     '''
 
-    name = 'boxmanager'
+    name = 'boxes'
     api = 2
 
     def __init__(self, kw="boxes"):
