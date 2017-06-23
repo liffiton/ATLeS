@@ -33,6 +33,12 @@ _imgfile = None
 
 
 def start_img_stream(width=648):
+    ''' Starts capturing a stream of images at the given width.
+        Sets global _raspistill object to be the running subprocess
+        if successful.
+
+        Raises OSError if "raspistill" binary not found, etc.
+    '''
     global _raspistill, _imgfile
 
     stop_img_stream()
