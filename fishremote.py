@@ -16,7 +16,7 @@ from rpyc.utils.server import ThreadedServer
 
 import config
 import utils
-from fishweb import box_interface
+from fishremote import box_interface
 
 
 _PORT = 4158
