@@ -2,7 +2,6 @@ import collections
 import fnmatch
 import glob
 import os
-import platform
 import tempfile
 import zipfile
 
@@ -146,8 +145,7 @@ def _get_all_track_data(db):
 @route('/tracks/')
 def tracks(db):
     tracks = _get_all_track_data(db)
-    local = request.app.config['fishweb.local']
-    return template('tracks', tracks=tracks, local=local, node=platform.node())
+    return template('tracks', tracks=tracks)
 
 
 @route('/view/<trackfile:path>')

@@ -1,5 +1,4 @@
 import os
-import platform
 import re
 import time
 
@@ -20,21 +19,12 @@ def _bgimgs():
 
 
 def _get_box(tgtbox, boxes):
-    local = request.app.config['fishweb.local']
-
-    if local:
-        assert tgtbox == platform.node()
-        assert boxes is None
-        # use the module directly
-        from fishweb import box_interface
-        return box_interface
-    else:
-        if tgtbox not in boxes:
-            abort(400, "Box %s not registered." % tgtbox)
-        if not boxes[tgtbox].connected:
-            abort(400, "Box %s not currently connected." % tgtbox)
-        # use the module via RPC
-        return boxes[tgtbox]
+    if tgtbox not in boxes:
+        abort(400, "Box %s not registered." % tgtbox)
+    if not boxes[tgtbox].connected:
+        abort(400, "Box %s not currently connected." % tgtbox)
+    # use the module via RPC
+    return boxes[tgtbox]
 
 
 @route('/boxes')
@@ -42,9 +32,8 @@ def get_boxes(boxes):
     return {name: box.as_dict() for name, box in boxes.items()}
 
 
-@route('/lock_data/')
 @route('/lock_data/<tgtbox>')
-def get_lock_data(tgtbox=None, boxes=None):
+def get_lock_data(tgtbox, boxes=None):
     box = _get_box(tgtbox, boxes)
 
     # RPyC doesn't return a real dict, and JSON won't serialize it,
@@ -89,11 +78,6 @@ class NewExperimentForm(Form):
 
 @route('/')
 def index(boxes=None):
-    local = request.app.config['fishweb.local']
-    if local:
-        # no need to choose a box, just give them the new exp. form
-        return new_experiment_box(tgtbox=platform.node(), boxes=boxes)
-
     return template('boxes')
 
 
@@ -109,7 +93,7 @@ def new_experiment_box(tgtbox, boxes=None):
 
 
 @post('/sync/<tgtbox>')
-def post_sync_data(tgtbox=None, boxes=None):
+def post_sync_data(tgtbox, boxes=None):
     box = _get_box(tgtbox, boxes)
 
     try:
@@ -121,7 +105,7 @@ def post_sync_data(tgtbox=None, boxes=None):
 
 @route('/image/<tgtbox>')
 @route('/image/<tgtbox>/<width:int>')
-def get_image(tgtbox=None, width=648, boxes=None):
+def get_image(tgtbox, width=648, boxes=None):
     box = _get_box(tgtbox, boxes)
 
     if box.lock_exists():
@@ -151,16 +135,15 @@ def get_image(tgtbox=None, width=648, boxes=None):
         box.stop_img_stream()
 
 
-@post('/clear_experiment/')
 @post('/clear_experiment/<tgtbox>')
-def post_clear_experiment(tgtbox=None, boxes=None):
+def post_clear_experiment(tgtbox, boxes=None):
     box = _get_box(tgtbox, boxes)
 
     box.kill_experiment()
 
 
 @post('/new/<tgtbox>')
-def post_new(tgtbox=None, boxes=None):
+def post_new(tgtbox, boxes=None):
     box = _get_box(tgtbox, boxes)
 
     if box.lock_exists():

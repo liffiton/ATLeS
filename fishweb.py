@@ -14,8 +14,6 @@ def parse_args():
 
     parser.add_argument('-d', '--daemon', action='store_true',
                         help="run the server as a daemon (in the background)")
-    parser.add_argument('-l', '--local', action='store_true',
-                        help="run experiments on this (local) machine only -- good for a standalone installation on a single machine")
     parser.add_argument('--testing', action='store_true',
                         help="run the server in 'testing' mode, with debugging information, restricted to localhost, etc. -- don't do this unless you really need to")
 
@@ -42,9 +40,6 @@ if __name__ == '__main__':
     bottle.TEMPLATE_PATH.insert(0, config.TEMPLATEDIR)
 
     app = bottle.default_app()
-
-    # set app config
-    app.config['fishweb.local'] = args.local
 
     # install sqlite plugin
     sqliteplugin = sqlite.Plugin(dbfile=config.DBFILE)
@@ -74,16 +69,15 @@ if __name__ == '__main__':
                 stderr=log
             )
             with context:
-                if not args.local:
-                    boxes_plugin = bottle_plugin_boxes.BoxesPlugin()
-                    app.install(boxes_plugin)
+                # add our boxes plugin
+                boxes_plugin = bottle_plugin_boxes.BoxesPlugin()
+                app.install(boxes_plugin)
 
                 app.run(host=host, port=8080, server='waitress', debug=False, reloader=False)
 
     else:
-        # add our boxmanager plugin if not running locally
-        if not args.local:
-            boxes_plugin = bottle_plugin_boxes.BoxesPlugin()
-            app.install(boxes_plugin)
+        # add our boxes plugin
+        boxes_plugin = bottle_plugin_boxes.BoxesPlugin()
+        app.install(boxes_plugin)
 
         app.run(host=host, port=8080, server='waitress', debug=args.testing, reloader=args.testing)
