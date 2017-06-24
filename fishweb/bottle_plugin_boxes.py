@@ -40,7 +40,6 @@ class Box(object):
 
         self._tunnel = None  # SSH tunnel instance
         self._rpc = None     # RPC connection instance
-        self._img_rpc = None     # RPC connection for get_image()
 
     def as_dict(self):
         return {
@@ -73,11 +72,9 @@ class Box(object):
                 return
 
             self._rpc = rpyc.ssh_connect(self._tunnel, self.port)
-            self._img_rpc = rpyc.ssh_connect(self._tunnel, self.port)
 
         else:
             self._rpc = rpyc.connect("localhost", self.port)
-            self._img_rpc = rpyc.connect("localhost", self.port)
 
         self.error = None
 
@@ -85,26 +82,10 @@ class Box(object):
         if self._rpc:
             self._rpc.close()
             self._rpc = None
-        if self._img_rpc:
-            self._img_rpc.close()
-            self._img_rpc = None
         if self._tunnel:
             self._tunnel.close()
             self._tunnel = None
         self.error = None
-
-    def NOPEget_image(self):
-        '''
-        Because get_image() takes so long and it blocks the connection while
-        running, other calls are severely delayed during a call.
-        Therefore, we override the remote get_image() direct call here to
-        call it in a separate rpyc connection just for get_image().
-        '''
-        if not self.connected:
-            return None
-
-        data = self._img_rpc.root.get_image()
-        return data
 
     def sync_data(self):
         ''' Copy/sync track data from this box to the local track directory.'''
@@ -132,8 +113,7 @@ class Box(object):
 
     @property
     def connected(self):
-        return self._rpc and not self._rpc.closed and \
-               self._img_rpc and not self._img_rpc.closed
+        return self._rpc and not self._rpc.closed
 
     def __getattr__(self, name):
         '''Return something from self.rpc if it wasn't found in this object
