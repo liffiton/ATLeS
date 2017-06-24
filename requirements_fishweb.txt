@@ -1,11 +1,12 @@
 bottle
-bottle-sqlite
+bottle-sqlalchemy
 Jinja2
 wtforms
 python-daemon
 matplotlib
 numpy
 pandas
-rpyc!=3.4
+rpyc
+sqlalchemy
 waitress
 zeroconf
