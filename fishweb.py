@@ -2,11 +2,12 @@ import argparse
 import os
 
 import bottle
-from bottle.ext import sqlite
+import bottle.ext.sqlalchemy
+import sqlalchemy
 
 import config
 import utils
-from fishweb import bottle_plugin_boxes
+from fishweb import bottle_plugin_boxes, db_schema
 
 
 def parse_args():
@@ -33,17 +34,20 @@ if __name__ == '__main__':
     utils.mkdir(config.DBGFRAMEDIR)
     utils.mkdir(config.ARCHIVEDIR)
 
-    # Setup db if not already there
-    utils.init_db(config.DBFILE, config.DBSCHEMAFILE)
-
     # let bottle know where to find our templates
     bottle.TEMPLATE_PATH.insert(0, config.TEMPLATEDIR)
 
     app = bottle.default_app()
 
-    # install sqlite plugin
-    sqliteplugin = sqlite.Plugin(dbfile=config.DBFILE)
-    app.install(sqliteplugin)
+    # install sqlalchemy plugin
+    engine = sqlalchemy.create_engine('sqlite:///{}'.format(config.DBFILE))
+    db_schema.create_all(engine)  # create db/tables if not already there
+    db_plugin = bottle.ext.sqlalchemy.Plugin(
+        engine,
+        keyword='db',
+        commit=True
+    )
+    app.install(db_plugin)
 
     # setup error handlers
     bottle.load("fishweb.error_handlers")
@@ -70,6 +74,8 @@ if __name__ == '__main__':
             )
             with context:
                 # add our boxes plugin
+                # (IIRC, this needs to be done in the daemon context,
+                #  not before.)
                 boxes_plugin = bottle_plugin_boxes.BoxesPlugin()
                 app.install(boxes_plugin)
 

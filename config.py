@@ -1,5 +1,5 @@
 DATADIR = "data/"
-DBFILE = DATADIR + "tracks.db"
+DBFILE = DATADIR + "fishweb.db"
 DBSCHEMAFILE = "tracks_schema.sql"
 TRACKDIR = DATADIR + "tracks/"
 LOCKFILE = DATADIR + "current_experiment.lock"

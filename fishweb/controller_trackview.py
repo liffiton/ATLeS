@@ -6,11 +6,13 @@ import tempfile
 import zipfile
 
 from bottle import post, request, response, route, static_file, jinja2_template as template
+from sqlalchemy import sql
 
 import config
+import fishweb.db_schema as db_schema
 
 
-def _tracks():
+def _track_files():
     # match in all subdirs - thanks: http://stackoverflow.com/a/2186565
     tracks = []
     for root, dirnames, filenames in os.walk(config.TRACKDIR):
@@ -94,58 +96,57 @@ def _get_all_track_data(db):
         Uses the database (for any data previously computed/stored). '''
     # First, load all track data from db into a dictionary
     # to avoid thousands of individual database queries.
-    cur = db.execute("SELECT * FROM Tracks")
-    rows = cur.fetchall()
+    tracks = db_schema.tracks
+    select = sql.select([tracks])
+    rows = db.execute(select)
     # Make a dictionary so it's indexable by key.
-    track_data = {row['key']: row for row in rows}
+    track_db_data = {row['key']: row for row in rows}
 
-    tracks = []
+    track_data = []
 
     # Go through all track files, loading track data from DB if present
     # or computing and storing in DB if not yet.
-    for trackfile in _tracks():
+    for trackfile in _track_files():
         mtime = os.stat(trackfile).st_mtime
         trackrel = os.path.relpath(trackfile, config.TRACKDIR)
         key = "%f|%s" % (mtime, trackrel)
-        if key in track_data:
-            row = track_data[key]
+        if key in track_db_data:
+            row = track_db_data[key]
         else:
             lines, aml, heat, invalid_heat = _get_track_data(trackfile)
-            db.execute("INSERT INTO Tracks(key, lines, acquired, missing, lost, heat, invalid_heat) "
-                       "VALUES(?, ?, ?, ?, ?, ?, ?)",
-                       (
-                           key,
-                           lines,
-                           aml[0], aml[1], aml[2],
-                           heat,
-                           invalid_heat,
-                       ))
-            cur = db.execute("SELECT * FROM Tracks WHERE key=?", (key, ))
-            row = cur.fetchone()
-        lines = row['lines']
-        aml = (row['acquired'], row['missing'], row['lost'])
-        heat = row['heat']
-        invalid_heat = row['invalid_heat']
-        tracks.append(
+            insert = tracks.insert().values(
+                key=key,
+                lines=lines,
+                acquired=aml[0],
+                missing=aml[1],
+                lost=aml[2],
+                heat=heat,
+                invalid_heat=invalid_heat
+            )
+            db.execute(insert)
+            select = sql.select([tracks]).where(tracks.c.key == key)
+            row = db.execute(select).fetchone()
+
+        track_data.append(
             (trackfile,
              trackrel,
-             lines,
-             ['{}'.format(x) for x in aml],
-             heat,
-             invalid_heat,
+             row['lines'],
+             [str(row['acquired']), str(row['missing']), str(row['lost'])],
+             row['heat'],
+             row['invalid_heat'],
              _imgs(trackrel),
              _dbgframes(trackrel),
              _setupfile(trackfile)
              )
         )
 
-    return tracks
+    return track_data
 
 
 @route('/tracks/')
 def tracks(db):
-    tracks = _get_all_track_data(db)
-    return template('tracks', tracks=tracks)
+    track_data = _get_all_track_data(db)
+    return template('tracks', tracks=track_data)
 
 
 @route('/view/<trackfile:path>')
