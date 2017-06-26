@@ -218,8 +218,6 @@ class BoxManager(object):
             insert = boxes.insert(boxdict)
             conn.execute(insert)
 
-        conn.commit()
-
     def watch_queue(self):
         # Runs in its own thread
         # Needs a separate sqlite connection for a separate thread
