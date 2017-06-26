@@ -51,8 +51,8 @@
                 New Experiment
               </a>
             </p>
-            <p ng-show="!box.local">
-              <button type="button" class="btn btn-default" role="button" my-sync-button="{{box.name}}" ng-disabled="syncing.has(box.name)">
+            <p>
+              <button ng-show="!box.local" type="button" class="btn btn-default" role="button" my-sync-button="{{box.name}}" ng-disabled="syncing.has(box.name)">
                 <span class="glyphicon glyphicon-refresh" ng-class="{'rotatey': syncing.has(box.name)}"></span>
                 <span class="btntxt" ng-if="!syncing.has(box.name)">
                   Sync Data
@@ -61,8 +61,6 @@
                   Syncing...
                 </span>
               </button>
-            </p>
-            <p>
               <a href="/image/{{box.name}}/648" class="btn btn-default" role="button">
                 <span class="glyphicon glyphicon-camera"></span>
                 <span class="btntxt">
@@ -71,6 +69,50 @@
               </a>
             </p>
           </div>
+        </div>
+        <div class="panel-body" ng-if="box.exp_data.count == 0">
+          <i>[No experiment data found.]</i>
+        </div>
+        <div class="panel-body exp_info" ng-if="box.exp_data.count > 0">
+          <table class="table table-hover table-condensed table-vertmid">
+            <thead>
+              <tr>
+                <td colspan=5><b>Most recent experiment synced:</b><br>
+                  {{box.exp_data.last_name}}
+                  -
+                  {{box.exp_data.last_starttime}}
+                </td>
+              </tr>
+              <tr>
+                <th colspan=2>
+                  Last {{box.exp_data.count}} experiments
+                </th>
+                <th>Min</th>
+                <th>Avg</th>
+                <th>Max</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-if="box.exp_data.sketchy" title="Sketchy = # tracking points > 1">
+                <td>Sketchy</td>
+                <td class="chart_cell">
+                  <canvas sparkline sparkline-type="yMinMax" ng-model="box.exp_data.sketchy" class="sparkline"></canvas>
+                </td>
+                <td>{{box.exp_data.min_sketchy * 100 | number:1}}%</td>
+                <td>{{box.exp_data.avg_sketchy * 100 | number:1}}%</td>
+                <td>{{box.exp_data.max_sketchy * 100 | number:1}}%</td>
+              </tr>
+              <tr ng-if="box.exp_data.invalid" title="Invalid = status of 'missing' or 'lost'">
+                <td>Invalid</td>
+                <td class="chart_cell">
+                  <canvas sparkline ng-model="box.exp_data.invalid" sparkline-type="yMinMax" class="sparkline"></canvas>
+                </td>
+                <td>{{box.exp_data.min_invalid * 100 | number:1}}%</td>
+                <td>{{box.exp_data.avg_invalid * 100 | number:1}}%</td>
+                <td>{{box.exp_data.max_invalid * 100 | number:1}}%</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

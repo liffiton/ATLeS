@@ -20,9 +20,9 @@ $(function() {
     togglesel(row);
   });
   // create charts/heatmaps
-  console.time('aml');
-  $("canvas.aml").each(makeAML);
-  console.timeEnd('aml');
+  console.time('asml');
+  $("canvas.asml").each(makeASML);
+  console.timeEnd('asml');
   console.time('heatmaps');
   $("canvas.heatmap").each(makeHeatMap);
   console.timeEnd('heatmaps');
@@ -51,14 +51,14 @@ $(function() {
             </th>
             <th>Track file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
             <th class="number_cell">Points</th>
-            <th class="chart_cell"><acronym title="Acquired/Missing/Lost">A/M/L</acronym></th>
+            <th class="chart_cell"><acronym title="Acquired/Sketchy/Missing/Lost">A/S/M/L</acronym></th>
             <th class="chart_cell">Position</th>
             <th class="chart_cell">Invalid</th>
             <th>View</th>
             <th>Actions</th>
           </tr>
         </thead>
-        {% for trackpath, relpath, points, aml, heat, invalid_heat, imgs, dbgframes, setupfile in tracks: %}
+        {% for trackpath, relpath, points, asml, heat, invalid_heat, imgs, dbgframes, setupfile in tracks: %}
         <tr class="undo_row" id="row_{{loop.index0}}_undo">
           <td></td>
           <td>{{relpath}}</td>
@@ -79,7 +79,7 @@ $(function() {
           <td class="trackfile_cell"><a href="/{{trackpath}}">{{relpath}}</a></td>
           <td class="number_cell">{{points}}</td>
           <td class="chart_cell">
-            <canvas class="aml" data-values="{{'|'.join(aml)}}" title="{{' / '.join(aml)}}"></canvas>
+            <canvas class="asml" data-values="{{'|'.join(asml)}}" title="{{' / '.join(asml)}}"></canvas>
           </td>
           <td class="chart_cell">
             {% if heat: %}

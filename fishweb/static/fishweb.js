@@ -78,7 +78,7 @@ function checkProgress(boxname, progress_id, new_id) {
   });
 }
 
-function makeAML() {
+function makeASML() {
     // configuration: number of drawing pixels for bar chart
     var _width = 500;
 
@@ -87,11 +87,13 @@ function makeAML() {
 
     var data = values.split('|');
     var acquired = parseFloat(data[0]);
-    var missing = parseFloat(data[1]);
-    var lost = parseFloat(data[2]);
+    var sketchy = parseFloat(data[1]);
+    var missing = parseFloat(data[2]);
+    var lost = parseFloat(data[3]);
     var a = acquired * _width;
-    var b = missing * _width;
-    var c = lost * _width;
+    var b = sketchy * _width;
+    var c = missing * _width;
+    var d = lost * _width;
 
     this.width = _width;
     this.height = 1;
@@ -99,10 +101,12 @@ function makeAML() {
 
     ctx.fillStyle = "#0d0";
     ctx.fillRect(0,0,a,1);
-    ctx.fillStyle = "#fc0";
+    ctx.fillStyle = "#cf0";
     ctx.fillRect(a,0,b,1);
-    ctx.fillStyle = "#d00";
+    ctx.fillStyle = "#f90";
     ctx.fillRect(a+b,0,c,1);
+    ctx.fillStyle = "#d00";
+    ctx.fillRect(a+b+c,0,d,1);
 }
 
 function putPixel(imgdata, x, y, r, g, b) {

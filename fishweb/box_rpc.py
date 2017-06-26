@@ -1,13 +1,8 @@
-import copy
-import inspect
 import os
-import socket
 import subprocess
-import threading
 
 import plumbum
 import rpyc
-from zeroconf import ServiceBrowser, Zeroconf
 
 import config
 import utils
@@ -42,7 +37,7 @@ class Box(object):
         self._rpc = None     # RPC connection instance
 
     def as_dict(self):
-        return {
+        ret = {
             'name': self.name,
             'ip': self.ip,
             'port': self.port,
@@ -53,12 +48,22 @@ class Box(object):
             'gitlong': self.gitlong,
             'local': self.local,
             'error': self.error,
-            # called via RPC, lock_data() doesn't return a real dict,
-            # so pass it to dict() to make it "real"
-            'lock_data': dict(self.lock_data()) if self.connected else dict()
         }
 
-    def connect(self):
+        if self.connected:
+            lock_data = self.lock_data()
+            ret.update({
+                'exp_running': lock_data.get('running'),
+                'exp_pid': lock_data.get('pid'),
+                'exp_starttime': lock_data.get('starttime'),
+                'exp_runtime': lock_data.get('runtime')
+            })
+        else:
+            ret['exp_running'] = False
+
+        return ret
+
+    def connect(self, done_callback=None):
         self.error = "connecting..."
         self.local = (self.ip == utils.get_routed_ip())
         if not self.local:
@@ -77,6 +82,8 @@ class Box(object):
             self._rpc = rpyc.connect("localhost", self.port)
 
         self.error = None
+        if done_callback is not None:
+            done_callback(self.name)
 
     def down(self):
         if self._rpc:
@@ -119,82 +126,8 @@ class Box(object):
         '''Return something from self.rpc if it wasn't found in this object
         directly.  Lets us use one object namespace to access both "local"
         methods like sync_data() and remote RPC methods.'''
-        if self.connected and hasattr(self._rpc.root, name):
+        if name != '_rpc' and self.connected and hasattr(self._rpc.root, name):
             return getattr(self._rpc.root, name)
         else:
             # default behavior
             raise AttributeError
-
-
-class BoxManager(object):
-    def __init__(self):
-        super(BoxManager, self).__init__()
-        self._boxes = dict()
-        self._boxlock = threading.Lock()
-
-        # work around a bug in zeroconf on Cygwin
-        try:
-            zeroconf = Zeroconf()
-        except socket.error:
-            zeroconf = Zeroconf(["0.0.0.0"])
-        self._browser = ServiceBrowser(zeroconf, "_fishbox._tcp.local.", self)  # starts its own daemon thread
-
-    def add_service(self, zeroconf, type, name):
-        info = zeroconf.get_service_info(type, name)
-        print("Service %s added, service info: %s" % (name, info))
-        boxname = info.properties[b'name'].decode()
-        assert boxname == name.split('.')[0]
-        newbox = Box(name=boxname,
-                     ip=socket.inet_ntoa(info.address),
-                     port=info.port,
-                     properties=info.properties
-                     )
-        # connect in a separate thread so we don't have to wait for the connection here
-        threading.Thread(target=newbox.connect).start()
-        with self._boxlock:
-            self._boxes[boxname] = newbox
-
-    def remove_service(self, zeroconf, type, name):
-        print("Service %s removed" % name)
-        boxname = name.split('.')[0]
-        with self._boxlock:
-            self._boxes[boxname].down()
-
-    def get_boxes(self):
-        with self._boxlock:
-            return copy.copy(self._boxes)
-
-
-class BoxesPlugin(object):
-    ''' A plugin to inject a box list from a global BoxManager into any Bottle
-    routes that need it (indicated via a "boxes" keyword (customizable)).
-    '''
-
-    name = 'boxes'
-    api = 2
-
-    def __init__(self, kw="boxes"):
-        self._boxmanager = BoxManager()
-        self._keyword = kw
-
-    def setup(self, app):
-        pass
-
-    def close(self):
-        pass
-
-    def apply(self, callback, route):
-        # Test if the original callback accepts our keyword.
-        # Ignore it if it does not need a box list.
-        args = inspect.getargspec(route.callback).args
-        if self._keyword not in args:
-            return callback
-
-        def wrapper(*args, **kwargs):
-            # inject the box list as a keyword argument
-            kwargs[self._keyword] = self._boxmanager.get_boxes()
-
-            return callback(*args, **kwargs)
-
-        # Replace the route callback with the wrapped one
-        return wrapper

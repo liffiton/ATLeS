@@ -7,7 +7,7 @@ import sqlalchemy
 
 import config
 import utils
-from fishweb import bottle_plugin_boxes, db_schema
+from fishweb import bottle_plugin_box_rpc, db_schema
 
 
 def parse_args():
@@ -40,10 +40,10 @@ if __name__ == '__main__':
     app = bottle.default_app()
 
     # install sqlalchemy plugin
-    engine = sqlalchemy.create_engine('sqlite:///{}'.format(config.DBFILE))
-    db_schema.create_all(engine)  # create db/tables if not already there
+    db_engine = sqlalchemy.create_engine('sqlite:///{}'.format(config.DBFILE))
+    db_schema.create_all(db_engine)  # create db/tables if not already there
     db_plugin = bottle.ext.sqlalchemy.Plugin(
-        engine,
+        db_engine,
         keyword='db',
         commit=True
     )
@@ -76,14 +76,14 @@ if __name__ == '__main__':
                 # add our boxes plugin
                 # (IIRC, this needs to be done in the daemon context,
                 #  not before.)
-                boxes_plugin = bottle_plugin_boxes.BoxesPlugin()
-                app.install(boxes_plugin)
+                box_rpc_plugin = bottle_plugin_box_rpc.BoxRPCPlugin()
+                app.install(box_rpc_plugin)
 
                 app.run(host=host, port=8080, server='waitress', debug=False, reloader=False)
 
     else:
         # add our boxes plugin
-        boxes_plugin = bottle_plugin_boxes.BoxesPlugin()
-        app.install(boxes_plugin)
+        box_rpc_plugin = bottle_plugin_box_rpc.BoxRPCPlugin(db_engine)
+        app.install(box_rpc_plugin)
 
         app.run(host=host, port=8080, server='waitress', debug=args.testing, reloader=args.testing)

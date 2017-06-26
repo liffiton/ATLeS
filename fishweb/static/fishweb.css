@@ -36,6 +36,14 @@ span.hostname {
   border-radius: 0.3em;
 }
 
+div.exp_info {
+  font-size: 80%;
+  padding: 0 8pt 0 8pt;
+}
+div.exp_info table {
+  margin: 0;
+}
+
 div.gitstatus {
     float: right;
     font-size: 70%;
@@ -63,8 +71,9 @@ table.table-vertmid td.bgsel {
 .chart_cell {
   text-align: center;
   position: relative;
+  min-width: 4em;
 }
-canvas.aml {
+canvas.asml, canvas.sparkline {
   width: 4em;
   height: 1em;
   /* centering */
@@ -92,16 +101,6 @@ canvas.heatmap {
   left: 50%;
   margin-left: -2em;  /* half width */
   margin-top: -1em;  /* half height */
-}
-canvas.velocity {
-  width: 4em;
-  height: 1em;
-  /* centering */
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-left: -2em;  /* half width */
-  margin-top: -0.5em;  /* half height */
 }
 .alert .progress {
   margin-bottom: 0;

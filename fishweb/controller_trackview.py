@@ -1,7 +1,10 @@
 import collections
+import dateutil
 import fnmatch
 import glob
 import os
+import platform
+import re
 import tempfile
 import zipfile
 
@@ -10,6 +13,9 @@ from sqlalchemy import sql
 
 import config
 import fishweb.db_schema as db_schema
+
+
+_trackfile_parse_regexp = re.compile(r"(\d{8}-\d{6})-(.*)-track.csv")
 
 
 def _track_files():
@@ -26,12 +32,12 @@ def _imgs(trackrel):
 
 
 def _dbgframes(trackrel):
-    expname = trackrel[:trackrel.find("-track.csv")]
+    expname = trackrel.replace("-track.csv", "")
     return sorted(glob.glob(os.path.join(config.DBGFRAMEDIR, expname, "*")))
 
 
 def _setupfile(trackpath):
-    setupfile = trackpath[:trackpath.find("-track.csv")] + "-setup.txt"
+    setupfile = trackpath.replace("-track.csv", "-setup.txt")
     if os.path.isfile(setupfile):
         return setupfile
     else:
@@ -46,12 +52,13 @@ def _get_track_data(track):
     states = collections.Counter()
     heatmap = collections.Counter()
     invalid_heatmap = collections.Counter()
+    # TODO: use pandas to simplify parsing/analysis
     with open(track) as f:
         lines = 0
         for line in f:
             vals = line.split(',')
             try:
-                state, x, y = vals[1:4]
+                state, x, y, numpts = vals[1:5]
             except ValueError:
                 # most likely an empty line
                 break
@@ -59,6 +66,8 @@ def _get_track_data(track):
             lines += 1
             if state == "init":
                 state = "lost"
+            if int(numpts) > 1:
+                state = "sketchy"
             states[state] += 1
             try:
                 x = float(x)
@@ -75,9 +84,9 @@ def _get_track_data(track):
                 pass  # not super important if we can't parse x,y
 
     if lines:
-        aml = ["%0.3f" % (states[key] / float(lines)) for key in ('acquired', 'missing', 'lost')]
+        asml = ["%0.3f" % (states[key] / float(lines)) for key in ('acquired', 'sketchy', 'missing', 'lost')]
     else:
-        aml = [0, 0, 0]
+        asml = [0, 0, 0, 0]
 
     def normalize_stringify(heatdata):
         maxheat = max(heatdata.values())
@@ -88,7 +97,7 @@ def _get_track_data(track):
     heatstr = normalize_stringify(heatmap) if heatmap else ""
     invalid_heatstr = normalize_stringify(invalid_heatmap) if invalid_heatmap else ""
 
-    return lines, aml, heatstr, invalid_heatstr
+    return lines, asml, heatstr, invalid_heatstr
 
 
 def _get_all_track_data(db):
@@ -108,22 +117,33 @@ def _get_all_track_data(db):
     # or computing and storing in DB if not yet.
     for trackfile in _track_files():
         mtime = os.stat(trackfile).st_mtime
-        trackrel = os.path.relpath(trackfile, config.TRACKDIR)
+        trackrel = os.path.relpath(trackfile, config.TRACKDIR)  # path relative to main tracks directory
         key = "%f|%s" % (mtime, trackrel)
         if key in track_db_data:
             row = track_db_data[key]
         else:
-            lines, aml, heat, invalid_heat = _get_track_data(trackfile)
+            lines, asml, heat, invalid_heat = _get_track_data(trackfile)
+            subdir, filename = os.path.split(trackrel)
+            if subdir == '':
+                # locally-created, most likely
+                subdir = platform.node()
+            starttime_str, exp_name = _trackfile_parse_regexp.search(filename).groups()
+            starttime = dateutil.parser.parse(starttime_str)
             insert = tracks.insert().values(
                 key=key,
+                box=subdir,
+                starttime=starttime,
+                exp_name=exp_name,
                 lines=lines,
-                acquired=aml[0],
-                missing=aml[1],
-                lost=aml[2],
+                acquired=asml[0],
+                sketchy=asml[1],
+                missing=asml[2],
+                lost=asml[3],
                 heat=heat,
                 invalid_heat=invalid_heat
             )
             db.execute(insert)
+            db.commit()  # so this doesn't hold open a potentially very long transaction
             select = sql.select([tracks]).where(tracks.c.key == key)
             row = db.execute(select).fetchone()
 
@@ -131,7 +151,7 @@ def _get_all_track_data(db):
             (trackfile,
              trackrel,
              row['lines'],
-             [str(row['acquired']), str(row['missing']), str(row['lost'])],
+             [str(row[key]) for key in ('acquired', 'sketchy', 'missing', 'lost')],
              row['heat'],
              row['invalid_heat'],
              _imgs(trackrel),

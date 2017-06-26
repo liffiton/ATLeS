@@ -69,10 +69,84 @@ angular.module('BoxesApp', ['ngResource'])
     }
   };
 })
+.directive('sparkline', function() {
+  return {
+    restrict: 'A',
+    scope: {
+        data: '=ngModel'
+    },
+    link: function(scope, element, attrs) {
+      var data = scope.data;
+      var len = data.length;
+
+      var lineWidth = 8;
+
+      var canvas = element[0];
+      canvas.width = 400;
+      canvas.height = 100;
+      var ctx = element[0].getContext('2d');
+
+      /*
+      // shade background
+      ctx.fillStyle = "#eeeeee";
+      ctx.rect(0,0,element[0].width,element[0].height);
+      ctx.fill();
+      */
+
+      // parameters for data region
+      var w = element[0].width;
+      var h = element[0].height - 2*lineWidth;
+      var ptspacing = w/(len-1);
+
+      // scale a data value in a y-coordinate for the canvas
+      // based on requested line type
+      var type = attrs.sparklineType;
+      if (type == null) {
+        type = "yMinMax";
+      }
+      var getY = function(dataval) {
+        var min = Math.min.apply(null, data);
+        var max = Math.max.apply(null, data);
+        // dataY is scaled from 0 to 1 (0=bottom, 1=top)
+        if (type == "yMinMax") {
+          var dataY = (dataval-min) / (max-min);
+        }
+        if (type == "yPercent") {
+          var dataY = dataval;
+        }
+        // canvasY is actual pixel coordinates
+        // aiming to draw all in a region w/ a lineWidth buffer
+        // on top and bottom
+        var canvasY = (1-dataY)*h + lineWidth;
+        return canvasY;
+      }
+
+      // draw sparkline
+      var color = "#0066cc";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.beginPath();
+      ctx.moveTo(0, getY(data[0]));
+      for (var i = 1 ; i < len ; i++) {
+        ctx.lineTo(i*ptspacing, getY(data[i]));
+      }
+      ctx.stroke();
+      /*
+      // draw circles marking each datapoint
+      ctx.fillStyle = color;
+      for (var i = 0 ; i < len ; i++) {
+        ctx.beginPath();
+        ctx.arc(i*ptspacing, getY(data[i]), lineWidth*1.5, 2*Math.PI, false);
+        ctx.fill();
+      }
+      */
+    }
+  };
+})
 .directive('myClearButton', ['$http', function($http) {
   return {
     restrict: 'A',
-    link: function(scope, element, attrs, ngModel) {
+    link: function(scope, element, attrs) {
 
       function do_clear() {
         var go = confirm("Are you sure?  (The running experiment will be terminated.)");
@@ -87,7 +161,7 @@ angular.module('BoxesApp', ['ngResource'])
 .directive('mySyncButton', ['$http', function($http) {
   return {
     restrict: 'A',
-    link: function(scope, element, attrs, ngModel) {
+    link: function(scope, element, attrs) {
       var boxname = attrs.mySyncButton;
 
       function do_sync() {
