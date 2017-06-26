@@ -113,6 +113,10 @@ class Box(object):
         # If data is already local, no need to sync
         assert not self.local
 
+        # Double-check that this box isn't running an experiment
+        if self.lock_exists():
+            return
+
         # Copy remote files into an archive dir, then have rsync
         # delete the originals after the transfer
         self._tunnel["cp -r %s %s" % (self.trackdir, self.archivedir)]
@@ -138,7 +142,7 @@ class Box(object):
         '''Return something from self.rpc if it wasn't found in this object
         directly.  Lets us use one object namespace to access both "local"
         methods like sync_data() and remote RPC methods.'''
-        if name != '_rpc' and self.connected and hasattr(self._rpc.root, name):
+        if self.connected and hasattr(self._rpc.root, name):
             return getattr(self._rpc.root, name)
         else:
             # default behavior
@@ -161,11 +165,13 @@ class BoxManager(object):
             zeroconf = Zeroconf(["0.0.0.0"])
         self._browser = ServiceBrowser(zeroconf, "_fishbox._tcp.local.", self)  # starts its own daemon thread
 
-        # start polling boxes and the queue in separate threads
-        t = threading.Thread(target=self.poll_boxes)
+        # start separate thread for:
+        #  - polling boxes
+        t = threading.Thread(target=self._poll_boxes)
         t.daemon = True
         t.start()
-        t = threading.Thread(target=self.watch_queue)
+        #  - handling the explicit update queue
+        t = threading.Thread(target=self._watch_queue)
         t.daemon = True
         t.start()
 
@@ -198,27 +204,47 @@ class BoxManager(object):
         with self._boxlock:
             return copy.copy(self._boxes)
 
-    def _update_box(self, box, conn):
+    def _update_box_db(self, box, boxinfo, conn):
         boxes = db_schema.boxes
-        # get updated box data
-        with self._boxlock:
-            if box in self._boxes:
-                boxdict = self._boxes[box].as_dict()
-            else:
-                boxdict = {'connected': False}
         # check whether this box is in the database yet
         select = sql.select([boxes.c.name]).where(boxes.c.name == box)
         box_exists = conn.execute(select).scalar()
         if box_exists:
             # if so, update
-            update = boxes.update().where(boxes.c.name == box).values(boxdict)
+            update = boxes.update().where(boxes.c.name == box).values(boxinfo)
             conn.execute(update)
         else:
             # if not, insert
-            insert = boxes.insert(boxdict)
+            insert = boxes.insert(boxinfo)
             conn.execute(insert)
 
-    def watch_queue(self):
+    def _update_box_datafiles(self, box, boxinfo, conn):
+        ''' Checks for newer datafiles; syncs if any are found. '''
+        # Get mtimes of latest remote and local data files
+        boxdatadir = os.path.join(config.DATADIR, box)
+        latest_remote = self._boxes[box].max_data_mtime()
+        latest_local = utils.max_mtime(boxdatadir)
+        # If remote has newer, sync and update latest local time
+        if latest_local < latest_remote:
+            self._boxes[box].sync_data()
+        # assert that update occurred
+        assert latest_remote == utils.max_mtime(boxdatadir)
+
+    def _update_box(self, box, conn):
+        # get updated box data
+        with self._boxlock:
+            if box in self._boxes:
+                boxinfo = self._boxes[box].as_dict()
+            else:
+                boxinfo = {'connected': False}
+        self._update_box_db(box, boxinfo, conn)
+        if boxinfo['connected'] \
+          and not boxinfo['local'] \
+          and not boxinfo['exp_running'] \
+          and not self._boxes[box].lock_exists():  # be doubly-sure...
+            self._update_box_datafiles(box, boxinfo, conn)
+
+    def _watch_queue(self):
         # Runs in its own thread
         # Needs a separate sqlite connection for a separate thread
         conn = self._engine.connect()
@@ -226,7 +252,7 @@ class BoxManager(object):
             box = self._updatequeue.get()
             self._update_box(box, conn)
 
-    def poll_boxes(self):
+    def _poll_boxes(self):
         # Runs in its own thread
         # Needs a separate sqlite connection for a separate thread
         conn = self._engine.connect()

@@ -7,6 +7,7 @@ import tempfile
 import time
 
 import config
+import utils
 from fishbox import wiring
 
 
@@ -26,6 +27,10 @@ def lock_data():
                 'runtime': runtime,
                 'curtime': int(time.time())
                 }
+
+
+def max_datafile_mtime():
+    return utils.max_mtime(config.DATADIR)
 
 
 _raspistill = None

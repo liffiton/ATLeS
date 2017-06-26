@@ -1,4 +1,6 @@
+import datetime
 import errno
+import glob
 import os
 import socket
 
@@ -38,3 +40,9 @@ def git_status():
     gitshort = "%s-%s%s" % (branch, date, '-*' if mods else '')
     gitlong = "%s\n%s" % (fulldesc, fulldate)
     return (gitshort, gitlong)
+
+
+def max_mtime(dir):
+    files = glob.glob(os.path.join(dir, '*'))
+    maxtime = max(os.path.getmtime(f) for f in files)
+    return datetime.datetime(maxtime)

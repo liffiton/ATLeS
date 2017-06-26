@@ -15,6 +15,7 @@ boxes = Table(
     Column('gitshort', String),
     Column('gitlong', String),
     Column('error', String),
+    Column('latest_local_datafile', DateTime),
     Column('exp_running', Boolean),
     Column('exp_pid', Integer),
     Column('exp_starttime', Integer),
