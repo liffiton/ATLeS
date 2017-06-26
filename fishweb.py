@@ -1,5 +1,6 @@
 import argparse
 import os
+import threading
 
 import bottle
 import bottle.ext.sqlalchemy
@@ -7,7 +8,7 @@ import sqlalchemy
 
 import config
 import utils
-from fishweb import bottle_plugin_box_rpc, db_schema
+from fishweb import bottle_plugin_box_rpc, db_schema, track_scanner
 
 
 def parse_args():
@@ -58,6 +59,11 @@ if __name__ == '__main__':
     bottle.load("fishweb.controller_boxes")
     bottle.load("fishweb.controller_analyze")
     bottle.load("fishweb.controller_trackview")
+
+    # start up the track scanner
+    t = threading.Thread(target=track_scanner.scan_tracks, args=[db_engine])
+    t.daemon = True
+    t.start()
 
     if args.daemon:
         import daemon

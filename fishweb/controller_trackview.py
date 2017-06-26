@@ -1,9 +1,7 @@
 import collections
-import dateutil
 import fnmatch
 import glob
 import os
-import platform
 import re
 import tempfile
 import zipfile
@@ -103,60 +101,23 @@ def _get_track_data(track):
 def _get_all_track_data(db):
     ''' Load all track data for present track files.
         Uses the database (for any data previously computed/stored). '''
-    # First, load all track data from db into a dictionary
-    # to avoid thousands of individual database queries.
     tracks = db_schema.tracks
     select = sql.select([tracks])
     rows = db.execute(select)
-    # Make a dictionary so it's indexable by key.
-    track_db_data = {row['key']: row for row in rows}
 
     track_data = []
 
-    # Go through all track files, loading track data from DB if present
-    # or computing and storing in DB if not yet.
-    for trackfile in _track_files():
-        mtime = os.stat(trackfile).st_mtime
-        trackrel = os.path.relpath(trackfile, config.TRACKDIR)  # path relative to main tracks directory
-        key = "%f|%s" % (mtime, trackrel)
-        if key in track_db_data:
-            row = track_db_data[key]
-        else:
-            lines, asml, heat, invalid_heat = _get_track_data(trackfile)
-            subdir, filename = os.path.split(trackrel)
-            if subdir == '':
-                # locally-created, most likely
-                subdir = platform.node()
-            starttime_str, exp_name = _trackfile_parse_regexp.search(filename).groups()
-            starttime = dateutil.parser.parse(starttime_str)
-            insert = tracks.insert().values(
-                key=key,
-                box=subdir,
-                starttime=starttime,
-                exp_name=exp_name,
-                lines=lines,
-                acquired=asml[0],
-                sketchy=asml[1],
-                missing=asml[2],
-                lost=asml[3],
-                heat=heat,
-                invalid_heat=invalid_heat
-            )
-            db.execute(insert)
-            db.commit()  # so this doesn't hold open a potentially very long transaction
-            select = sql.select([tracks]).where(tracks.c.key == key)
-            row = db.execute(select).fetchone()
-
+    for row in rows:
         track_data.append(
-            (trackfile,
-             trackrel,
+            (row['trackpath'],
+             row['trackrel'],
              row['lines'],
              [str(row[key]) for key in ('acquired', 'sketchy', 'missing', 'lost')],
              row['heat'],
              row['invalid_heat'],
-             _imgs(trackrel),
-             _dbgframes(trackrel),
-             _setupfile(trackfile)
+             _imgs(row['trackrel']),
+             _dbgframes(row['trackrel']),
+             _setupfile(row['trackpath'])
              )
         )
 

@@ -26,6 +26,8 @@ tracks = Table(
     'tracks',
     metadata,
     Column('key', String, primary_key=True),
+    Column('trackpath', String),
+    Column('trackrel', String),
     Column('box', String),
     Column('starttime', DateTime),
     Column('exp_name', String),
