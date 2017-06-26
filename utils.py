@@ -44,5 +44,7 @@ def git_status():
 
 def max_mtime(dir):
     files = glob.glob(os.path.join(dir, '*'))
+    if not files:
+        return
     maxtime = max(os.path.getmtime(f) for f in files)
     return datetime.datetime.fromtimestamp(maxtime)

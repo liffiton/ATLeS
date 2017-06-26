@@ -221,12 +221,17 @@ class BoxManager(object):
     def _update_box_datafiles(self, box, boxinfo, conn):
         ''' Checks for newer datafiles; syncs if any are found. '''
         # Get mtimes of latest remote and local data files
-        boxdatadir = os.path.join(config.DATADIR, box)
         latest_remote = self._boxes[box].max_datafile_mtime()
+        if latest_remote is None:
+            # No files present on remote
+            return
+
+        boxdatadir = os.path.join(config.DATADIR, box)
         latest_local = utils.max_mtime(boxdatadir)
         # If remote has newer, sync and update latest local time
         if latest_local < latest_remote:
             self._boxes[box].sync_data()
+
         # assert that update occurred
         assert latest_remote == utils.max_mtime(boxdatadir)
 
