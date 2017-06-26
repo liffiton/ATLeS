@@ -220,20 +220,23 @@ class BoxManager(object):
 
     def _update_box_datafiles(self, box, boxinfo, conn):
         ''' Checks for newer datafiles; syncs if any are found. '''
+        box_rpc = self._boxes[box]
         # Get mtimes of latest remote and local data files
-        latest_remote = self._boxes[box].max_datafile_mtime()
+        latest_remote = box_rpc.max_datafile_mtime()
         if latest_remote is None:
             # No files present on remote
             return
+        boxtrackdir = os.path.join(config.TRACKDIR, box)
+        latest_local = utils.max_mtime(boxtrackdir)
 
-        boxdatadir = os.path.join(config.DATADIR, box)
-        latest_local = utils.max_mtime(boxdatadir)
         # If remote has newer, sync and update latest local time
-        if latest_local < latest_remote:
-            self._boxes[box].sync_data()
+        if latest_local is None or latest_local < latest_remote:
+            box_rpc.sync_data()
 
         # assert that update occurred
-        assert latest_remote == utils.max_mtime(boxdatadir)
+        print(latest_remote)
+        print(utils.max_mtime(boxtrackdir))
+        assert latest_remote == utils.max_mtime(boxtrackdir)
 
     def _update_box(self, box, conn):
         # get updated box data
@@ -244,9 +247,10 @@ class BoxManager(object):
                 boxinfo = {'connected': False}
         self._update_box_db(box, boxinfo, conn)
         if boxinfo['connected'] \
-          and not boxinfo['local'] \
-          and not boxinfo['exp_running'] \
-          and not self._boxes[box].lock_exists():  # be doubly-sure...
+                and not boxinfo['local'] \
+                and not boxinfo['exp_running'] \
+                and self._boxes[box].connected \
+                and not self._boxes[box].lock_exists():
             self._update_box_datafiles(box, boxinfo, conn)
 
     def _watch_queue(self):

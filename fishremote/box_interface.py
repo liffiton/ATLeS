@@ -30,7 +30,7 @@ def lock_data():
 
 
 def max_datafile_mtime():
-    return utils.max_mtime(config.DATADIR)
+    return utils.max_mtime(config.TRACKDIR)
 
 
 _raspistill = None
