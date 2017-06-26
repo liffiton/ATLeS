@@ -1,4 +1,5 @@
 import copy
+import datetime
 import os
 import socket
 import subprocess
@@ -229,13 +230,17 @@ class BoxManager(object):
         boxtrackdir = os.path.join(config.TRACKDIR, box)
         latest_local = utils.max_mtime(boxtrackdir)
 
+        # *Ugly* hack to "de-netref" the rpyc-returned object
+        # Otherwise we can't compare it to a real datetime object...
+        timetuple = list(latest_remote.timetuple())[:6]
+        timetuple.append(latest_remote.microsecond)
+        latest_remote = datetime.datetime(*timetuple)
+
         # If remote has newer, sync and update latest local time
         if latest_local is None or latest_local < latest_remote:
             box_rpc.sync_data()
 
         # assert that update occurred
-        print(latest_remote)
-        print(utils.max_mtime(boxtrackdir))
         assert latest_remote == utils.max_mtime(boxtrackdir)
 
     def _update_box(self, box, conn):
