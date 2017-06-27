@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import atexit
 from collections import namedtuple, OrderedDict

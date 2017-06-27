@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #
 # camtest.py - Testing the camera, setting parameters, etc.
 #
@@ -49,26 +50,26 @@ def main():
             break
         elif key % 256 == ord(' '):
             cv2.imwrite("camtestout.png", frame)
-            print "Saved image to camtestout.png"
+            print("Saved image to camtestout.png")
         elif key % 256 == ord('c'):
             channel = [1,2,-1,0][channel]
-            print "New channel: %d" % channel
+            print("New channel: %d" % channel)
         elif key % 256 == ord('i'):
             iso = [1,2,3,4,0][iso]
             subprocess.call(["v4l2-ctl", "--set-ctrl", "iso_sensitivity=%d" % iso])
-            print "New ISO: %d" % iso
+            print("New ISO: %d" % iso)
         elif key % 256 == ord('e'):
             exposure *= 2
             if exposure > 1000:
                 exposure = 10
             subprocess.call(["v4l2-ctl", "--set-ctrl", "exposure_time_absolute=%d" % exposure])
-            print "New exposure: %d" % exposure
+            print("New exposure: %d" % exposure)
         elif key % 256 == ord('w'):
             wb += 1
             if wb > 9:
                 wb = 0
             subprocess.call(["v4l2-ctl", "--set-ctrl", "white_balance_auto_preset=%d" % wb])
-            print "New wb: %d" % wb
+            print("New wb: %d" % wb)
 
         frames += 1
         if frames % 10 == 0:

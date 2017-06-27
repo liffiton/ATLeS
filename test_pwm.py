@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from fishbox import wiring
 
 # To work in both Python 2 and 3
