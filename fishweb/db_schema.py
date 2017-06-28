@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, Float, String, Boolean, DateTime, MetaData
+from sqlalchemy import MetaData, Table, Column, Integer, Float, String, Boolean, DateTime, ForeignKey
 
 metadata = MetaData()
 
@@ -28,7 +28,11 @@ tracks = Table(
     Column('key', String, primary_key=True),
     Column('trackpath', String),
     Column('trackrel', String),
-    Column('box', String),
+    Column('setupfile', String),
+    Column('trigger', String),
+    Column('controller', String),
+    Column('stimulus', String),
+    Column('box', String, index=True),
     Column('starttime', DateTime),
     Column('exp_name', String),
     Column('lines', Integer),
@@ -38,6 +42,15 @@ tracks = Table(
     Column('lost', Float),
     Column('heat', String),
     Column('invalid_heat', String)
+)
+
+phases = Table(
+    'phases',
+    metadata,
+    Column('track_key', String, ForeignKey("tracks.key"), index=True, nullable=False),
+    Column('phase_num', Integer, nullable=False),
+    Column('phase_len', Integer, nullable=False),
+    Column('stim_actual', String, nullable=False)
 )
 
 

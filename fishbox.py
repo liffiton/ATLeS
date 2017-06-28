@@ -2,7 +2,7 @@
 
 import argparse
 import atexit
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict
 try:
     from ConfigParser import RawConfigParser
 except ImportError:
@@ -17,10 +17,8 @@ import time
 
 import config
 import utils
+from utils import Phase
 from fishbox import experiment
-
-# define a named tuple for storing Phase data
-Phase = namedtuple('Phase', ['phasenum', 'length', 'dostim', 'background'])
 
 
 def greedy_parse(s):

@@ -1,4 +1,5 @@
 import collections
+import configparser
 import dateutil
 import fnmatch
 import os
@@ -9,6 +10,7 @@ import time
 from sqlalchemy import sql
 
 import config
+from utils import Phase  # noqa
 import fishweb.db_schema as db_schema
 
 
@@ -80,15 +82,81 @@ def _get_track_data(track):
     return lines, asml, heatstr, invalid_heatstr
 
 
+def _get_setup_info(setupfile):
+    parser = configparser.ConfigParser()
+    try:
+        parser.read(setupfile)
+        trigger = parser.get('experiment', 'trigger')
+        controller = parser.get('experiment', 'controller')
+        stimulus = parser.get('experiment', 'stimulus')
+        phase_data_str = parser.get('phases', 'phases_data')
+        return trigger, controller, stimulus, phase_data_str
+    except configparser.NoSectionError as e:
+        print("configparser error: {}\nFile: {}".format(e, setupfile))
+        raise
+
+
+def _get_track_db_info(key, trackfile, trackrel):
+    lines, asml, heat, invalid_heat = _get_track_data(trackfile)
+    subdir, filename = os.path.split(trackrel)
+    if subdir == '':
+        # locally-created, most likely
+        subdir = platform.node()
+    starttime_str, exp_name = _trackfile_parse_regexp.search(filename).groups()
+    starttime = dateutil.parser.parse(starttime_str)
+
+    setupfile = trackfile.replace('-track.csv', '-setup.txt')
+    if os.path.isfile(setupfile):
+        trigger, controller, stimulus, phase_data_str = _get_setup_info(setupfile)
+    else:
+        setupfile = None
+        trigger = controller = stimulus = phase_data_str = None
+
+    new_row = dict(
+        key=key,
+        trackpath=trackfile,
+        trackrel=trackrel,
+        setupfile=setupfile,
+        trigger=trigger,
+        controller=controller,
+        stimulus=stimulus,
+        box=subdir,
+        starttime=starttime,
+        exp_name=exp_name,
+        lines=lines,
+        acquired=asml[0],
+        sketchy=asml[1],
+        missing=asml[2],
+        lost=asml[3],
+        heat=heat,
+        invalid_heat=invalid_heat
+    )
+
+    return new_row, phase_data_str
+
+
+def _store_phases(conn, key, phase_data_str):
+    phases = db_schema.phases
+    phase_list = eval(phase_data_str)  # uses Phase namedtuple imported from utils
+    for phase in phase_list:
+        insert = phases.insert().values(
+            track_key=key,
+            phase_num=phase.phasenum,
+            phase_len=phase.length,
+            stim_actual=phase.dostim,
+        )
+        conn.execute(insert)
+
+
 def _update_track_data(conn):
     ''' Load all track data for present track files not currently in the database. '''
     # First, load all track data from db into a dictionary
     # to avoid thousands of individual database queries.
     tracks = db_schema.tracks
-    select = sql.select([tracks])
+    select = sql.select([tracks.c.key])
     rows = conn.execute(select)
-    # Make a dictionary so it's indexable by key.
-    track_db_data = {row['key']: row for row in rows}
+    # Make a set for fast existence checks
+    tracks_in_db = set(row['key'] for row in rows)
 
     # Go through all track files, loading track data from DB if present
     # or computing and storing in DB if not yet.
@@ -96,30 +164,12 @@ def _update_track_data(conn):
         mtime = os.stat(trackfile).st_mtime
         trackrel = os.path.relpath(trackfile, config.TRACKDIR)  # path relative to main tracks directory
         key = "%f|%s" % (mtime, trackrel)
-        if key not in track_db_data:
-            lines, asml, heat, invalid_heat = _get_track_data(trackfile)
-            subdir, filename = os.path.split(trackrel)
-            if subdir == '':
-                # locally-created, most likely
-                subdir = platform.node()
-            starttime_str, exp_name = _trackfile_parse_regexp.search(filename).groups()
-            starttime = dateutil.parser.parse(starttime_str)
-            insert = tracks.insert().values(
-                key=key,
-                trackpath=trackfile,
-                trackrel=trackrel,
-                box=subdir,
-                starttime=starttime,
-                exp_name=exp_name,
-                lines=lines,
-                acquired=asml[0],
-                sketchy=asml[1],
-                missing=asml[2],
-                lost=asml[3],
-                heat=heat,
-                invalid_heat=invalid_heat
-            )
+        if key not in tracks_in_db:
+            new_row, phase_data_str = _get_track_db_info(key, trackfile, trackrel)
+            insert = tracks.insert().values(new_row)
             conn.execute(insert)
+            if phase_data_str is not None:
+                _store_phases(conn, key, phase_data_str)
 
 
 def scan_tracks(db_engine):

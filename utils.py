@@ -3,10 +3,15 @@ import errno
 import glob
 import os
 import socket
+from collections import namedtuple
 
 from contextlib import closing
 
 import plumbum
+
+
+# define a named tuple for storing Phase data
+Phase = namedtuple('Phase', ['phasenum', 'length', 'dostim', 'background'])
 
 
 # http://stackoverflow.com/a/166589
