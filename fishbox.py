@@ -50,6 +50,12 @@ def get_conf(args):
             # greedy_parse() converts each to a float or an int, if it can.
             conf[section][key] = greedy_parse(parser.get(section, key))
 
+    # setup a 'general' section of the configuration
+    # (mostly for the record in the -setup.txt file)
+    conf['general'] = {}
+    conf['general']['inifile'] = args.inifile
+    conf['general']['boxname'] = utils.get_boxname()
+
     return conf
 
 

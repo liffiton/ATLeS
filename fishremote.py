@@ -2,7 +2,6 @@
 
 import atexit
 import os
-import platform
 import signal
 import socket
 import sys
@@ -93,7 +92,7 @@ def main():
     print("RPC server started.")
 
     # register the service via MDNS/Bonjour
-    boxname = platform.node()
+    boxname = utils.get_boxname()
     gitstatus = utils.git_status()
     gitshort = gitstatus[0]
     gitlong = gitstatus[1]

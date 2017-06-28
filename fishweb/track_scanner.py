@@ -3,13 +3,13 @@ import configparser
 import dateutil
 import fnmatch
 import os
-import platform
 import re
 import time
 
 from sqlalchemy import sql
 
 import config
+import utils
 from utils import Phase  # noqa
 import fishweb.db_schema as db_schema
 
@@ -101,7 +101,7 @@ def _get_track_db_info(key, trackfile, trackrel):
     subdir, filename = os.path.split(trackrel)
     if subdir == '':
         # locally-created, most likely
-        subdir = platform.node()
+        subdir = utils.get_boxname()
     starttime_str, exp_name = _trackfile_parse_regexp.search(filename).groups()
     starttime = dateutil.parser.parse(starttime_str)
 

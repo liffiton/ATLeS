@@ -2,6 +2,7 @@ import datetime
 import errno
 import glob
 import os
+import platform
 import socket
 from collections import namedtuple
 
@@ -20,6 +21,10 @@ def get_routed_ip():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_DGRAM)) as s:
         s.connect(("8.8.8.8", 53))  # Google DNS, but doesn't really matter
         return s.getsockname()[0]
+
+
+def get_boxname():
+    return platform.node()
 
 
 def mkdir(path):
