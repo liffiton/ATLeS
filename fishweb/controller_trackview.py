@@ -102,7 +102,7 @@ def _get_all_track_data(db):
     ''' Load all track data for present track files.
         Uses the database (for any data previously computed/stored). '''
     tracks = db_schema.tracks
-    select = sql.select([tracks])
+    select = sql.select([tracks]).order_by(tracks.c.trackrel)
     rows = db.execute(select)
 
     track_data = []

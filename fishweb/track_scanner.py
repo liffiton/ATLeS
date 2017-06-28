@@ -17,13 +17,13 @@ import fishweb.db_schema as db_schema
 _trackfile_parse_regexp = re.compile(r"(\d{8}-\d{4,6})-?(.*)-track.csv")
 
 
-def _track_files():
+def _track_files_set():
     # match in all subdirs - thanks: http://stackoverflow.com/a/2186565
     tracks = []
     for root, dirnames, filenames in os.walk(config.TRACKDIR):
         for filename in fnmatch.filter(filenames, "*-track.csv"):
             tracks.append(os.path.join(root, filename))
-    return sorted(tracks)
+    return set(tracks)
 
 
 def _get_track_data(track):
@@ -158,9 +158,25 @@ def _update_track_data(conn):
     # Make a set for fast existence checks
     tracks_in_db = set(row['key'] for row in rows)
 
+    # Get a set of the tracks in the filesystem
+    tracks_in_fs = _track_files_set()
+
+    # Insert new tracks
+    tracks_in_db = _add_new_tracks(conn, tracks_in_db, tracks_in_fs)
+    # Delete removed tracks
+    _clean_removed_tracks(conn, tracks_in_db, tracks_in_fs)
+
+
+def _add_new_tracks(conn, tracks_in_db, tracks_in_fs):
+    ''' For any track in the filesystem that isn't yet in the database,
+        read and add it to the tracks and phases tables.
+
+        Returns: set of tracks in the database after all additions.
+    '''
+    tracks = db_schema.tracks
     # Go through all track files, loading track data from DB if present
     # or computing and storing in DB if not yet.
-    for trackfile in _track_files():
+    for trackfile in tracks_in_fs:
         mtime = os.stat(trackfile).st_mtime
         trackrel = os.path.relpath(trackfile, config.TRACKDIR)  # path relative to main tracks directory
         key = "%f|%s" % (mtime, trackrel)
@@ -170,6 +186,26 @@ def _update_track_data(conn):
             conn.execute(insert)
             if phase_data_str is not None:
                 _store_phases(conn, key, phase_data_str)
+
+            tracks_in_db.add(key)
+
+    return tracks_in_db
+
+
+def _clean_removed_tracks(conn, tracks_in_db, tracks_in_fs):
+    ''' For any files in the database not found in the filesystem,
+        delete them from the tracks and phases tables.
+    '''
+    tracks = db_schema.tracks
+    phases = db_schema.phases
+    for track_key in tracks_in_db:
+        trackrel = track_key.split('|')[1]
+        trackfile = os.path.join(config.TRACKDIR, trackrel)
+        if trackfile not in tracks_in_fs:
+            delete = tracks.delete().where(tracks.c.key == track_key)
+            conn.execute(delete)
+            delete = phases.delete().where(phases.c.track_key == track_key)
+            conn.execute(delete)
 
 
 def scan_tracks(db_engine):
