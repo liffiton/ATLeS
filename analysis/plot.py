@@ -238,21 +238,38 @@ class TrackPlotter(object):
         badpoints = (self._track.valid != True)  # noqa: E712
         heatmaps.plot_heatmap(ax, self._track.x[badpoints], self._track.y[badpoints], nbins=nbins)
 
-    def plot_heatmap(self, numplots=1):
-        if numplots == 'perminute':
+    def plot_heatmap(self, plot_type='overall'):
+        assert plot_type in ('per-minute', 'per-phase', 'overall')
+        if plot_type == 'per-minute':
             numplots = int(math.ceil(self._track.time[-1] / 60.0))
-            numrows = int(math.ceil(numplots / 10.0))
-            plt.figure(figsize=(2*min(numplots, 10), 2*numrows))
-            title = "Per-minute heatmap"
-        else:
+        elif plot_type == 'per-phase':
+            numplots = self._track.num_phases()
+            phase_starts = self._track.phase_starts()
+            phase_ends = phase_starts[1:] + [2**30]
+        elif plot_type == 'overall':
             numplots = 1
-            numrows = 1
+
+        numrows = int(math.ceil(numplots / 10.0))
+        if plot_type == 'overall':
             plt.figure(figsize=(4, 4))
-            title = "Overall heatmap"
+        else:
+            plt.figure(figsize=(2*min(numplots, 10), 2*numrows))
 
         for i in range(numplots):
-            start = i * len(self._track.x) // numplots
-            end = (i+1) * len(self._track.x) // numplots
+            if plot_type == 'per-minute':
+                start_min = i
+                end_min = i+1
+                title = "{}:00-{}:00".format(start_min, end_min)
+            elif plot_type == 'per-phase':
+                start_min = phase_starts[i]
+                end_min = phase_ends[i]
+                title = "Phase {} ({}:00-{}:00)".format(i, start_min, end_min)
+            elif plot_type == 'overall':
+                start_min = 0
+                end_min = 2**30
+                title = "Overall heatmap"
+            selected = (self._track.time >= start_min*60) & (self._track.time < end_min*60)
+
             ax = plt.subplot(numrows, min(numplots, 10), i+1)
 
             if numplots > 1:
@@ -261,11 +278,10 @@ class TrackPlotter(object):
 
             _format_axis(ax)
 
-            if i == 0:
-                ax.set_title(title)
+            ax.set_title(title)
 
             nbins = 50
-            heatmaps.plot_heatmap(ax, self._track.x[start:end], self._track.y[start:end], nbins=nbins)
+            heatmaps.plot_heatmap(ax, self._track.x[selected], self._track.y[selected], nbins=nbins)
 
     def _plot_trace_portion(self, ax, start, end, median_speed):
         time = self._track.time[start:end]

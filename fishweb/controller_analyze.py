@@ -89,7 +89,10 @@ def _do_analyze(trackfile):
     plot.savefig(config.PLOTDIR + "%s.10.heat.png" % trackrel)
     plotter.plot_invalidheatmap()
     plot.savefig(config.PLOTDIR + "%s.12.heat.invalid.png" % trackrel)
-    plotter.plot_heatmap(numplots='perminute')
+    if processor.num_phases() > 1:
+        plotter.plot_heatmap(plot_type='per-phase')
+        plot.savefig(config.PLOTDIR + "%s.14.heat.perphase.png" % trackrel)
+    plotter.plot_heatmap(plot_type='per-minute')
     plot.savefig(config.PLOTDIR + "%s.15.heat.perminute.png" % trackrel)
     plotter.plot_trace()
     plot.savefig(config.PLOTDIR + "%s.20.plot.svg" % trackrel)

@@ -1,3 +1,4 @@
+import itertools
 import math
 from configparser import ConfigParser
 import numpy as np
@@ -107,6 +108,12 @@ class TrackProcessor(object):
             self.phase_list = eval(phases_data_str)  # uses Phase namedtuple imported from utils
         else:
             self.phase_list = None
+
+    def num_phases(self):
+        return len(self.phase_list)
+
+    def phase_starts(self):
+        return list(itertools.accumulate([0] + [phase.length for phase in self.phase_list]))
 
     def get_setup(self, sections):
         ret = {}
