@@ -370,7 +370,7 @@ class TrackPlotter(object):
 
         # Add markers/links to debugframes if given
         # Get [tracking]:start_frame for proper offset of debug frame numbers into track data here
-        start_frame = int(self._track.read_setup(['tracking'])["tracking__start_frame"])
+        start_frame = int(self._track.config['tracking']['start_frame'])
         for dbgframe in self._dbgframes:
             nameparts = os.path.basename(dbgframe).split('_')
             frameindex = max(0, int(nameparts[1]) - start_frame)  # restrict to index 0 at minimum

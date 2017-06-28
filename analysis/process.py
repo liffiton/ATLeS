@@ -1,9 +1,8 @@
 import math
-try:
-    from ConfigParser import RawConfigParser, MissingSectionHeaderError
-except ImportError:
-    from configparser import RawConfigParser, MissingSectionHeaderError
+from configparser import ConfigParser
 import numpy as np
+
+from utils import Phase  # noqa
 
 _entry_wait = 2  # min seconds between counted entries to top
 _freeze_min_time = 2  # min seconds to count lack of motion as a "freeze"
@@ -32,9 +31,14 @@ def groups_where(vals):
 
 
 class TrackProcessor(object):
-    def __init__(self, infile):
-        self._trackfile = infile
+    def __init__(self, trackfile):
+        self.trackfile = trackfile
+        self.setupfile = trackfile.replace("-track.csv", "-setup.txt")
 
+        self._read_trackfile()
+        self._read_setupfile()
+
+    def _read_trackfile(self):
         def xy_to_float(s):
             if s != b'.':
                 return float(s)
@@ -42,7 +46,7 @@ class TrackProcessor(object):
                 return -1
 
         time, status, x, y, numpts = np.loadtxt(
-            infile,
+            self.trackfile,
             delimiter=',',
             unpack=True,
             dtype={'names': ('time','status','x','y','numpts'), 'formats': ('f','S16','f','f','d')},
@@ -94,36 +98,59 @@ class TrackProcessor(object):
         self.dy = dy
         self.numpts = numpts
 
-    def read_setup(self, sections):
-        curstats = {}
+    def _read_setupfile(self):
+        self.config = ConfigParser()
+        self.config.read(self.setupfile)
+        # parse phases_data
+        if 'phases' in self.config and 'phases_data' in self.config['phases']:
+            phases_data_str = self.config['phases']['phases_data']
+            self.phase_list = eval(phases_data_str)  # uses Phase namedtuple imported from utils
+        else:
+            self.phase_list = None
 
-        setupfile = self._trackfile.replace('-track.csv', '-setup.txt')
-        curstats['Setup file'] = setupfile
-
-        parser = RawConfigParser()
-        try:
-            parser.read(setupfile)
-        except MissingSectionHeaderError:
-            return curstats
+    def get_setup(self, sections):
+        ret = {}
+        ret['Setup file'] = self.setupfile
 
         for section in sections:
-            if section not in parser.sections():
+            if section not in self.config:
                 continue
 
-            for key in parser.options(section):
-                curstats[section + "__" + key] = parser.get(section, key)
+            for key in self.config[section]:
+                ret[section + "__" + key] = self.config[section][key]
 
-        return curstats
+        return ret
 
     @property
     def len_minutes(self):
         return int(math.ceil(self.time[-1] / 60.0))
 
-    def get_stats(self, minute=None):
-        if minute is not None:
-            selected = self.valid & (self.time > minute*60) & (self.time < (minute+1)*60)
-        else:
+    def get_stats(self, include_phases=False):
+        ret = {}
+        ret.update(self._get_stats_time_range(minutes='all'))
+        # only include per-phase stats if we have more than one phase
+        if include_phases and self.phase_list is not None and len(self.phase_list) > 1:
+            start_min = 0
+            for phase in self.phase_list:
+                phase_stats = self._get_stats_time_range(
+                                minutes=(start_min, start_min+phase.length)
+                              )
+                ret.update(phase_stats)
+                start_min += phase.length
+        return ret
+
+    def _get_stats_time_range(self, minutes=None):
+        ''' Returns dictionary of statistics for the given time range.
+            Params:
+              minutes:  Tuple of (start_min, end_min) or 'all'.
+                        If provided, analysis proceeds from start_min to
+                        *beginning* of end_min.
+                        If 'all', analysis covers entire dataset.
+        '''
+        if minutes is 'all':
             selected = self.valid
+        else:
+            selected = self.valid & (self.time >= minutes[0]*60) & (self.time < minutes[1]*60)
 
         valid_count = np.sum(selected)
 
@@ -153,7 +180,7 @@ class TrackProcessor(object):
 
         stats = {}
 
-        if minute is None:
+        if minutes is 'all':
             stats["#Datapoints"] = len(self.valid)
             stats["#Valid"] = valid_count
             stats["%Valid datapoints"] = valid_count / float(len(self.valid))
@@ -186,8 +213,11 @@ class TrackProcessor(object):
                 stats["Avg. time per freeze (sec)"] = freeze_time / freeze_count
                 stats["Freeze frequency (per min)"] = 60.0*(freeze_count / time_total)
 
-        if minute is not None:
-            stats = {"%s - minute %04d" % (key, minute): value for key, value in stats.items()}
+        if minutes is not 'all':
+            stats = {
+                "%s - minutes %04d-%04d" % (key, minutes[0], minutes[1]): value
+                for key, value in stats.items()
+            }
 
         return stats
 

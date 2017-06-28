@@ -12,10 +12,10 @@ except ImportError:
 # before the analyze module pulls it in.
 import matplotlib
 matplotlib.use('Agg')
-from analysis import process, plot  # noqa: E402
 
 from bottle import get, post, redirect, request, response, jinja2_template as template  # noqa: E402
 
+from analysis import process, plot  # noqa: E402
 import config  # noqa: E402
 import utils   # noqa: E402
 
@@ -26,6 +26,7 @@ def get_stats():
     do_csv = request.query.csv
     stats = []
     all_keys = set()
+
     for track in tracks:
         curstats = {}
         curstats['Track file'] = track
@@ -36,11 +37,8 @@ def get_stats():
             # often 'wrong number of columns' due to truncated file from killed experiment
             return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % track, exception=traceback.format_exc())
 
-        curstats.update(processor.read_setup(['experiment', 'at_runtime']))
-        curstats.update(processor.get_stats())
-        #for i in range(processor.len_minutes):
-        #    curstats.update(processor.get_stats(minute=i))
-        #    all_keys.update(curstats.keys())
+        curstats.update(processor.get_setup(['experiment', 'phases']))
+        curstats.update(processor.get_stats(include_phases=True))
         all_keys.update(curstats.keys())
         stats.append(curstats)
     for i in range(len(stats)):
