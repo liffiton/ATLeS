@@ -53,7 +53,7 @@ def _set_backgroundcolor(ax, color):
         lh.legendPatch.set_facecolor(color)
 
 
-def _format_axis(ax):
+def format_axis(ax):
     _set_foregroundcolor(ax, '0.5')
     _set_backgroundcolor(ax, '0.08')
     # drop plot borders
@@ -75,15 +75,24 @@ def show():
     plt.close('all')
 
 
-def savefig(outfile):
-    ''' Saves the current figure to the given filename.
-        Format is inferred from the file extension.
-        Large (tall) figures are broken into multiple images (vertical tiles).
-        Create a plot first using a TrackPlotter object. '''
+def savefig(outfile, format=None):
+    ''' Saves the current figure to the given filename or file-like object.
+
+        Format is inferred from the file extension if a name is given,
+        otherwise specify it manually with the format parameter.
+
+        Large (tall) figures are broken into multiple images (vertical tiles)
+        if outfile is a string (filename).
+
+        Create a plot first using a TrackPlotter object or other code that
+        creates a pyplot figure.
+    '''
     fig = plt.gcf()
     _format_figure(fig)
+
     # A bit of an ugly hack to split giant images into multiple parts
-    max_height = 100
+    # Only used if outfile is given as a string (filename)
+    max_height = 100 if isinstance(outfile, str) else float('inf')
     # plot height in inches
     height = fig.get_window_extent().transformed(fig.dpi_scale_trans.inverted()).height
     if height > max_height:
@@ -91,9 +100,10 @@ def savefig(outfile):
         for i in range(numparts):
             filename = re.sub(r"(\.[^\.]+)$", r"%02d\1" % (numparts-i), outfile)
             bbox = matplotlib.transforms.Bbox.from_extents([0,i*max_height,12,min(height,(i+1)*max_height)])
-            plt.savefig(filename, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches=bbox)
+            plt.savefig(filename, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches=bbox, format=format)
     else:
-        plt.savefig(outfile, facecolor=fig.get_facecolor(), edgecolor='none')
+        plt.savefig(outfile, facecolor=fig.get_facecolor(), edgecolor='none', format=format)
+
     plt.close('all')
 
 
@@ -167,7 +177,7 @@ class TrackPlotter(object):
             ncol=4,
         )
         legend_ax.axis('off')
-        _format_axis(legend_ax)
+        format_axis(legend_ax)
 
     def plot_invalidheatmap(self):
         title = "Map of shame (loc of invalid data)"
@@ -176,7 +186,7 @@ class TrackPlotter(object):
         ax = plt.gca()
 
         ax.set_title(title)
-        _format_axis(ax)
+        format_axis(ax)
 
         nbins = 50
 
@@ -208,7 +218,7 @@ class TrackPlotter(object):
             elif plot_type == 'per-phase':
                 start_min = phase_starts[i]
                 end_min = phase_ends[i]
-                title = "Phase {} ({}:00-{}:00)".format(i, start_min, end_min)
+                title = "Phase {} ({}:00-{}:00)".format(i+1, start_min, end_min)
             elif plot_type == 'overall':
                 start_min = 0
                 end_min = 2**30
@@ -220,7 +230,7 @@ class TrackPlotter(object):
                 ax.axes.get_xaxis().set_visible(False)
                 ax.axes.get_yaxis().set_visible(False)
 
-            _format_axis(ax)
+            format_axis(ax)
 
             ax.set_title(title)
 
@@ -253,7 +263,7 @@ class TrackPlotter(object):
         numpts = df.numpts[start:end].values
 
         # Format nicely
-        _format_axis(ax)
+        format_axis(ax)
         ax.axes.get_yaxis().set_visible(False)
 
         # Get set axes (specifically, we don't want the y-axis to be autoscaled for us)

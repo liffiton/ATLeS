@@ -221,18 +221,17 @@ function update_buttons() {
   var count = sel_count();
   var track_rows = $("tr.track_row").filter(":visible");
   var row_count = track_rows.length;
-  $('#statsbutton').prop('disabled', count == 0);
-  $('#statsbutton').toggleClass('btn-primary', count > 0);
-  $('#statscsvbutton').prop('disabled', count == 0);
-  $('#statscsvbutton').toggleClass('btn-primary', count > 0);
-  $('#downloadbutton').prop('disabled', count == 0);
-  $('#downloadbutton').toggleClass('btn-primary', count > 0);
-  $('#replotselbutton').prop('disabled', count == 0);
-  $('#replotselbutton').toggleClass('btn-primary', count > 0);
-  $('#archiveselbutton').prop('disabled', count == 0);
-  $('#archiveselbutton').toggleClass('btn-primary', count > 0);
+  $('.active-if-any').prop('disabled', count == 0);
+  $('.active-if-any').toggleClass('btn-primary', count > 0);
+  $('.active-if-2plus').prop('disabled', count < 2);
+  $('.active-if-2plus').toggleClass('btn-primary', count >= 2);
   $('._selectallbutton').toggleClass('btn-default', count < row_count);
   $('._selectallbutton').toggleClass('btn-primary', count == row_count);
+}
+
+function go_heatmaps() {
+  var sels = Object.keys(selection).sort();
+  window.location = '/heatmaps/?tracks=' + sels.join('|');
 }
 
 function go_stats() {
@@ -266,7 +265,7 @@ function analyze_selection() {
   var go = confirm("This operation will run in the background with no feedback while running or when complete (sorry).");
   if (! go) return;
   var sels = Object.keys(selection).sort();
-  async_post('/analyze_selection/', 'selection=' + sels.join('|'));
+  async_post('/analyze_selection/', 'tracks=' + sels.join('|'));
 }
 
 function archive_selection() {

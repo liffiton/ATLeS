@@ -1,5 +1,7 @@
+import base64
 import csv
 import glob
+import io
 import multiprocessing
 import os
 import traceback
@@ -15,7 +17,7 @@ matplotlib.use('Agg')
 
 from bottle import get, post, redirect, request, response, jinja2_template as template  # noqa: E402
 
-from analysis import process, plot  # noqa: E402
+from analysis import heatmaps, process, plot  # noqa: E402
 import config  # noqa: E402
 import utils   # noqa: E402
 
@@ -121,11 +123,51 @@ def _analyze_selection(trackfiles):
             _do_analyze(trackfile)
         except ValueError as e:
             # often 'wrong number of columns' due to truncated file from killed experiment
-            return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackfile, exception=traceback.format_exc())
+            pass  # nothing to be done here; we're processing in the background
 
 
 @post('/analyze_selection/')
 def post_analyze_selection():
-    trackfiles = request.query.selection.split('|')
-    p = multiprocessing.Process(target=_analyze_selection, args=(trackfiles,))
+    tracks = request.query.tracks.split('|')
+    p = multiprocessing.Process(target=_analyze_selection, args=(tracks,))
     p.start()
+
+
+@get('/heatmaps/')
+def get_heatmaps():
+    tracks = request.query.tracks.split('|')
+    processors = [
+        process.TrackProcessor(track, just_raw_data=True)
+        for track in tracks
+    ]
+    # verify all phases are equivalent
+    # https://stackoverflow.com/a/3844832/7938656
+    plengths = [[phase.length for phase in p.phase_list] for p in processors]
+    if plengths.count(plengths[0]) != len(plengths):
+        return template('error', errormsg="The provided tracks do not all have the same phase lengths.  Please select tracks that share an experimental setup.")
+
+    # Save all images as binary to be included in the page directly
+    # Base64-encoded.  (Saves having to write temporary data to filesystem.)
+    images_data = []
+
+    # use phases from the first track
+    plengths = plengths[0]
+
+    dataframes = [p.df for p in processors]
+    phase_start = 0
+    for i, length in enumerate(plengths):
+        phase_end = phase_start + length
+        x, y = heatmaps.get_timeslice(dataframes, phase_start*60, phase_end*60)
+        title = "Phase {} ({}:00-{}:00)".format(i+1, phase_start, phase_end)
+        ax = heatmaps.make_heatmap(x, y, title)
+        plot.format_axis(ax)
+
+        image_data = io.BytesIO()
+        plot.savefig(image_data, format='png')
+        images_data.append(
+            base64.b64encode(image_data.getvalue()).decode()
+        )
+
+        phase_start = phase_end
+
+    return template('view', imgdatas=images_data)

@@ -2,7 +2,9 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track {{trackrel}}</title>
+    {% if trackrel: %}
+        <title>Track {{trackrel}}</title>
+    {% endif %}
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <style type="text/css">
         body {
@@ -85,7 +87,9 @@
 </head>
 <body>
 <div class="container">
-    <h1>Track <a href="/{{trackfile}}">{{trackrel}}</a></h1>
+    {% if trackrel: %}
+        <h1>Track <a href="/{{trackfile}}">{{trackrel}}</a></h1>
+    {% endif %}
     <div class="text-center">
         {% for img in imgs: %}
             {% if img.endswith('.svg'): %}
@@ -93,6 +97,9 @@
             {% else: %}
                 <a href="/{{img}}"><img style='max-width: 100%;' src="/{{img}}"></a>
             {% endif %}
+        {% endfor %}
+        {% for imgdata in imgdatas: %}
+            <img style='max-width: 100%;' src="data:image/png;base64,{{imgdata}}">
         {% endfor %}
     </div>
 </div>

@@ -33,12 +33,13 @@ def groups_where(vals):
 
 
 class TrackProcessor(object):
-    def __init__(self, trackfile):
+    def __init__(self, trackfile, just_raw_data=False):
         self.trackfile = trackfile
         self.setupfile = trackfile.replace("-track.csv", "-setup.txt")
 
         self._read_trackfile()
-        self._generate_columns()
+        if not just_raw_data:
+            self._generate_columns()
         self._read_setupfile()
 
     def _read_trackfile(self):

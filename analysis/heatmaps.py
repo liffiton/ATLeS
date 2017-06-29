@@ -23,14 +23,14 @@ def get_timeslice(dataframes, start_time, end_time):
     xpoints = []
     ypoints = []
     for df in dataframes:
-        xpoints.extend(df.loc[start_time:end_time]['x'])
-        ypoints.extend(df.loc[start_time:end_time]['y'])
+        xpoints.extend(df.x[start_time:end_time])
+        ypoints.extend(df.y[start_time:end_time])
 
     return xpoints, ypoints
 
 
 def plot_heatmap(ax, xpoints, ypoints, nbins, title=None, maxcount=None):
-    ''' Plot a single heatmap on the given axes for given time range across all given dataframes. '''
+    ''' Plot a heatmap of the given data on on the given axes. '''
     # imshow expects y,x for the image, but x,y for the extents,
     # so we have to manage that here...
     bins = np.concatenate( (np.arange(0,1.0,1.0/nbins), [1.0]) )
@@ -47,6 +47,14 @@ def plot_heatmap(ax, xpoints, ypoints, nbins, title=None, maxcount=None):
     else:
         norm = None
     return ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest', norm=norm)
+
+
+def make_heatmap(x, y, title):
+    ''' Create a new figure w/ heatmap w/ the given data, title. '''
+    plt.figure(figsize=(4,4))
+    ax = plt.gca()
+    plot_heatmap(ax, x, y, nbins=50, title=title)
+    return ax
 
 
 def make_animation(datasets):
