@@ -111,9 +111,9 @@ class TrackProcessor(object):
 
     @property
     def len_minutes(self):
-        # -0.1 so the *one* sample in the new minute (e.g. time=3600.0456)
-        # still just counts as 60 minutes
-        return int(math.ceil((self.df.index.max()-0.1) / 60.0))
+        # Take second-to-last index so if just *one* sample in the new minute
+        # (e.g. time=3600.0456), it still just counts as 60 minutes
+        return int(math.ceil(self.df.index[-2] / 60.0))
 
     def get_stats(self, include_phases=False):
         ret = {}
