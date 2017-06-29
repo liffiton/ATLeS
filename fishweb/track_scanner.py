@@ -86,10 +86,10 @@ def _get_setup_info(setupfile):
     parser = configparser.ConfigParser()
     try:
         parser.read(setupfile)
-        trigger = parser.get('experiment', 'trigger')
-        controller = parser.get('experiment', 'controller')
-        stimulus = parser.get('experiment', 'stimulus')
-        phase_data_str = parser.get('phases', 'phases_data')
+        trigger = parser.get('experiment', 'trigger', fallback=None)
+        controller = parser.get('experiment', 'controller', fallback=None)
+        stimulus = parser.get('experiment', 'stimulus', fallback=None)
+        phase_data_str = parser.get('phases', 'phases_data', fallback=None)
         return trigger, controller, stimulus, phase_data_str
     except configparser.NoSectionError as e:
         print("configparser error: {}\nFile: {}".format(e, setupfile))

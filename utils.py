@@ -13,6 +13,8 @@ import plumbum
 
 # define a named tuple for storing Phase data
 Phase = namedtuple('Phase', ['phasenum', 'length', 'dostim', 'background'])
+# Give the named tuple default values [https://stackoverflow.com/a/18348004/7938656]
+Phase.__new__.__defaults__ = (None,) * len(Phase._fields)
 
 
 # http://stackoverflow.com/a/166589
