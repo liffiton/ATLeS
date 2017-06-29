@@ -8,7 +8,8 @@ from utils import Phase  # noqa
 
 _entry_wait = 2  # min seconds between counted entries to top
 _freeze_min_time = 2  # min seconds to count lack of motion as a "freeze"
-_freeze_max_speed = 0.1  # maximum speed to still consider a "freeze"
+_freeze_max_speed = 0.05  # maximum speed to still consider a "freeze"
+_freeze_window_size = 20  # number of samples for which the speed can't go above the max
 
 
 def groups_where(vals):
@@ -77,8 +78,7 @@ class TrackProcessor(object):
         # need *both* as many columns are diffs relying on previous value
         df['valid'] = ~df.lost & ~df.missing & ~np.roll(df.lost, 1) & ~np.roll(df.missing, 1)
 
-        # TODO: base frozen off of some rolling average speed?
-        df['frozen'] = df.speed < _freeze_max_speed
+        df['frozen'] = df.valid & (df.speed.rolling(window=_freeze_window_size, center=True).max() < _freeze_max_speed)
 
     def _read_setupfile(self):
         self.config = ConfigParser()
