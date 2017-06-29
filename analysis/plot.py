@@ -4,7 +4,7 @@ import re
 
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib import collections, gridspec, lines, patches
+from matplotlib import collections, lines, patches
 
 from analysis import heatmaps
 
@@ -134,27 +134,14 @@ class TrackPlotter(object):
     def plot_trace(self):
         # one minute per subplot
         numplots = self._track.len_minutes
-        fig = plt.figure(figsize=(12,1+2*numplots))
-
-        gs = gridspec.GridSpec(
-            numplots+1,  # +1 row for legend
-            1,           # 1 column
-            height_ratios=[0.5] + ([1] * numplots),   # 0.5 for 'legend subplot'
-            width_ratios=[1],  # all same width
-        )
-
-        for i in range(numplots):
-            # all plots but last span both columns,
-            # last plot only in the first column, to get the correct width
-            if i == numplots - 1:
-                ax = plt.subplot(gs[i+1,0])
-            else:
-                ax = plt.subplot(gs[i+1,:])
-
-            self._plot_trace_portion(ax, start_min=i, end_min=i+1)
+        fig = plt.figure(figsize=(12,2*(numplots+1)))
 
         # Draw the legend at the top
-        self.draw_legend(plt.subplot(gs[0,:]))
+        self.draw_legend(plt.subplot(numplots+1, 1, 1))
+
+        for i in range(numplots):
+            ax = plt.subplot(numplots+1, 1, i+2)
+            self._plot_trace_portion(ax, start_min=i, end_min=i+1)
 
         return fig
 
@@ -324,10 +311,10 @@ class TrackPlotter(object):
         for dbgframe in self._dbgframes:
             nameparts = os.path.basename(dbgframe).split('_')
             frameindex = max(0, int(nameparts[1]) - start_frame)  # restrict to index 0 at minimum
-            if start <= frameindex < end:
-                frametime = self._track.df.index[frameindex]
-                marker = matplotlib.patches.RegularPolygon(  # numVertices=3 -> triangle
-                    (frametime, -1.08), numVertices=3, radius=0.08,
+            frametime = self._track.df.index[frameindex]
+            if start <= frametime < end:
+                marker = matplotlib.patches.Circle(
+                    (frametime, -1.1), radius=0.08,
                     color='#337AB7',
                     clip_on=False,
                     url='/' + dbgframe
