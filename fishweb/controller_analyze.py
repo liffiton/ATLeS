@@ -129,27 +129,3 @@ def post_analyze_selection():
     trackfiles = request.query.selection.split('|')
     p = multiprocessing.Process(target=_analyze_selection, args=(trackfiles,))
     p.start()
-
-
-@post('/compare/')
-def post_compare():
-    track1 = request.query.p1
-    track2 = request.query.p2
-    processor1 = process.TrackProcessor(track1)
-    processor2 = process.TrackProcessor(track2)
-    plotter1 = plot.TrackPlotter(processor1)
-    plotter2 = plot.TrackPlotter(processor2)
-    plotter1.plot_leftright()
-    plotter2.plot_leftright(addplot=True)
-    # XXX: Note that this ignores directory names...
-    # *May* inadvertently overwrite an existing plot if, e.g.,
-    # We have box1/test-track.csv and box2/test-track.csv,
-    # and both are just seen as "test-track.csv" here...
-    name1 = os.path.basename(track1)
-    name2 = os.path.basename(track2)
-    # XXX: bit of a hack doing pyplot stuff outside of Grapher...
-    matplotlib.pyplot.legend([name1 + " Left", name2 + " Left", name1 + " Right", name2 + " Right"], fontsize=8, loc=2)
-
-    imgname = config.PLOTDIR + "%s_%s_leftrights.png" % (name1, name2)
-    plot.savefig(imgname)
-    redirect("/" + imgname)

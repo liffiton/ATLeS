@@ -221,8 +221,6 @@ function update_buttons() {
   var count = sel_count();
   var track_rows = $("tr.track_row").filter(":visible");
   var row_count = track_rows.length;
-  $('#comparebutton').prop('disabled', count != 2);
-  $('#comparebutton').toggleClass('btn-primary', count == 2);
   $('#statsbutton').prop('disabled', count == 0);
   $('#statsbutton').toggleClass('btn-primary', count > 0);
   $('#statscsvbutton').prop('disabled', count == 0);
@@ -235,11 +233,6 @@ function update_buttons() {
   $('#archiveselbutton').toggleClass('btn-primary', count > 0);
   $('._selectallbutton').toggleClass('btn-default', count < row_count);
   $('._selectallbutton').toggleClass('btn-primary', count == row_count);
-}
-
-function do_compare() {
-  var sels = Object.keys(selection).sort();
-  do_post('/compare/', 'p1=' + sels[0] + '&p2=' + sels[1]);
 }
 
 function go_stats() {
