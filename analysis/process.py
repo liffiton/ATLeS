@@ -2,6 +2,7 @@ import itertools
 import math
 from configparser import ConfigParser
 import numpy as np
+import pandas
 
 from utils import Phase  # noqa
 
@@ -37,67 +38,46 @@ class TrackProcessor(object):
         self.setupfile = trackfile.replace("-track.csv", "-setup.txt")
 
         self._read_trackfile()
+        self._generate_columns()
         self._read_setupfile()
 
     def _read_trackfile(self):
-        def xy_to_float(s):
-            if s != b'.':
-                return float(s)
-            else:
-                return -1
+        colnames = ['time', 'status', 'x', 'y', 'numpts', '_1', '_2']
+        self.df = pandas.read_csv(self.trackfile, header=None, names=colnames, index_col=0)
 
-        time, status, x, y, numpts = np.loadtxt(
-            self.trackfile,
-            delimiter=',',
-            unpack=True,
-            dtype={'names': ('time','status','x','y','numpts'), 'formats': ('f','S16','f','f','d')},
-            converters={2: xy_to_float, 3: xy_to_float}
-        )
+    def _generate_columns(self):
+        ''' Calculate several auxiliary columns from the raw data
+            read from CSV by _read_trackfile().
+        '''
+        # shorthand
+        df = self.df
 
         # calculate derivatives and other derived values
-        #dx = np.gradient(x)
-        #dy = np.gradient(y)
-        #dt = np.gradient(time)
-        dx = np.concatenate( ([0], np.diff(x)) )
-        dy = np.concatenate( ([0], np.diff(y)) )
-        dt = np.concatenate( ([0], np.diff(time)) )
+        df['dx'] = df.x.diff()
+        df['dy'] = df.y.diff()
+        df['dt'] = df.index.to_series().diff()
 
-        if np.min(dt) < 0:
+        if df.dt.min() < 0:
+            time_travel_indices = np.where(df.dt < 0)[0]
             print("\n[31mWARNING:[m Time travel detected!\n[31mNegative time deltas in following indices:[m " +
-                  " ".join(str(x) for x in np.where(dt < 0)) +
+                  " ".join(str(x) for x in time_travel_indices) +
                   "\n"
                   )
 
-        movement = np.matrix([dx,dy])
-        try:
-            self.dist = np.linalg.norm(movement, axis=0)
-        except TypeError:
-            # older version of numpy w/o axis argument
-            self.dist = np.array(map(np.linalg.norm, np.transpose(movement)))
-        self.speed = np.concatenate( ([0], self.dist[1:] / dt[1:]) )  # ignore invalid 0 entry in dt
-        self.theta = np.arctan2(dy, dx)  # reversed params are correct for numpy.arctan2
-        #self.dtheta = np.gradient(theta)
-        #self.angular_velocity = dtheta / dt
+        df['dist'] = np.linalg.norm(df[['dx','dy']], axis=1)
+        df['speed'] = df.dist / df.dt
+        df['theta'] = np.arctan2(df.dy, df.dx)  # reversed params are correct for numpy.arctan2
 
         # produce boolean arrays
-        self.valid = (status != b'lost') & (status != b'init') & (np.roll(status, 1) != b'lost') & (np.roll(status, 1) != b'init')  # valid if this index *and* previous are both not 'lost' or 'init'
-        self.lost = (status == b'lost') | (status == b'init')
-        self.missing = (status == b'missing')
-        self.in_top = (y > 0.5)
-        self.in_bottom = (y <= 0.5)
-        self.in_left25 = (x < 0.25)
-        self.in_right25 = (x > 0.75)
-        self.frozen = (self.speed < _freeze_max_speed)
+        df['lost'] = (df.status == 'lost') | (df.status == 'init')
+        df['missing'] = (df.status == 'missing')
+        df['sketchy'] = (df.numpts > 1)
+        # valid if this index *and* previous are both not 'lost' or 'missing'
+        # need *both* as many columns are diffs relying on previous value
+        df['valid'] = ~df.lost & ~df.missing & ~np.roll(df.lost, 1) & ~np.roll(df.missing, 1)
 
-        # setup internal data
-        self.len = len(time)
-        self.time = time
-        self.dt = dt
-        self.x = x
-        self.dx = dx
-        self.y = y
-        self.dy = dy
-        self.numpts = numpts
+        # TODO: base frozen off of some rolling average speed?
+        df['frozen'] = df.speed < _freeze_max_speed
 
     def _read_setupfile(self):
         self.config = ConfigParser()
@@ -130,7 +110,9 @@ class TrackProcessor(object):
 
     @property
     def len_minutes(self):
-        return int(math.ceil(self.time[-1] / 60.0))
+        # -0.1 so the *one* sample in the new minute (e.g. time=3600.0456)
+        # still just counts as 60 minutes
+        return int(math.ceil((self.df.index.max()-0.1) / 60.0))
 
     def get_stats(self, include_phases=False):
         ret = {}
@@ -154,66 +136,39 @@ class TrackProcessor(object):
                         *beginning* of end_min.
                         If 'all', analysis covers entire dataset.
         '''
+        # shorthand
+        df = self.df
+
         if minutes is 'all':
-            selected = self.valid
+            selected = df.valid
         else:
-            selected = self.valid & (self.time >= minutes[0]*60) & (self.time < minutes[1]*60)
+            selected = df.valid & (df.index >= minutes[0]*60) & (df.index < minutes[1]*60)
 
-        valid_count = np.sum(selected)
+        valid_count = df.valid.sum()
 
-        dist_total = np.sum(self.dist[selected])
-        time_total = np.sum(self.dt[selected])
+        dist_total = df.dist[selected].sum()
+        time_total = df.dt[selected].sum()
 
-        frozen_starts, frozen_lens = groups_where(self.frozen & selected)
+        frozen_starts, frozen_lens = groups_where(df.frozen & selected)
         freeze_count, freeze_time, _ = self._sum_runs(frozen_starts, frozen_lens, min_runlength=_freeze_min_time)
-
-        left25_starts, left25_lens = groups_where(self.in_left25 & selected)
-        left25_count, left25_time, left25_dist = self._sum_runs(left25_starts, left25_lens)
-
-        right25_starts, right25_lens = groups_where(self.in_right25 & selected)
-        right25_count, right25_time, right25_dist = self._sum_runs(right25_starts, right25_lens)
-
-        top_starts, top_lens = groups_where(self.in_top & selected)
-        top_count, top_time, top_dist = self._sum_runs(top_starts, top_lens)
-
-        bottom_starts, bottom_lens = groups_where(self.in_bottom & selected)
-        bottom_count, bottom_time, bottom_dist = self._sum_runs(bottom_starts, bottom_lens)
-
-        # TODO:  cur_turn_time = 0
-        # count erratic movements
-        # "Erratic movement" = a string of at least _erratic_count 'turns' in less than _erratic_time seconds
-        # "Turn" = abs(angular_velocity) > _turn_vel for at least _turn_time seconds
-        # TODO
 
         stats = {}
 
         if minutes is 'all':
-            stats["#Datapoints"] = len(self.valid)
+            stats["#Datapoints"] = len(df)
             stats["#Valid"] = valid_count
-            stats["%Valid datapoints"] = valid_count / float(len(self.valid))
-            stats["Total time (sec)"] = self.time[-1]
+            stats["%Valid datapoints"] = valid_count / float(len(df))
+            stats["Total time (sec)"] = df.index.max()
             stats["Valid time (sec)"] = time_total
 
         if selected.any():  # no stats if no data, and avoids "nan" results, as well
             stats["Total distance traveled (?)"] = dist_total
-            stats["Avg. x coordinate"] = np.mean(self.x[selected])
-            stats["Avg. y coordinate"] = np.mean(self.y[selected])
+            # TODO: weight averages by dt of each frame?
+            stats["Avg. x coordinate"] = df.x[selected].mean()
+            stats["Avg. y coordinate"] = df.y[selected].mean()
             stats["Avg. speed (?/sec)"] = dist_total / time_total
-            stats["Avg. x speed (?/sec)"] = np.sum(np.abs(self.dx[selected])) / time_total
-            stats["Avg. y speed (?/sec)"] = np.sum(np.abs(self.dy[selected])) / time_total
-            stats["#Entries to top"] = top_count
-            stats["Time in top (sec)"] = top_time
-            stats["Time in bottom (sec)"] = bottom_time
-            stats["Distance in top (?)"] = top_dist
-            stats["Distance in bottom (?)"] = bottom_dist
-            if top_count:
-                stats["Time of first top entry (sec)"] = self.time[top_starts[0]]
-                stats["Avg. time per entry (sec)"] = top_time / top_count
-                stats["Avg. distance per entry (?)"] = top_dist / top_count
-            if bottom_time:
-                stats["Top/bottom time ratio"] = top_time/bottom_time
-            if bottom_dist:
-                stats["Top/bottom distance ratio"] = top_dist/bottom_dist
+            stats["Avg. x speed (?/sec)"] = df.dx[selected].abs().sum() / time_total
+            stats["Avg. y speed (?/sec)"] = df.dy[selected].abs().sum() / time_total
             stats["#Freezes"] = freeze_count
             if freeze_count:
                 stats["Total time frozen (sec)"] = freeze_time
@@ -229,9 +184,11 @@ class TrackProcessor(object):
         return stats
 
     def _sum_runs(self, starts, lens, min_runlength=None, min_wait=None):
-        times = self.time[starts+lens] - self.time[starts]
-        cumdist = np.cumsum(self.dist)
-        dists = cumdist[starts+lens] - cumdist[starts]
+        df = self.df
+
+        times = (df.index[starts+lens] - df.index[starts]).to_series()
+        cumdist_vals = df.dist.cumsum().values
+        dists = cumdist_vals[starts+lens] - cumdist_vals[starts]
         if min_runlength is not None:
             which = times > min_runlength
         elif min_wait is not None:
