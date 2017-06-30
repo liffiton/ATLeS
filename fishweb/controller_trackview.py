@@ -141,7 +141,7 @@ def _get_filters(rows):
         if all(len(str(x)) > 100 for x in values):
             continue
         # looks good: include it
-        filters[key] = values
+        filters[key] = sorted(values)
 
     return filters
 
