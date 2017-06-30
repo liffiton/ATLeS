@@ -131,16 +131,16 @@ $(function() {
       <div class="well">
         <p>
         With selection:
-        <button type="button" class="btn btn-primary active-if-2plus" disabled="true" id="heatmapsbutton" onclick="go_heatmaps();">
+        <button type="button" class="btn btn-primary active-if-2plus" disabled="true" id="heatmapsbutton" onclick="tracksel_go('/heatmaps/');">
           Generate aggregate heatmaps
         </button>
-        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="statsbutton" onclick="go_stats();">
+        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="statsbutton" onclick="tracksel_go('/stats/');">
           View Statistics
         </button>
-        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="statscsvbutton" onclick="go_stats_csv();">
+        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="statscsvbutton" onclick="tracksel_go('/stats/', 'csv=true');">
           Download Statistics [.csv]
         </button>
-        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="downloadbutton" onclick="do_download();">
+        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="downloadbutton" onclick="tracksel_go('/download/');">
           Download Raw Data [.zip]
         </button>
         <button type="button" class="btn btn-primary active-if-any" disabled="true" title="Re-plot" id="replotselbutton" onclick="analyze_selection();">

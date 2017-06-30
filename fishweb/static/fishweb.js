@@ -229,24 +229,13 @@ function update_buttons() {
   $('._selectallbutton').toggleClass('btn-primary', count == row_count);
 }
 
-function go_heatmaps() {
+function tracksel_go(baseurl, addl_query) {
   var sels = Object.keys(selection).sort();
-  window.location = '/heatmaps/?tracks=' + sels.join('|');
-}
-
-function go_stats() {
-  var sels = Object.keys(selection).sort();
-  window.location = '/stats/?tracks=' + sels.join('|');
-}
-
-function go_stats_csv() {
-  var sels = Object.keys(selection).sort();
-  window.location = '/stats/?csv=true&tracks=' + sels.join('|');
-}
-
-function do_download() {
-  var sels = Object.keys(selection).sort();
-  do_post('/download/', 'tracks=' + sels.join('|'));
+  var query = 'tracks=' + sels.join('|');
+  if (addl_query) {
+    query = addl_query + '&' + query;
+  }
+  window.location = baseurl + "?" + query;
 }
 
 function do_archive(path, index) {
