@@ -1,6 +1,8 @@
 import collections
+import datetime
 import fnmatch
 import glob
+import numbers
 import os
 import re
 import tempfile
@@ -108,17 +110,9 @@ def _get_all_track_data(db):
     track_data = []
 
     for row in rows:
+        asml = [str(x) for x in (row[key] for key in ('acquired', 'sketchy', 'missing', 'lost'))]
         track_data.append(
-            (row['trackpath'],
-             row['trackrel'],
-             row['lines'],
-             [str(row[key]) for key in ('acquired', 'sketchy', 'missing', 'lost')],
-             row['heat'],
-             row['invalid_heat'],
-             _imgs(row['trackrel']),
-             _dbgframes(row['trackrel']),
-             _setupfile(row['trackpath'])
-             )
+            (row, asml, _imgs(row['trackrel']), _dbgframes(row['trackrel']), _setupfile(row['trackpath']))
         )
 
     return track_data
@@ -128,6 +122,56 @@ def _get_all_track_data(db):
 def tracks(db):
     track_data = _get_all_track_data(db)
     return template('tracks', tracks=track_data)
+
+
+def _get_filters(rows):
+    filters = {}
+    for key in rows[0].keys():
+        values = sorted(list(set(row[key] for row in rows)))
+        # values that are all unique or all same don't make good filters
+        if len(values) == len(rows) or len(values) == 1:
+            continue
+        # values that are all numeric are likely not useful either
+        if all(isinstance(x, numbers.Number) for x in values):
+            continue
+        # values that are all datetimes are likely not useful either
+        if all(isinstance(x, datetime.datetime) for x in values):
+            continue
+        # super long strings are likely not useful either
+        if all(len(str(x)) > 100 for x in values):
+            continue
+        # looks good: include it
+        filters[key] = values
+
+    return filters
+
+
+@route('/tracks/filter/')
+def tracks_filter(db):
+    track_data = _get_all_track_data(db)
+
+    query_tracks = request.query.get('tracks')
+    if query_tracks is not None:
+        tracks_set = set(query_tracks.split('|'))
+        track_data = [t for t in track_data if t[0]['trackpath'] in tracks_set]
+
+    # hack filtering for now (better: use DB)
+    selected = {}
+    for filt in request.query.keys():
+        if filt == 'tracks':
+            continue
+        val = request.query.get(filt)
+        track_data = [t for t in track_data if t[0][filt] == val]
+        # figure out query string without this selection (for backing out in web interface)
+        querystring_without = '&'.join(s for s in request.query_string.split('&') if not s.startswith(filt))
+        # store for showing in page
+        selected[filt] = { 'val': val, 'querystring_without': querystring_without }
+
+    # possible filter params/values for selected rows
+    rows = [t[0] for t in track_data]
+    filters = _get_filters(rows)
+
+    return template('tracks', tracks=track_data, filters=filters, selected=selected, query_string=request.query_string)
 
 
 @route('/view/<trackfile:path>')
