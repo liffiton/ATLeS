@@ -38,29 +38,53 @@ $(function() {
   <div class="row">
     <div class="col-sm-12">
       <div class="panel panel-default">
-        <div class="panel-heading">
+        <div class="panel-heading form-inline">
+          <a class="close" href="/tracks/">&times;</a>
           <h2 class="panel-title">
             Filters
-            <a class="close" href="/tracks/">&times;</a>
           </h2>
+          <div class="row">
+          <div class="col-sm-12">
+            {% for param in selected|sort: %}
+            <span class="form-control">
+              <strong>{{param}}:</strong>
+              {{selected[param]['val']}}
+              &nbsp;
+              <a role="button" class="close" href="?{{selected[param]['querystring_without']}}">
+                &times;
+              </a>
+            </span>
+            {% endfor %}
+          </div>
+          </div>
         </div>
         <div class="panel-body form-horizontal">
-          {% for param in selected|sort: %}
+          {% for param, values, stats in filters: %}
           <div class="form-group">
-            <label class="control-label col-sm-1">{{param}}</label>
-            <div class="col-sm-11"><p class="form-control-static">
-              {{selected[param]['val']}}
-              <a class="text-danger" href="?{{selected[param]['querystring_without']}}"><strong>&times;</strong></a>
-            </p></div>
-          </div>
-          {% endfor %}
-          {% for param in filters|sort: %}
-          <div class="form-group">
-            <label class="control-label col-sm-1" for='bob'>{{param}}</label>
-            <div class="col-sm-11">
-              {% for val in filters[param]: %}
-              <a class="btn btn-default" role="button" href="?{{ query_string + "&" + param + "=" + val|string}}">{{ val }}</a>
+            <label class="control-label col-sm-2">{{param}}</label>
+            <div class="col-sm-10">
+              {% if values == "numeric": %}
+              <form class="form-inline">
+                {% for entry in query: %}
+                <input type="hidden" name="{{entry}}" value="{{query[entry]}}">
+                {% endfor %}
+                <input name="{{param}} (min)" size=1 placeholder="min" class="form-control input-sm">
+                <input name="{{param}} (max)" size=1 placeholder="max" class="form-control input-sm">
+                <button type="submit" class="btn btn-primary btn-xs">Set</button>
+                &nbsp;&nbsp;&nbsp;
+                <small class="text-muted">
+                  min: {{stats[0]}}
+                  &nbsp;
+                  median: {{stats[1]}}
+                  &nbsp;
+                  max: {{stats[2]}}
+                </small>
+              </form>
+              {% else: %}
+              {% for val in values: %}
+              <a class="btn btn-default btn-sm" role="button" href="?{{ query_string + "&" + param + "=" + val|string}}">{{ val }}</a>
               {% endfor %}
+              {% endif %}
             </div>
           </div>
           {% endfor %}
@@ -87,7 +111,7 @@ $(function() {
               </button>
             </th>
             <th>Track file <input type="search" placeholder="filter rows" id="rowfilter"><span id="filterclear">x</span></th>
-            <th class="number_cell">Points</th>
+            <th class="number_cell">Lines</th>
             <th class="chart_cell"><acronym title="Acquired/Sketchy/Missing/Lost">A/S/M/L</acronym></th>
             <th class="chart_cell">Position</th>
             <th class="chart_cell">Invalid</th>

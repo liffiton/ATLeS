@@ -5,6 +5,7 @@ import glob
 import numbers
 import os
 import re
+import statistics
 import tempfile
 import zipfile
 
@@ -124,15 +125,30 @@ def tracks(db):
     return template('tracks', tracks=track_data)
 
 
-def _get_filters(rows):
-    filters = {}
-    for key in rows[0].keys():
-        values = sorted(list(set(row[key] for row in rows)))
+def _get_filters(rows, selected):
+    ''' Return a list of potential filter tuples:
+          (param name, list of values, stats)
+        for the given data in rows.
+
+        If values are all numeric, no list is given (signalled
+        to template with string "numeric") and stats is filled
+        in with statistics of the values to present to user.
+
+        Tries to generate a filter for every column in rows.
+        Excludes any already in selected.
+        Excludes others based on suitability (see code).
+    '''
+    filters = []
+    for name in rows[0].keys():
+        # exclude any already selected
+        if name in selected \
+                or name + " (min)" in selected \
+                or name + " (max)" in selected:
+            continue
+
+        values = sorted(list(set(row[name] for row in rows)))
         # values that are all unique or all same don't make good filters
         if len(values) == len(rows) or len(values) == 1:
-            continue
-        # values that are all numeric are likely not useful either
-        if all(isinstance(x, numbers.Number) for x in values):
             continue
         # values that are all datetimes are likely not useful either
         if all(isinstance(x, datetime.datetime) for x in values):
@@ -140,10 +156,36 @@ def _get_filters(rows):
         # super long strings are likely not useful either
         if all(len(str(x)) > 100 for x in values):
             continue
+
         # looks good: include it
-        filters[key] = sorted(values)
+        if all(isinstance(x, numbers.Number) for x in values):
+            # values that are all numeric will ask for min/max separately
+            # signal with values="numeric"
+            # get/include stats from values
+            stats = (
+                min(values),
+                round(statistics.median(values), 3),
+                max(values),
+            )
+            filt = (name, "numeric", stats)
+        else:
+            filt = (name, values, None)
+        filters.append(filt)
 
     return filters
+
+
+def _select_track_data(track_data, filt, val):
+    if filt.endswith(" (min)"):
+        filt = filt.replace(" (min)", "")
+        val = float(val)
+        return [t for t in track_data if t[0][filt] >= val]
+    elif filt.endswith(" (max)"):
+        filt = filt.replace(" (max)", "")
+        val = float(val)
+        return [t for t in track_data if t[0][filt] <= val]
+    else:
+        return [t for t in track_data if t[0][filt] == val]
 
 
 @route('/tracks/filter/')
@@ -160,18 +202,23 @@ def tracks_filter(db):
     for filt in request.query.keys():
         if filt == 'tracks':
             continue
+
         val = request.query.get(filt)
-        track_data = [t for t in track_data if t[0][filt] == val]
+        if val == '':
+            # unspecified min/max numeric values, e.g.
+            continue
+
+        track_data = _select_track_data(track_data, filt, val)
         # figure out query string without this selection (for backing out in web interface)
-        querystring_without = '&'.join(s for s in request.query_string.split('&') if not s.startswith(filt))
+        querystring_without = '&'.join("{}={}".format(key, val) for key, val in request.query.items() if key != filt)
         # store for showing in page
         selected[filt] = { 'val': val, 'querystring_without': querystring_without }
 
     # possible filter params/values for selected rows
     rows = [t[0] for t in track_data]
-    filters = _get_filters(rows)
+    filters = _get_filters(rows, selected) if rows else []
 
-    return template('tracks', tracks=track_data, filters=filters, selected=selected, query_string=request.query_string)
+    return template('tracks', tracks=track_data, filters=filters, selected=selected, query_string=request.query_string, query=request.query)
 
 
 @route('/view/<trackfile:path>')
