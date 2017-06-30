@@ -41,22 +41,23 @@ $(function() {
         <div class="panel-heading form-inline">
           <a class="close" href="/tracks/">&times;</a>
           <h2 class="panel-title">
-            Filters
+            <strong>Filters:</strong>
+            &nbsp;
+            <span class="badge">{{tracks|length}}</span> matches
           </h2>
-          <div class="row">
-          <div class="col-sm-12">
-            {% for param in selected|sort: %}
-            <span class="form-control">
-              <strong>{{param}}:</strong>
-              {{selected[param]['val']}}
-              &nbsp;
-              <a role="button" class="close" href="?{{selected[param]['querystring_without']}}">
-                &times;
-              </a>
-            </span>
-            {% endfor %}
-          </div>
-          </div>
+          {% if selected: %}
+          <br>
+          {% endif %}
+          {% for param in selected|sort: %}
+          <span class="form-control">
+            <strong>{{param}}:</strong>
+            {{selected[param]['val']}}
+            &nbsp;
+            <a role="button" class="close" href="?{{selected[param]['querystring_without']}}">
+              &times;
+            </a>
+          </span>
+          {% endfor %}
         </div>
         <div class="panel-body form-horizontal">
           {% for param, values, stats in filters: %}
@@ -81,8 +82,11 @@ $(function() {
                 </small>
               </form>
               {% else: %}
-              {% for val in values: %}
-              <a class="btn btn-default btn-sm" role="button" href="?{{ query_string + "&" + param + "=" + val|string}}">{{ val }}</a>
+              {% for val, count in values: %}
+              <a class="btn btn-default btn-sm" role="button" href="?{{ query_string + "&" + param + "=" + val|string}}">
+                {{val}}
+                <span class="badge badge-info">{{count}}</span>
+              </a>
               {% endfor %}
               {% endif %}
             </div>

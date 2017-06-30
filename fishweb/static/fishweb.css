@@ -104,6 +104,17 @@ canvas.heatmap {
   padding-right: 0.3em;
 }
 
+.badge-info {
+  /* reproducing alert-info in a badge that really doesn't want to be colored */
+  color: #31708f !important;
+  background-color: #d9edf7 !important;
+  border-color: #bce8f1 !important;
+  /* and tweaking the typography */
+  font-weight: normal;
+  /* and spacing a bit */
+  margin-left: 0.4em;
+}
+
 /* for new.tpl */
 div#inidisplay {
   display: none;

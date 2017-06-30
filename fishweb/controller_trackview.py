@@ -126,13 +126,13 @@ def tracks(db):
 
 
 def _get_filters(rows, selected):
-    ''' Return a list of potential filter tuples:
-          (param name, list of values, stats)
-        for the given data in rows.
+    ''' Return a list of potential filter tuples for the given data in rows.
+         tuple: (param name, list of values, stats)
+         "value": (value, count of rows with that value)
 
-        If values are all numeric, no list is given (signalled
-        to template with string "numeric") and stats is filled
-        in with statistics of the values to present to user.
+        If values are all numeric, no list is given (signalled to template with
+        string "numeric") and stats is filled in with statistics of the values
+        to present to user.
 
         Tries to generate a filter for every column in rows.
         Excludes any already in selected.
@@ -169,7 +169,11 @@ def _get_filters(rows, selected):
             )
             filt = (name, "numeric", stats)
         else:
-            filt = (name, values, None)
+            counts = [
+                sum(1 for row in rows if row[name] == val)
+                for val in values
+            ]
+            filt = (name, zip(values, counts), None)
         filters.append(filt)
 
     return filters
