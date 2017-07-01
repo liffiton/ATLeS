@@ -45,7 +45,17 @@ class TrackProcessor(object):
 
     def _read_trackfile(self):
         colnames = ['time', 'status', 'x', 'y', 'numpts', '_1', '_2']
-        self.df = pandas.read_csv(self.trackfile, header=None, names=colnames, index_col=0)
+        # for handling data w/ '.' in place of unknown initial locations
+        def xy_to_float(s):
+            if s == '.':
+                return -1
+            else:
+                return float(s)
+
+        self.df = pandas.read_csv(
+            self.trackfile, header=None, names=colnames, index_col=0,
+            converters={2: xy_to_float, 3: xy_to_float}
+        )
 
     def _generate_columns(self):
         ''' Calculate several auxiliary columns from the raw data
@@ -87,8 +97,17 @@ class TrackProcessor(object):
         if 'phases' in self.config and 'phases_data' in self.config['phases']:
             phases_data_str = self.config['phases']['phases_data']
             self.phase_list = eval(phases_data_str)  # uses Phase namedtuple imported from utils
+        elif 'experiment_args' in self.config:
+            # older setup file; look for experiment_args section and build a Phase from that
+            onephase = Phase(
+                phasenum=1,
+                length=int(self.config['experiment_args']['time']),
+                dostim=(self.config['at_runtime']['dostim'] == 'True'),
+                background=None
+            )
+            self.phase_list = [onephase]
         else:
-            self.phase_list = None
+            self.phase_list = []  # no clue...
 
     def num_phases(self):
         return len(self.phase_list)
