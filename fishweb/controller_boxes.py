@@ -197,7 +197,9 @@ def get_image(tgtbox, boxes_rpc, width=648):
             imgdata = box.get_image()
             if imgdata is None:
                 return
-            yield "--fishboxframe\nContent-Type: image/jpeg\n\n%s\n" % imgdata
+            if len(imgdata) < 16:
+                continue  # ignore dud frames
+            yield b"\n".join([b"--fishboxframe", b"Content-Type: image/jpeg", b"", imgdata, b""])
     finally:
         box.stop_img_stream()
 
