@@ -288,7 +288,7 @@ class Experiment(object):
             self._write_data(data)
 
         if self._args.debug_frames:
-            if status in {'lost', 'missing', 'init'} and self._prev_status == 'acquired':
+            if status != 'acquired' and self._prev_status == 'acquired':
                 # save a frame whenever we first lose tracking (transition from acquired to not)
                 self._save_debug_frame(frame, subframe, frame_num, status)
             if frame_num % self._args.debug_frames == 0:
@@ -304,6 +304,8 @@ class Experiment(object):
                 self._stim.show(response)
         else:
             self._stim.show(0)  # 0 = no stimulus
+
+        self._prev_status = status
 
     def _get_phase_data(self, runningtime):
         t_sum = 0
