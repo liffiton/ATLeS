@@ -41,7 +41,7 @@ angular.module('BoxesApp', ['ngResource'])
 
     var width = Math.min(100, 100 * elapsed / runtime);
    
-    return width + "%"; 
+    return width;
   };
 })
 .filter('remaining', function() {

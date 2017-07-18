@@ -38,7 +38,7 @@
             </button>
             <strong>Experiment running</strong><br>since {{box.lock_data | since}}.
             <div class="progress" style="width: 100%;">
-              <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{box.lock_data | barwidth}};">
+              <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="{{box.lock_data | barwidth}}" aria-valuemin="0" aria-valuemax="100" ng-style="{width: ((box.lock_data | barwidth) + '%') }">
                 <span class="pull-right" id="rem_in">{{box.lock_data | remaining:'in'}}</span>
               </div>
               <span class="pull-right" id="rem_out">{{box.lock_data | remaining:'out'}}</span>

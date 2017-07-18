@@ -100,6 +100,11 @@ canvas.heatmap {
 .alert .progress {
   margin-bottom: 0;
 }
+/* stop Bootstrap from animating progress bars (reanimates from left on each data reload) */
+.progress-bar {
+  -webkit-transition: none !important;
+  transition: none !important;
+}
 #rem_in, #rem_out {
   padding-right: 0.3em;
 }
