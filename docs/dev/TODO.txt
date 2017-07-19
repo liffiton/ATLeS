@@ -1,8 +1,8 @@
 TODOs and Plans
 ===============
 
-Fishremote Image
-----------------
+ATLeS Box Image
+---------------
  - https://github.com/Drewsif/PiShrink/
 
 Enclosure
@@ -19,14 +19,14 @@ Circuits
    * Other ways of making connections to the 0.1" spaced holes?
 
 
-FishWeb / Analyze
------------------
+ATLeSweb / Analyze
+------------------
  - :?: When does the data output/recording start?  How is that indicated?
  - Experiment progress indicator should know when timing actually started
 
 
-FishBox [.py]
--------------
+ATLeSbox [.py]
+--------------
 
 Big / Important:
  - Switch to pigpio library for PWM -- runs separate daemon as root, all rest
@@ -45,6 +45,4 @@ Medium:
 
 Testing/validation:
  - Check carefully how invalid entries ['lost'] will affect collected metrics
-
-BUGS:
 

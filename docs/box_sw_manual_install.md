@@ -3,7 +3,7 @@ title: (Manual) Box Software Setup
 ---
 
 Most people will not need to use the following instructions.
-They are provided for anyone who wants to set up the [whatever] box software environment themselves.
+They are provided for anyone who wants to set up the ATLeS box software environment themselves.
 The easiest way to install and use the software is to [install a provided OS image](box_sw_install).
 
 # Installing FishyCam from Scratch
