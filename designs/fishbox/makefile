@@ -6,32 +6,32 @@ all: top.dxf bottom.dxf side1.dxf side2.dxf end1.dxf end2.dxf mask.dxf tank_supp
 clean:
 	rm *.dxf
 
-top.dxf: fishbox.scad
-	"$(OPENSCAD)" -o $@ -D DXF_TOP=true fishbox.scad
+top.dxf: box_structure.scad
+	"$(OPENSCAD)" -o $@ -D DXF_TOP=true box_structure.scad
 
-bottom.dxf: fishbox.scad
-	"$(OPENSCAD)" -o $@ -D DXF_BOTTOM=true fishbox.scad
+bottom.dxf: box_structure.scad
+	"$(OPENSCAD)" -o $@ -D DXF_BOTTOM=true box_structure.scad
 
-side1.dxf: fishbox.scad
-	"$(OPENSCAD)" -o $@ -D DXF_SIDE1=true fishbox.scad
+side1.dxf: box_structure.scad
+	"$(OPENSCAD)" -o $@ -D DXF_SIDE1=true box_structure.scad
 
-side2.dxf: fishbox.scad
-	"$(OPENSCAD)" -o $@ -D DXF_SIDE2=true fishbox.scad
+side2.dxf: box_structure.scad
+	"$(OPENSCAD)" -o $@ -D DXF_SIDE2=true box_structure.scad
 
-end1.dxf: fishbox.scad
-	"$(OPENSCAD)" -o $@ -D DXF_END1=true fishbox.scad
+end1.dxf: box_structure.scad
+	"$(OPENSCAD)" -o $@ -D DXF_END1=true box_structure.scad
 
-end2.dxf: fishbox.scad
-	"$(OPENSCAD)" -o $@ -D DXF_END2=true fishbox.scad
+end2.dxf: box_structure.scad
+	"$(OPENSCAD)" -o $@ -D DXF_END2=true box_structure.scad
 
-mask.dxf: fishbox.scad
-	"$(OPENSCAD)" -o $@ -D DXF_MASK=true fishbox.scad
+mask.dxf: box_structure.scad
+	"$(OPENSCAD)" -o $@ -D DXF_MASK=true box_structure.scad
 
-tank_support.dxf: fishbox.scad
-	"$(OPENSCAD)" -o $@ -D DXF_TANK_SUPPORT=true fishbox.scad
+tank_support.dxf: box_structure.scad
+	"$(OPENSCAD)" -o $@ -D DXF_TANK_SUPPORT=true box_structure.scad
 
-rpi_support.dxf: fishbox.scad
-	"$(OPENSCAD)" -o $@ -D DXF_RPI_SUPPORT=true fishbox.scad
+rpi_support.dxf: box_structure.scad
+	"$(OPENSCAD)" -o $@ -D DXF_RPI_SUPPORT=true box_structure.scad
 
-rear_support.dxf: fishbox.scad
-	"$(OPENSCAD)" -o $@ -D DXF_REAR_SUPPORT=true fishbox.scad
+rear_support.dxf: box_structure.scad
+	"$(OPENSCAD)" -o $@ -D DXF_REAR_SUPPORT=true box_structure.scad
