@@ -22,3 +22,7 @@ end
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
+# To fix things under Cygwin
+# I'd use 'if Gem.win_platform?', but it doesn't seem to work?
+gem 'json'
+gem 'bigdecimal'
