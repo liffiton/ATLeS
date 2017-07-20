@@ -1,8 +1,8 @@
 ---
-title: ATLeS: Automated Tracking & Learning System
+title: Automated Tracking and Learning System
 ---
 
-The goal of the ATLeS project is to create an inexpensive, open-source system for automated, high-throughput, realtime observation and conditioning experiments of small organisms.  Zebrafish, <i>danio rerio</i>, are the target organism for the initial design.
+The goal of the ATLeS project is to create an inexpensive, open-source system for automated, high-throughput, realtime observation and conditioning experiments.  Zebrafish, <i>danio rerio</i>, are the target organism for the initial design.
 
 ATLeS consists of one or more ATLeS boxes, each of which can run an automated experiment on a single organism at a time, and optionally a separate server that provides a combined interface for managing and controlling several boxes and their experiments in one place.
 Each box uses an inexpensive [Raspberry Pi](https://www.raspberrypi.org/) as its "brain," an infrared-sensitive camera as its "eyes," and inexpensive materials for the structure.
