@@ -1,6 +1,5 @@
 import errno
 import os
-import shlex
 import signal
 import subprocess
 import tempfile
@@ -97,7 +96,7 @@ def stop_img_stream():
     wiring.IR_off()
 
 
-def start_experiment(expname, inifile, phases):
+def start_experiment(expname, notes, inifile, phases):
     '''
     Parameters:
        phases: Tuple(int, str, str) - length, stimulus, background file
@@ -112,16 +111,26 @@ def start_experiment(expname, inifile, phases):
         cmdparts = []
 
     cmdparts.append(config.EXPSCRIPT)
-    cmdparts.append("--inifile %s" % inifile)
+
+    # inifile
+    cmdparts.append("--inifile")
+    cmdparts.append(inifile)
+
     # phases: each specified with a -p argument w/ ','-delimited values in each
     # e.g.: -p 10,off -p 30,rand -p 30,off
     for p in phases:
-        cmdparts.append("--phases %s" % ','.join(str(x) for x in p))
-    cmdparts.append(expname)
-    cmdline = ' '.join(cmdparts)
-    cmdargs = shlex.split(cmdline)
+        cmdparts.append("--phases")
+        cmdparts.append(','.join(str(x) for x in p))
 
-    subprocess.Popen(cmdargs)
+    # notes
+    cmdparts.append("--notes")
+    cmdparts.append(notes)
+
+    # experiment name
+    cmdparts.append(expname)
+
+    # execute
+    subprocess.Popen(cmdparts)
 
 
 # http://stackoverflow.com/a/6940314

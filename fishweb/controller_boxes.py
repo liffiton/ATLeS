@@ -3,7 +3,7 @@ import re
 import time
 
 from bottle import abort, post, redirect, request, response, route, jinja2_template as template
-from wtforms import Form, FieldList, FormField, HiddenField, IntegerField, RadioField, SelectField, StringField, validators, ValidationError
+from wtforms import Form, FieldList, FormField, HiddenField, IntegerField, RadioField, SelectField, StringField, TextAreaField, validators, ValidationError
 from sqlalchemy import sql
 
 import config
@@ -139,6 +139,7 @@ class ExperimentPhaseForm(Form):
 class NewExperimentForm(Form):
     ''' Form for creating a new experiment. '''
     expname = StringField("Experiment Name", [validators.Length(max=32), _name_is_sane])
+    notes = TextAreaField("Notes")
     inifile = SelectField(".ini File", choices=list(zip(_inis(), _inis())))
     phases = FieldList(FormField(ExperimentPhaseForm), min_entries=10, max_entries=10)
 
@@ -224,6 +225,7 @@ def post_new(tgtbox, boxes_rpc):
         return template('new', dict(form=form, box=box))
 
     expname = form.expname.data
+    notes = form.notes.data
     inifile = os.path.join(config.INIDIR, form.inifile.data)
 
     def get_phase(phase):
@@ -234,6 +236,6 @@ def post_new(tgtbox, boxes_rpc):
 
     phases = [get_phase(p) for p in form.phases if p.enabled.data == 'True']
 
-    box.start_experiment(expname, inifile, phases)
+    box.start_experiment(expname, notes, inifile, phases)
 
     redirect("/")

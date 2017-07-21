@@ -35,13 +35,14 @@ tracks = Table(
     Column('trigger', String),
     Column('controller', String),
     Column('stimulus', String),
+    Column('notes', String),
     Column('lines', Integer),
     Column('acquired', Float),
     Column('sketchy', Float),
     Column('missing', Float),
     Column('lost', Float),
-    Column('heat', String),
-    Column('invalid_heat', String)
+    Column('heat', String),  # string-encoded position heatmap
+    Column('invalid_heat', String)  # same, but for positions of invalid points
 )
 
 phases = Table(

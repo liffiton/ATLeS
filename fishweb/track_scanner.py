@@ -86,11 +86,12 @@ def _get_setup_info(setupfile):
     parser = configparser.ConfigParser()
     try:
         parser.read(setupfile)
+        notes = parser.get('general', 'notes', fallback=None)
         trigger = parser.get('experiment', 'trigger', fallback=None)
         controller = parser.get('experiment', 'controller', fallback=None)
         stimulus = parser.get('experiment', 'stimulus', fallback=None)
         phase_data_str = parser.get('phases', 'phases_data', fallback=None)
-        return trigger, controller, stimulus, phase_data_str
+        return notes, trigger, controller, stimulus, phase_data_str
     except configparser.NoSectionError as e:
         print("configparser error: {}\nFile: {}".format(e, setupfile))
         raise
@@ -107,10 +108,10 @@ def _get_track_db_info(key, trackfile, trackrel):
 
     setupfile = trackfile.replace('-track.csv', '-setup.txt')
     if os.path.isfile(setupfile):
-        trigger, controller, stimulus, phase_data_str = _get_setup_info(setupfile)
+        notes, trigger, controller, stimulus, phase_data_str = _get_setup_info(setupfile)
     else:
         setupfile = None
-        trigger = controller = stimulus = phase_data_str = None
+        notes = trigger = controller = stimulus = phase_data_str = None
 
     new_row = dict(
         key=key,
@@ -123,6 +124,7 @@ def _get_track_db_info(key, trackfile, trackrel):
         box=subdir,
         starttime=starttime,
         exp_name=exp_name,
+        notes=notes,
         lines=lines,
         acquired=asml[0],
         sketchy=asml[1],

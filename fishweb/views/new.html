@@ -95,6 +95,17 @@ $(function() {
                 {% endif %}
               </div>
             </div>
+            <div class="form-group {{ "has-error" if form.notes.errors }}">
+              {{ form.notes.label(class_="col-sm-4 control-label") }}
+              <div class="col-sm-8">
+                {{ form.notes(class_="form-control") }}
+                {% if form.notes.errors: %}
+                  {% for e in form.notes.errors: %}
+                    <p class="help-block">{{e}}</p>
+                  {% endfor %}
+                {% endif %}
+              </div>
+            </div>
             <div class="form-group {{ "has-error" if form.inifile.errors }}">
               {{ form.inifile.label(class_="col-sm-4 control-label") }}
               <div class="col-sm-8">

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import argparse
 import atexit
@@ -10,6 +10,7 @@ except ImportError:
 import logging
 import os
 import random
+import pipes   # TODO: move to python3 and use shlex.quote() instead
 import signal
 import sys
 import threading
@@ -53,6 +54,7 @@ def get_conf(args):
     # setup a 'general' section of the configuration
     # (mostly for the record in the -setup.txt file)
     conf['general'] = {}
+    conf['general']['notes'] = args.notes
     conf['general']['inifile'] = args.inifile
     conf['general']['boxname'] = utils.get_boxname()
 
@@ -98,6 +100,8 @@ def get_args():
                         help='create a window to see the camera view and tracking information')
     parser.add_argument('--debug-frames', type=int, default=100, metavar='N',
                         help='save an image of the current frame every N frames - also saves a frame any time tracking is lost (default: 100; 0 means no debug frames will be written, including tracking-lost frames)')
+    parser.add_argument('--notes', type=str,
+                        help='additional notes to be saved alongside the experiment data (optional)')
 
 #    exp_group = parser.add_argument_group('experiment settings')
 #    exp_group.add_argument('-t', '--time', type=int, default=None,
@@ -192,7 +196,9 @@ def write_setup(conf):
 
     setupfilename = "%s/%s-setup.txt" % (config.TRACKDIR, conf['name'])
     with open(setupfilename, 'w') as setupfile:
-        setupfile.write("; Command line:\n;    %s\n;\n" % (' '.join(sys.argv)))
+        # TODO: move to python3 and use shlex.quote() instead
+        cmdline = repr(' '.join(pipes.quote(s) for s in sys.argv))
+        setupfile.write("; Command line:\n;    {}\n;\n".format(cmdline))
         setupfile.write("; Configuration:\n")
         parser.write(setupfile)
 
