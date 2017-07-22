@@ -4,7 +4,6 @@ import fnmatch
 import glob
 import numbers
 import os
-import re
 import statistics
 import tempfile
 import zipfile
@@ -14,9 +13,6 @@ from sqlalchemy import sql
 
 import config
 import fishweb.db_schema as db_schema
-
-
-_trackfile_parse_regexp = re.compile(r"(\d{8}-\d{6})-(.*)-track.csv")
 
 
 def _track_files():
