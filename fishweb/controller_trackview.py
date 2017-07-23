@@ -176,6 +176,9 @@ def _get_filters(rows, selected):
 
 
 def _select_track_data(track_data, filt, val):
+    if filt == "tracks":
+        tracks_set = set(val.split('|'))
+        return [t for t in track_data if t[0]['trackpath'] in tracks_set]
     if filt.endswith(" (min)"):
         filt = filt.replace(" (min)", "")
         val = float(val)
@@ -192,23 +195,16 @@ def _select_track_data(track_data, filt, val):
 def tracks_filter(db):
     track_data = _get_all_track_data(db)
 
-    query_tracks = request.query.get('tracks')
-    if query_tracks is not None:
-        tracks_set = set(query_tracks.split('|'))
-        track_data = [t for t in track_data if t[0]['trackpath'] in tracks_set]
-
-    # hack filtering for now (better: use DB)
     selected = {}
     for filt in request.query.keys():
-        if filt == 'tracks':
-            continue
-
         val = request.query.get(filt)
         if val == '':
             # unspecified min/max numeric values, e.g.
             continue
 
+        # hack filtering for now (better: use DB)
         track_data = _select_track_data(track_data, filt, val)
+
         # figure out query string without this selection (for backing out in web interface)
         querystring_without = '&'.join("{}={}".format(key, val) for key, val in request.query.items() if key != filt)
         # store for showing in page

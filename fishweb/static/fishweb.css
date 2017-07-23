@@ -10,6 +10,10 @@ tr.undo_row {
 td.actionbuttons {
   white-space: nowrap;  /* keep all buttons on one line */
 }
+span.form-control {
+  /* override bootstrap's set height when form-control applied to a span */
+  height: auto;
+}
 input#rowfilter {
   font-weight: normal;
   margin-left: 2em;
