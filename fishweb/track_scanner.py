@@ -220,4 +220,4 @@ def scan_tracks(db_engine):
     while True:
         _update_track_data(conn)
 
-        time.sleep(10)
+        time.sleep(5)
