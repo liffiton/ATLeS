@@ -142,7 +142,11 @@ def _get_filters(rows, selected):
                 or name + " (max)" in selected:
             continue
 
-        values = sorted(list(set(row[name] for row in rows)))
+        # get a sorted list of unique non-None values
+        values = set(row[name] for row in rows)
+        values.discard(None)
+        values = sorted(values)
+
         # values that are all unique or all same don't make good filters
         if len(values) == len(rows) or len(values) == 1:
             continue

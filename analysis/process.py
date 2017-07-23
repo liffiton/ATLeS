@@ -1,6 +1,6 @@
+import configparser
 import itertools
 import math
-from configparser import ConfigParser
 import numpy as np
 import pandas
 
@@ -91,7 +91,7 @@ class TrackProcessor(object):
         df['frozen'] = df.valid & (df.speed.rolling(window=_freeze_window_size, center=True).max() < _freeze_max_speed)
 
     def _read_setupfile(self):
-        self.config = ConfigParser()
+        self.config = configparser.ConfigParser(interpolation=None)
         self.config.read(self.setupfile)
         # parse phases_data
         if 'phases' in self.config and 'phases_data' in self.config['phases']:

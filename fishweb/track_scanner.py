@@ -83,7 +83,7 @@ def _get_track_data(track):
 
 
 def _get_setup_info(setupfile):
-    parser = configparser.ConfigParser()
+    parser = configparser.ConfigParser(interpolation=None)
     try:
         parser.read(setupfile)
         notes = parser.get('general', 'notes', fallback=None)
