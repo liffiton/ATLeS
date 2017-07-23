@@ -46,8 +46,6 @@ def _get_track_data(track):
                 break
 
             lines += 1
-            if state == "init":
-                state = "lost"
             if int(numpts) > 1:
                 state = "sketchy"
             states[state] += 1
@@ -58,12 +56,16 @@ def _get_track_data(track):
                 # place this sample in a heatmap bucket
                 bucket_x = int(x * xbuckets)
                 bucket_y = int(y * ybuckets)
-                if state != "lost":
+                if state in ('acquired', 'sketchy'):
                     heatmap[(bucket_x, bucket_y)] += 1
-                if state != "acquired":
+                if state in ('missing', 'lost'):
                     invalid_heatmap[(bucket_x, bucket_y)] += 1
             except ValueError:
                 pass  # not super important if we can't parse x,y
+
+            # convert init to lost just for count (not for heatmaps)
+            if state == "init":
+                state = "lost"
 
     if lines:
         asml = ["%0.3f" % (states[key] / float(lines)) for key in ('acquired', 'sketchy', 'missing', 'lost')]
