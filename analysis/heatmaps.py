@@ -46,7 +46,7 @@ def plot_heatmap(ax, xpoints, ypoints, nbins, title=None, maxcount=None):
         norm = Normalize(0, maxcount)
     else:
         norm = None
-    return ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('afmhot'), origin='lower', interpolation='nearest', norm=norm)
+    return ax.imshow(heatmap, extent=extent, cmap=plt.get_cmap('hot'), origin='lower', interpolation='nearest', norm=norm)
 
 
 def make_heatmap(x, y, title):
