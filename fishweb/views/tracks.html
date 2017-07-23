@@ -60,11 +60,11 @@ $(function() {
           {% endfor %}
         </div>
         <div class="panel-body form-horizontal">
-          {% for param, values, stats in filters: %}
+          {% for param, type, values in filters: %}
           <div class="form-group">
             <label class="control-label col-sm-2">{{param}}</label>
             <div class="col-sm-10">
-              {% if values == "numeric": %}
+              {% if type == "numeric": %}
               <form class="form-inline">
                 {% for entry in query: %}
                 <input type="hidden" name="{{entry}}" value="{{query[entry]}}">
@@ -74,11 +74,11 @@ $(function() {
                 <button type="submit" class="btn btn-primary btn-xs">Set</button>
                 &nbsp;&nbsp;&nbsp;
                 <small class="text-muted">
-                  min: {{stats[0]}}
+                  min: {{values[0]}}
                   &nbsp;
-                  median: {{stats[1]}}
+                  median: {{values[1]}}
                   &nbsp;
-                  max: {{stats[2]}}
+                  max: {{values[2]}}
                 </small>
               </form>
               {% else: %}

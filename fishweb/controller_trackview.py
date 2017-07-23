@@ -123,12 +123,11 @@ def tracks(db):
 
 def _get_filters(rows, selected):
     ''' Return a list of potential filter tuples for the given data in rows.
-         tuple: (param name, list of values, stats)
-         "value": (value, count of rows with that value)
-
-        If values are all numeric, no list is given (signalled to template with
-        string "numeric") and stats is filled in with statistics of the values
-        to present to user.
+         tuple: (param name, type, values or stats)
+         "type": 'string' or 'numeric'
+         "values or stats": a list of tuples (val, count) for string values
+                            or
+                            a tuple of (min,med,max) for numeric values
 
         Tries to generate a filter for every column in rows.
         Excludes any already in selected.
@@ -173,11 +172,8 @@ def _get_filters(rows, selected):
             )
             filt = (name, "numeric", stats)
         else:
-            counts = [
-                sum(1 for row in rows if row[name] == val)
-                for val in values
-            ]
-            filt = (name, zip(values, counts), None)
+            counts = collections.Counter(row[name] for row in rows if row[name] in values)
+            filt = (name, "string", sorted(counts.items()))
         filters.append(filt)
 
     return filters
