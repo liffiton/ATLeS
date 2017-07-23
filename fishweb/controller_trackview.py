@@ -136,19 +136,23 @@ def _get_filters(rows, selected):
     '''
     filters = []
     for name in rows[0].keys():
+        # exclude never-filtered columsn
+        if name in ('key', 'trackpath', 'trackrel', 'setupfile'):
+            continue
         # exclude any already selected
         if name in selected \
                 or name + " (min)" in selected \
                 or name + " (max)" in selected:
             continue
 
-        # get a sorted list of unique non-None values
+        # get a sorted list of unique non-None, non-"" values
         values = set(row[name] for row in rows)
         values.discard(None)
+        values.discard('')
         values = sorted(values)
 
-        # values that are all unique or all same don't make good filters
-        if len(values) == len(rows) or len(values) == 1:
+        # values that are all the same don't make good filters
+        if len(values) == 1:
             continue
         # values that are all datetimes are likely not useful either
         if all(isinstance(x, datetime.datetime) for x in values):
