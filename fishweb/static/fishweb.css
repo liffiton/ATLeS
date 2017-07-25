@@ -138,6 +138,14 @@ img.thumb {
   max-width: 12em;
 }
 
+/* flexbox for box widgets */
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+.flex-item {
+}
+
 /* CSS animation woo! */
 .rotatey {
     animation: rotation 2s infinite linear;

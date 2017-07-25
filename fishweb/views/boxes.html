@@ -18,8 +18,8 @@
     </div>
   </div>
 
-  <div class="row" ng-cloak ng-show="boxes.length && boxes !== 'error'">
-    <div class="col-lg-3 col-sm-4" ng-repeat="box in boxes | orderBy:'name'">
+  <div class="row flex-container" ng-cloak ng-show="boxes.length && boxes !== 'error'">
+    <div class="col-lg-3 col-sm-4 flex-item" ng-repeat="box in boxes | orderBy:'name'">
       <div class="gitstatus" title="{{box.gitlong}}">
         ver: {{box.gitshort}}
       </div>
