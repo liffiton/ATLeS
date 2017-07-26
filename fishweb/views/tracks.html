@@ -69,8 +69,8 @@ $(function() {
                 {% for entry in query: %}
                 <input type="hidden" name="{{entry}}" value="{{query[entry]}}">
                 {% endfor %}
-                <input name="{{param}} (min)" size=1 placeholder="min" class="form-control input-sm">
-                <input name="{{param}} (max)" size=1 placeholder="max" class="form-control input-sm">
+                <input name="{{param}} (min)" size=4 placeholder="min" class="form-control input-sm">
+                <input name="{{param}} (max)" size=4 placeholder="max" class="form-control input-sm">
                 <button type="submit" class="btn btn-primary btn-xs">Set</button>
                 &nbsp;&nbsp;&nbsp;
                 <small class="text-muted">
