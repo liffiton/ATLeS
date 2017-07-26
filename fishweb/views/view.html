@@ -56,7 +56,7 @@
               // on mouseover of the link.
               var popup = document.createElement('img');
               popup.src = imgURL;
-              popup.style.display = "none";
+              popup.style.visibility = "hidden";
               popup.style.padding = "0";
               popup.style.border = "3px solid #012";
               popup.classList.add("brighter");  // brightened by default
@@ -67,10 +67,10 @@
               document.body.appendChild(popup);
               // Handle mouseover/mouseout events: show/hide the popup img.
               link.addEventListener("mouseover", function(e) {
-                popup.style.display = "block";
+                popup.style.visibility = "visible";
               });
               link.addEventListener("mouseout", function(e) {
-                popup.style.display = "none";
+                popup.style.visibility = "hidden";
               });
             });
           };
