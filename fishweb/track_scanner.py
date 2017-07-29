@@ -93,7 +93,9 @@ def _get_setup_info(setupfile):
         controller = parser.get('experiment', 'controller', fallback=None)
         stimulus = parser.get('experiment', 'stimulus', fallback=None)
         phase_data_str = parser.get('phases', 'phases_data', fallback=None)
-        return notes, trigger, controller, stimulus, phase_data_str
+        phase_data = eval(phase_data_str)  # uses Phase namedtuple imported from utils
+        did_stim = any(phase.dostim for phase in phase_data)  # did any phases activate the conditional stimulus
+        return notes, trigger, controller, stimulus, did_stim, phase_data
     except configparser.NoSectionError as e:
         print("configparser error: {}\nFile: {}".format(e, setupfile))
         raise
@@ -110,10 +112,10 @@ def _get_track_db_info(key, trackfile, trackrel):
 
     setupfile = trackfile.replace('-track.csv', '-setup.txt')
     if os.path.isfile(setupfile):
-        notes, trigger, controller, stimulus, phase_data_str = _get_setup_info(setupfile)
+        notes, trigger, controller, stimulus, did_stim, phase_data = _get_setup_info(setupfile)
     else:
         setupfile = None
-        notes = trigger = controller = stimulus = phase_data_str = None
+        notes = trigger = controller = stimulus = did_stim = phase_data = None
 
     new_row = dict(
         key=key,
@@ -123,6 +125,7 @@ def _get_track_db_info(key, trackfile, trackrel):
         trigger=trigger,
         controller=controller,
         stimulus=stimulus,
+        did_stim=did_stim,
         box=subdir,
         starttime=starttime,
         exp_name=exp_name,
@@ -136,13 +139,12 @@ def _get_track_db_info(key, trackfile, trackrel):
         invalid_heat=invalid_heat
     )
 
-    return new_row, phase_data_str
+    return new_row, phase_data
 
 
-def _store_phases(conn, key, phase_data_str):
+def _store_phases(conn, key, phase_data):
     phases = db_schema.phases
-    phase_list = eval(phase_data_str)  # uses Phase namedtuple imported from utils
-    for phase in phase_list:
+    for phase in phase_data:
         insert = phases.insert().values(
             track_key=key,
             phase_num=phase.phasenum,
@@ -185,11 +187,11 @@ def _add_new_tracks(conn, tracks_in_db, tracks_in_fs):
         trackrel = os.path.relpath(trackfile, config.TRACKDIR)  # path relative to main tracks directory
         key = "%f|%s" % (mtime, trackrel)
         if key not in tracks_in_db:
-            new_row, phase_data_str = _get_track_db_info(key, trackfile, trackrel)
+            new_row, phase_data = _get_track_db_info(key, trackfile, trackrel)
             insert = tracks.insert().values(new_row)
             conn.execute(insert)
-            if phase_data_str is not None:
-                _store_phases(conn, key, phase_data_str)
+            if phase_data is not None:
+                _store_phases(conn, key, phase_data)
 
             tracks_in_db.add(key)
 

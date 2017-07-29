@@ -35,6 +35,7 @@ tracks = Table(
     Column('trigger', String),
     Column('controller', String),
     Column('stimulus', String),
+    Column('did_stim', Boolean),  # did any of the phases activate the conditional stimulus?
     Column('notes', String),
     Column('lines', Integer),
     Column('acquired', Float),
