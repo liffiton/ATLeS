@@ -161,7 +161,10 @@ def _get_filters(rows, selected):
             continue
 
         # looks good: include it
-        if all(isinstance(x, numbers.Number) for x in values):
+        if all(isinstance(x, bool) for x in values):
+            counts = collections.Counter(row[name] for row in rows if row[name] in values)
+            filt = (name, "boolean", sorted(counts.items()))
+        elif all(isinstance(x, numbers.Number) for x in values):
             # values that are all numeric will ask for min/max separately
             # signal with values="numeric"
             # get/include stats from values
@@ -191,6 +194,9 @@ def _select_track_data(track_data, filt, val):
         filt = filt.replace(" (max)", "")
         val = float(val)
         return [t for t in track_data if t[0][filt] <= val]
+    elif isinstance(track_data[0][0][filt], bool):
+        # need to convert our string query values to bool for the comparison
+        return [t for t in track_data if t[0][filt] == bool(val)]
     else:
         return [t for t in track_data if t[0][filt] == val]
 

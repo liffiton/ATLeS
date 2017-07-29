@@ -93,7 +93,11 @@ def _get_setup_info(setupfile):
         controller = parser.get('experiment', 'controller', fallback=None)
         stimulus = parser.get('experiment', 'stimulus', fallback=None)
         phase_data_str = parser.get('phases', 'phases_data', fallback=None)
-        phase_data = eval(phase_data_str)  # uses Phase namedtuple imported from utils
+        try:
+            phase_data = eval(phase_data_str)  # uses Phase namedtuple imported from utils
+        except TypeError:
+            # old setupfile w/o matching phase tuple
+            phase_data = []
         did_stim = any(phase.dostim for phase in phase_data)  # did any phases activate the conditional stimulus
         return notes, trigger, controller, stimulus, did_stim, phase_data
     except configparser.NoSectionError as e:
