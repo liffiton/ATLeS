@@ -11,7 +11,7 @@ from fishbox import wiring
 
 
 def lock_exists():
-    return os.path.isfile(config.LOCKFILE)
+    return config.LOCKFILE.is_file()
 
 
 def lock_data():

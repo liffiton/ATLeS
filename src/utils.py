@@ -1,6 +1,5 @@
 import datetime
 import errno
-import glob
 import os
 import platform
 import socket
@@ -31,9 +30,9 @@ def get_boxname():
 
 def mkdir(path):
     try:
-        os.makedirs(path)
+        os.makedirs(str(path))
     except OSError as e:
-        if e.errno == errno.EEXIST and os.path.isdir(path):
+        if e.errno == errno.EEXIST and path.is_dir():
             # exists already, fine.
             pass
         else:
@@ -55,8 +54,8 @@ def git_status():
 
 
 def max_mtime(dir):
-    files = glob.glob(os.path.join(dir, '*'))
+    files = dir.glob("*")
     if not files:
         return None
-    maxtime = max(os.path.getmtime(f) for f in files)
+    maxtime = max(os.path.getmtime(str(f)) for f in files)
     return datetime.datetime.fromtimestamp(maxtime)
