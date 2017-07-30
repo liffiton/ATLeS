@@ -1,41 +1,35 @@
 import collections
 import datetime
-import fnmatch
-import glob
 import numbers
-import os
 import statistics
 import tempfile
 import zipfile
 
-from bottle import post, request, response, route, static_file, jinja2_template as template
+from bottle import request, response, route, static_file, jinja2_template as template
 from sqlalchemy import sql
 
 import config
 import fishweb.db_schema as db_schema
 
 
-def _track_files():
-    # match in all subdirs - thanks: http://stackoverflow.com/a/2186565
-    tracks = []
-    for root, dirnames, filenames in os.walk(config.TRACKDIR):
-        for filename in fnmatch.filter(filenames, "*-track.csv"):
-            tracks.append(os.path.join(root, filename))
-    return sorted(tracks)
-
-
 def _imgs(trackrel):
-    return sorted(glob.glob(os.path.join(config.PLOTDIR, "%s*" % trackrel)))
+    return [p.relative_to(config.BASEDIR)
+            for p in
+            sorted(config.PLOTDIR.glob("{}*".format(trackrel)))
+            ]
 
 
 def _dbgframes(trackrel):
     expname = trackrel.replace("-track.csv", "")
-    return sorted(glob.glob(os.path.join(config.DBGFRAMEDIR, expname, "*")))
+    return [p.relative_to(config.BASEDIR)
+            for p in
+            sorted((config.DBGFRAMEDIR / expname).glob("*"))
+            ]
 
 
-def _setupfile(trackpath):
-    setupfile = trackpath.replace("-track.csv", "-setup.txt")
-    if os.path.isfile(setupfile):
+def _setupfile(trackrel):
+    setupfile = trackrel.replace("-track.csv", "-setup.txt")
+    if (config.TRACKDIR / setupfile).is_file():
         return setupfile
     else:
         return None
@@ -109,7 +103,7 @@ def _get_all_track_data(db):
     for row in rows:
         asml = [str(x) for x in (row[key] for key in ('acquired', 'sketchy', 'missing', 'lost'))]
         track_data.append(
-            (row, asml, _imgs(row['trackrel']), _dbgframes(row['trackrel']), _setupfile(row['trackpath']))
+            (row, asml, _imgs(row['trackrel']), _dbgframes(row['trackrel']), _setupfile(row['trackrel']))
         )
 
     return track_data
@@ -185,7 +179,7 @@ def _get_filters(rows, selected):
 def _select_track_data(track_data, filt, val):
     if filt == "tracks":
         tracks_set = set(val.split('|'))
-        return [t for t in track_data if t[0]['trackpath'] in tracks_set]
+        return [t for t in track_data if t[0]['trackrel'] in tracks_set]
     if filt.endswith(" (min)"):
         filt = filt.replace(" (min)", "")
         val = float(val)
@@ -227,30 +221,28 @@ def tracks_filter(db):
     return template('tracks', tracks=track_data, filters=filters, selected=selected, query_string=request.query_string, query=request.query)
 
 
-@route('/view/<trackfile:path>')
-def view_track(trackfile):
-    trackrel = os.path.relpath(trackfile, config.TRACKDIR)
-    return template('view', imgs=_imgs(trackrel), trackfile=trackfile, trackrel=trackrel)
+@route('/view/<trackrel:path>')
+def view_track(trackrel):
+    return template('view', imgs=_imgs(trackrel), trackrel=trackrel)
 
 
-@route('/dbgframes/<trackfile:path>')
-def debug_frames(trackfile):
-    trackrel = os.path.relpath(trackfile, config.TRACKDIR)
-    return template('view', imgs=_dbgframes(trackrel), trackfile=trackfile, trackrel=trackrel)
+@route('/dbgframes/<trackrel:path>')
+def debug_frames(trackrel):
+    return template('view', imgs=_dbgframes(trackrel), trackrel=trackrel)
 
 
-@post('/download/')
-def post_download():
-    tracks = request.query.tracks.split('|')
+@route('/download/')
+def download():
+    trackrels = request.query.tracks.split('|')
 
     # write the archive into a temporary in-memory file-like object
     temp = tempfile.SpooledTemporaryFile()
     with zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED) as archive:
-        for trackpath in tracks:
-            basename = trackpath.replace("-track.csv", "")
-            paths = glob.glob(basename + "*")
+        for trackrel in trackrels:
+            base_wildcard = trackrel.replace("-track.csv", "*")
+            paths = config.TRACKDIR.glob(base_wildcard)
             for path in paths:
-                archive.write(path)
+                archive.write(path, path.relative_to(config.TRACKDIR))
 
     temp.seek(0)
 

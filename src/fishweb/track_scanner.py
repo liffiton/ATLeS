@@ -1,7 +1,6 @@
 import collections
 import configparser
 import dateutil
-import fnmatch
 import os
 import re
 import time
@@ -18,12 +17,7 @@ _trackfile_parse_regexp = re.compile(r"(\d{8}-\d{4,6})-?(.*)-track.csv")
 
 
 def _track_files_set():
-    # match in all subdirs - thanks: http://stackoverflow.com/a/2186565
-    tracks = []
-    for root, dirnames, filenames in os.walk(config.TRACKDIR):
-        for filename in fnmatch.filter(filenames, "*-track.csv"):
-            tracks.append(os.path.join(root, filename))
-    return set(tracks)
+    return set(config.TRACKDIR.glob("**/*-track.csv"))
 
 
 def _get_track_data(track):
@@ -114,8 +108,8 @@ def _get_track_db_info(key, trackfile, trackrel):
     starttime_str, exp_name = _trackfile_parse_regexp.search(filename).groups()
     starttime = dateutil.parser.parse(starttime_str)
 
-    setupfile = trackfile.replace('-track.csv', '-setup.txt')
-    if os.path.isfile(setupfile):
+    setupfile = trackfile.with_name(trackfile.name.replace('-track.csv', '-setup.txt'))
+    if setupfile.is_file():
         notes, trigger, controller, stimulus, did_stim, phase_data = _get_setup_info(setupfile)
     else:
         setupfile = None
@@ -210,7 +204,7 @@ def _clean_removed_tracks(conn, tracks_in_db, tracks_in_fs):
     phases = db_schema.phases
     for track_key in tracks_in_db:
         trackrel = track_key.split('|')[1]
-        trackfile = os.path.join(config.TRACKDIR, trackrel)
+        trackfile = config.TRACKDIR / trackrel
         if trackfile not in tracks_in_fs:
             delete = tracks.delete().where(tracks.c.key == track_key)
             conn.execute(delete)

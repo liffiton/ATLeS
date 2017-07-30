@@ -88,11 +88,11 @@
 <body>
 <div class="container">
     {% if trackrel: %}
-        <h1>Track <a href="/{{trackfile}}">{{trackrel}}</a></h1>
+        <h1>Track <a href="/data/tracks/{{trackrel}}">{{trackrel}}</a></h1>
     {% endif %}
     <div class="text-center">
         {% for img in imgs: %}
-            {% if img.endswith('.svg'): %}
+            {% if img.suffix == '.svg': %}
                 <object data="/{{img}}" type="image/svg+xml" style='max-width: 100%;'></object>
             {% else: %}
                 <a href="/{{img}}"><img style='max-width: 100%;' src="/{{img}}"></a>

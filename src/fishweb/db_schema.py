@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from sqlalchemy import MetaData, Table, Column, Integer, Float, String, Boolean, DateTime, ForeignKey
+import sqlalchemy.types as types
 
 metadata = MetaData()
 
@@ -22,13 +25,27 @@ boxes = Table(
     Column('exp_runtime', Integer)
 )
 
+
+class PathType(types.TypeDecorator):
+    ''' Stores pathlib.Path objects as Strings in the db,
+        converting on reads and writes. '''
+
+    impl = types.String
+
+    def process_bind_param(self, value, dialect):
+        return str(value)
+
+    def process_result_value(self, value, dialect):
+        return Path(value)
+
+
 tracks = Table(
     'tracks',
     metadata,
     Column('key', String, primary_key=True),
-    Column('trackpath', String),
+    Column('trackpath', PathType),
     Column('trackrel', String),
-    Column('setupfile', String),
+    Column('setupfile', PathType),
     Column('box', String, index=True),
     Column('exp_name', String, index=True),
     Column('starttime', DateTime),

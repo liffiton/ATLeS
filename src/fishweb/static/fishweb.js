@@ -238,14 +238,14 @@ function tracksel_go(baseurl, addl_query) {
   window.location = baseurl + "?" + query;
 }
 
-function do_archive(path, index) {
-  async_post('/archive/', 'path=' + path);
+function do_archive(trackrel, index) {
+  async_post('/archive/', 'trackrel=' + trackrel);
   $("#row_" + index + "_undo").show();
   $("#row_" + index).hide();
 }
 
-function do_unarchive(path, index) {
-  async_post('/unarchive/', 'path=' + path);
+function do_unarchive(trackrel, index) {
+  async_post('/unarchive/', 'trackrel=' + trackrel);
   $("#row_" + index).show();
   $("#row_" + index + "_undo").hide();
 }
@@ -254,15 +254,15 @@ function analyze_selection() {
   var go = confirm("This operation will run in the background with no feedback while running or when complete (sorry).");
   if (! go) return;
   var sels = Object.keys(selection).sort();
-  async_post('/analyze_selection/', 'tracks=' + sels.join('|'));
+  async_post('/analyze_selection/', 'trackrels=' + sels.join('|'));
 }
 
 function archive_selection() {
   var sels = Object.keys(selection).sort();
   for (var i = 0 ; i < sels.length ; i++) {
-    var path = sels[i];
-    var index = selection[path];
-    do_archive(path, index);
+    var trackrel = sels[i];
+    var index = selection[trackrel];
+    do_archive(trackrel, index);
   }
 }
 

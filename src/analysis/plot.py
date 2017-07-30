@@ -8,6 +8,8 @@ from matplotlib import collections, lines, patches
 
 from analysis import heatmaps
 
+import config
+
 
 # Source: https://gist.github.com/jasonmc/1160951
 def _set_foregroundcolor(ax, color):
@@ -317,6 +319,6 @@ class TrackPlotter(object):
                     (frametime, -1.1), radius=0.08,
                     color='#337AB7',
                     clip_on=False,
-                    url='/' + dbgframe
+                    url=str("/data" / dbgframe.relative_to(config.DATADIR))
                 )
                 ax.add_artist(marker)

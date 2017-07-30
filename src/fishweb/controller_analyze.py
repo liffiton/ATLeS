@@ -1,14 +1,10 @@
 import base64
 import csv
-import glob
 import io
 import multiprocessing
-import os
 import traceback
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
+from pathlib import Path
 
 # Import matplotlib ourselves and make it use agg (not any GUI anything)
 # before the analyze module pulls it in.
@@ -24,20 +20,20 @@ import utils   # noqa: E402
 
 @get('/stats/')
 def get_stats():
-    tracks = request.query.tracks.split('|')
+    trackrels = request.query.tracks.split('|')
     do_csv = request.query.csv
     stats = []
     all_keys = set()
 
-    for track in tracks:
+    for trackrel in trackrels:
         curstats = {}
-        curstats['Track file'] = track
+        curstats['Track file'] = trackrel
 
         try:
-            processor = process.TrackProcessor(track)
+            processor = process.TrackProcessor(str(config.TRACKDIR / trackrel))
         except ValueError as e:
             # often 'wrong number of columns' due to truncated file from killed experiment
-            return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % track, exception=traceback.format_exc())
+            return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackrel, exception=traceback.format_exc())
 
         curstats.update(processor.get_setup(['experiment', 'phases']))
         curstats.update(processor.get_stats(include_phases=True))
@@ -73,54 +69,52 @@ def get_stats():
         return template('stats', keys=all_keys, stats=stats)
 
 
-def _do_analyze(trackfile):
-    trackrel = os.path.relpath(trackfile, config.TRACKDIR)
+def _do_analyze(trackrel):
+    trackrel = Path(trackrel)
 
     # ensure directories exist for plot creation
-    trackreldir = os.path.dirname(trackrel)
-    utils.mkdir(os.path.join(config.PLOTDIR, trackreldir))
+    trackreldir = trackrel.parent
+    utils.mkdir(config.PLOTDIR / trackreldir)
 
     # look for debug frames to create links in the trace plot
-    trackname = os.path.basename(trackfile).replace('-track.csv', '')
-    dbgframedir = os.path.join(config.DBGFRAMEDIR, trackreldir, trackname)
-    dbgframes = glob.glob(dbgframedir + "/subframe*.png")
+    trackname = trackrel.name.replace('-track.csv', '')
+    dbgframedir = config.DBGFRAMEDIR / trackreldir / trackname
+    dbgframes = dbgframedir.glob("subframe*.png")
 
-    processor = process.TrackProcessor(trackfile)
+    processor = process.TrackProcessor(str(config.TRACKDIR / trackrel))
     plotter = plot.TrackPlotter(processor, dbgframes)
     plotter.plot_heatmap()
-    plot.savefig(config.PLOTDIR + "%s.10.heat.png" % trackrel)
+
+    def saveplot(filename):
+        plot.savefig(str(config.PLOTDIR / filename))
+
+    saveplot("{}.10.heat.png".format(trackrel))
     plotter.plot_invalidheatmap()
-    plot.savefig(config.PLOTDIR + "%s.12.heat.invalid.png" % trackrel)
+    saveplot("{}.12.heat.invalid.png".format(trackrel))
     if processor.num_phases() > 1:
         plotter.plot_heatmap(plot_type='per-phase')
-        plot.savefig(config.PLOTDIR + "%s.14.heat.perphase.png" % trackrel)
+        saveplot("{}.14.heat.perphase.png".format(trackrel))
     plotter.plot_heatmap(plot_type='per-minute')
-    plot.savefig(config.PLOTDIR + "%s.15.heat.perminute.png" % trackrel)
+    saveplot("{}.15.heat.perminute.png".format(trackrel))
     plotter.plot_trace()
-    plot.savefig(config.PLOTDIR + "%s.20.plot.svg" % trackrel)
-    #plotter.plot_x_fft()
-    #plot.savefig(config.PLOTDIR + "%s.50.x_fft.png" % trackrel)
-    #plotter.plot_x_fft(10)
-    #plot.savefig(config.PLOTDIR + "%s.51.x_fft.10.png" % trackrel)
-    #plotter.plot_leftright()
-    #plot.savefig(config.PLOTDIR + "%s.52.leftright.png" % trackrel)
+    saveplot("{}.20.plot.svg".format(trackrel))
 
 
 @post('/analyze/')
 def post_analyze():
-    trackfile = request.query.path
+    trackrel = request.query.trackrel
     try:
-        _do_analyze(trackfile)
+        _do_analyze(trackrel)
     except ValueError as e:
         # often 'wrong number of columns' due to truncated file from killed experiment
-        return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackfile, exception=traceback.format_exc())
-    redirect("/view/%s" % trackfile)
+        return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackrel, exception=traceback.format_exc())
+    redirect("/view/{}".format(trackrel))
 
 
-def _analyze_selection(trackfiles):
-    for trackfile in trackfiles:
+def _analyze_selection(trackrels):
+    for trackrel in trackrels:
         try:
-            _do_analyze(trackfile)
+            _do_analyze(trackrel)
         except ValueError as e:
             # often 'wrong number of columns' due to truncated file from killed experiment
             pass  # nothing to be done here; we're processing in the background
@@ -128,17 +122,17 @@ def _analyze_selection(trackfiles):
 
 @post('/analyze_selection/')
 def post_analyze_selection():
-    tracks = request.query.tracks.split('|')
-    p = multiprocessing.Process(target=_analyze_selection, args=(tracks,))
+    trackrels = request.query.trackrels.split('|')
+    p = multiprocessing.Process(target=_analyze_selection, args=(trackrels,))
     p.start()
 
 
 @get('/heatmaps/')
 def get_heatmaps():
-    tracks = request.query.tracks.split('|')
+    trackrels = request.query.tracks.split('|')
     processors = [
-        process.TrackProcessor(track, just_raw_data=True)
-        for track in tracks
+        process.TrackProcessor(str(config.TRACKDIR / trackrel), just_raw_data=True)
+        for trackrel in trackrels
     ]
     # verify all phases are equivalent
     # https://stackoverflow.com/a/3844832/7938656

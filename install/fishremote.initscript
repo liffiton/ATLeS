@@ -19,7 +19,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="fishremote RPC service"
 NAME=fishremote
-DAEMON_DIR=/home/pi/fishycam/
+DAEMON_DIR=/home/pi/fishycam/src/
 DAEMON_USER=root
 DAEMON=$DAEMON_DIR/$NAME.py
 DAEMON_ARGS=""

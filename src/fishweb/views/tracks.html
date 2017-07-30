@@ -129,19 +129,19 @@ $(function() {
           <td>{{row['trackrel']}}</td>
           <td colspan=5><i>Archived</i></td>
           <td>
-            <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{row['trackpath']}}', {{loop.index0}});" title="Unarchive">
+            <button type="button" class="btn btn-xs btn-warning" onclick="do_unarchive('{{row['trackrel']}}', {{loop.index0}});" title="Unarchive">
               <span class="glyphicon glyphicon-log-in"></span>
               Undo archive
             </button>
           </td>
         </tr>
-        <tr class="track_row" id="row_{{loop.index0}}" data-path='{{row['trackpath']}}' data-index='{{loop.index0}}'>
+        <tr class="track_row" id="row_{{loop.index0}}" data-path='{{row['trackrel']}}' data-index='{{loop.index0}}'>
           <td>
             <button type="button" class="btn btn-default btn-xs text-muted selectbutton" title='Select'>
               <span class="glyphicon glyphicon-ok"></span>
             </button>
           </td>
-          <td class="trackfile_cell"><a href="/{{row['trackpath']}}">{{row['trackrel']}}</a></td>
+          <td class="trackfile_cell"><a href="/data/tracks/{{row['trackrel']}}">{{row['trackrel']}}</a></td>
           <td class="number_cell">{{row['lines']}}</td>
           <td class="chart_cell">
             <canvas class="asml" data-values="{{'|'.join(asml)}}" title="{{' / '.join(asml)}}"></canvas>
@@ -158,18 +158,18 @@ $(function() {
           </td>
           <td>
             {% if imgs: %}
-            <a href="/view/{{row['trackpath']}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-stats"></span> Plots</a>
+            <a href="/view/{{row['trackrel']}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-stats"></span> Plots</a>
             {% endif %}
             {% if dbgframes: %}
-            <a href="/dbgframes/{{row['trackpath']}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-camera"></span> Debug</a>
+            <a href="/dbgframes/{{row['trackrel']}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-camera"></span> Debug</a>
             {% endif %}
             {% if setupfile: %}
-            <a href="/{{setupfile}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-cog"></span> Setup</a>
+            <a href="/data/tracks/{{setupfile}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-cog"></span> Setup</a>
             {% endif %}
           </td>
           <td class="actionbuttons">
             {% if row['lines'] > 0: %}
-            <button type="button" class="btn btn-default btn-xs" onclick="do_post('/analyze/', 'path={{row['trackpath']}}');">
+            <button type="button" class="btn btn-default btn-xs" onclick="do_post('/analyze/', 'trackrel={{row['trackrel']}}');">
               {% if imgs: %}
               <span class="glyphicon glyphicon-refresh"></span>
               Re-plot
@@ -179,7 +179,7 @@ $(function() {
               {% endif %}
             </button>
             {% endif %}
-            <button type="button" class="btn btn-xs btn-danger" onclick="do_archive('{{row['trackpath']}}', {{loop.index0}});" title='Archive'>
+            <button type="button" class="btn btn-xs btn-danger" onclick="do_archive('{{row['trackrel']}}', {{loop.index0}});" title='Archive'>
               <span class="glyphicon glyphicon-log-out"></span>
             </button>
           </td>
