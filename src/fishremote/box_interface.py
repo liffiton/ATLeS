@@ -110,7 +110,7 @@ def start_experiment(expname, notes, inifile, phases):
     else:
         cmdparts = []
 
-    cmdparts.append(config.EXPSCRIPT)
+    cmdparts.append(str(config.EXPSCRIPT))
 
     # inifile
     cmdparts.append("--inifile")
