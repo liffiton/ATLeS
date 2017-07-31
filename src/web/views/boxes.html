@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% set name='boxes' %}
 {% set Title='Boxes' %}
-{% set scripts=['/static/angular-1.6.0.min.js', '/static/angular-resource-1.6.0.min.js', '/static/fishwebang.js'] %}
+{% set scripts=['/static/angular-1.6.0.min.js', '/static/angular-resource-1.6.0.min.js', '/static/atles_angular.js'] %}
 
 {% block body %}
 {%- raw -%}
@@ -10,11 +10,11 @@
 
   <div class="row" ng-cloak>
     <div class="col-sm-10 col-sm-offset-1 text-muted" ng-show="boxes !== null && !boxes.length">
-      <p>No boxes currently connected.  When <code>fishremote.py</code> is run on a box, it will appear here.</p>
+      <p>No boxes currently connected.  When <code>atles_remote.py</code> is run on a box, it will appear here.</p>
     </div>
 
     <div class="col-sm-10 col-sm-offset-1 text-muted" ng-show="boxes === 'error'">
-      <p>Error receiving data from server.  <code>fishweb.py</code> may not be running.</p>
+      <p>Error receiving data from server.  <code>atles_web.py</code> may not be running.</p>
     </div>
   </div>
 

@@ -19,7 +19,7 @@ Follow the ~~[illustrated walkthrough](TBD)~~ *[coming soon]* in the [documentat
 
 # Use It
 
-After the boxes are assembled and the software is installed, run ``src/fishweb.py`` and point a browser to ``http://[hostname]:8080/``.  As you turn on boxes, they should become visible in the main web interface.
+After the boxes are assembled and the software is installed, run ``src/atles_web.py`` and point a browser to ``http://[hostname]:8080/``.  As you turn on boxes, they should become visible in the main web interface.
 
 # Adapt It
 

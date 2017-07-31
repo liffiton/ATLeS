@@ -287,10 +287,10 @@ class TrackPlotter(object):
         ax.add_collection(frozen_collection)
 
         # Plot horizontal position
-        ax.plot(time, x*2-1, color='orange', label='x position of fish')
+        ax.plot(time, x*2-1, color='orange', label='x position')
 
         # Plot height
-        ax.plot(time, y*2-1, color='limegreen', label='y position of fish')
+        ax.plot(time, y*2-1, color='limegreen', label='y position')
 
         # Plot numpts (scaled so 0 = -1.0 (plot bottom), 20 = 1.0 (top))
         ax.plot(time, -1.0+(numpts/10.0), color='purple', linewidth=1, label='# detected points')

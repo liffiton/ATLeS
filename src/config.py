@@ -13,13 +13,13 @@ DBGFRAMEDIR = DATADIR / "debug_frames"
 
 INIDIR = BASEDIR / "ini"
 
-EXPSCRIPT = BASEDIR / "src" / "fishbox.py"
+EXPSCRIPT = BASEDIR / "src" / "atles_box.py"
 
-WEBAPPDIR = BASEDIR / "src" / "fishweb"
+WEBAPPDIR = BASEDIR / "src" / "web"
 TEMPLATEDIR = WEBAPPDIR / "views"
 STATICDIR   = WEBAPPDIR / "static"
 IMGDIR      = STATICDIR / "bgimgs"
 
 # Options used by software running on remotes (boxes)
-FISHREMOTE_USER = "pi"  # username for logging into this Pi via SSH
+REMOTE_USER = "pi"  # username for logging into this Pi via SSH
 HAS_DISPLAY = False  # does this Pi have a display attached for "background" images

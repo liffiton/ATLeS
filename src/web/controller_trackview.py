@@ -9,7 +9,7 @@ from bottle import request, response, route, static_file, jinja2_template as tem
 from sqlalchemy import sql
 
 import config
-import fishweb.db_schema as db_schema
+import web.db_schema as db_schema
 
 
 def _imgs(trackrel):

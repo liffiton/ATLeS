@@ -2,7 +2,7 @@
 title: Box Software Usage Notes
 ---
 
-# Notes on Running FishyCam
+# Notes on Running `atles_box.py`
 
 ## Framerate
 

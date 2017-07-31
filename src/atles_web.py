@@ -10,7 +10,7 @@ import sqlalchemy
 
 import config
 import utils
-from fishweb import bottle_plugin_box_rpc, db_schema, track_scanner
+from web import bottle_plugin_box_rpc, db_schema, track_scanner
 
 
 def parse_args():
@@ -53,14 +53,14 @@ if __name__ == '__main__':
     app.install(db_plugin)
 
     # setup error handlers
-    bottle.load("fishweb.error_handlers")
+    bottle.load("web.error_handlers")
 
     # load modules with controllers / routes
-    bottle.load("fishweb.controller_static")
-    bottle.load("fishweb.controller_archive")
-    bottle.load("fishweb.controller_boxes")
-    bottle.load("fishweb.controller_analyze")
-    bottle.load("fishweb.controller_trackview")
+    bottle.load("web.controller_static")
+    bottle.load("web.controller_archive")
+    bottle.load("web.controller_boxes")
+    bottle.load("web.controller_analyze")
+    bottle.load("web.controller_trackview")
 
     # start up the track scanner
     t = threading.Thread(target=track_scanner.scan_tracks, args=[db_engine])

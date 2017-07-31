@@ -8,7 +8,7 @@ from analysis import scripts
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Analyze zebrafish Skinner box experiment tracks.')
+    parser = argparse.ArgumentParser(description='Analyze ATLeS experiment tracks.')
     subparsers = parser.add_subparsers()
     # Make the subcommand required in Python 3.3+ (https://stackoverflow.com/a/18283730/7938656)
     subparsers.required = True

@@ -18,14 +18,14 @@ from zeroconf import ServiceBrowser, Zeroconf
 
 import config
 import utils
-from fishweb import db_schema
+from web import db_schema
 
 
 class Box(object):
     def __init__(self, name, ip, port, properties):
         self.name = name   # name of remote box
         self.ip = ip       # IP address
-        self.port = port   # port on which fishremote.py is accepting connections
+        self.port = port   # port on which atles_remote.py is accepting connections
 
         # information on git commit status for remote code
         self.gitshort = properties[b'gitshort'].decode()
@@ -164,7 +164,7 @@ class BoxManager(object):
             zeroconf = Zeroconf()
         except socket.error:
             zeroconf = Zeroconf(["0.0.0.0"])
-        self._browser = ServiceBrowser(zeroconf, "_fishbox._tcp.local.", self)  # starts its own daemon thread
+        self._browser = ServiceBrowser(zeroconf, "_atlesbox._tcp.local.", self)  # starts its own daemon thread
 
         # start separate thread for:
         #  - polling boxes

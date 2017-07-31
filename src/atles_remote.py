@@ -15,7 +15,7 @@ from rpyc.utils.server import ThreadedServer
 
 import config
 import utils
-from fishremote import box_interface
+from remote import box_interface
 
 
 _PORT = 4158
@@ -78,7 +78,7 @@ def main():
     try:
         server = ThreadedServer(service, hostname='localhost', port=_PORT, protocol_config={"allow_public_attrs": True})
     except socket.error as e:
-        print("Error opening socket.  fishremote may already be running.")
+        print("Error opening socket.  atles_remote may already be running.")
         print(e)
         sys.exit(1)
 
@@ -97,13 +97,13 @@ def main():
     gitshort = gitstatus[0]
     gitlong = gitstatus[1]
     info = zeroconf.ServiceInfo(
-        "_fishbox._tcp.local.",
-        "%s._fishbox._tcp.local." % boxname,
+        "_atlesbox._tcp.local.",
+        "%s._atlesbox._tcp.local." % boxname,
         socket.inet_aton(ip), _PORT, 0, 0,
         {
             'name': boxname,
             'appdir': os.getcwd(),
-            'user': config.FISHREMOTE_USER,
+            'user': config.REMOTE_USER,
             'hasdisplay': config.HAS_DISPLAY,
             'gitshort': gitshort,
             'gitlong': gitlong,

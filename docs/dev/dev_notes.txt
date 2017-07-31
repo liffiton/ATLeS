@@ -3,7 +3,7 @@ fishhead: 10.2.6.44
 
 
 To run main web interface:
-  sudo python fishweb.py --daemon
+  sudo python src/atles_web.py --daemon
 
 
 Fish tank measurements:

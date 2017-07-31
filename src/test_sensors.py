@@ -2,7 +2,7 @@
 
 import time
 
-from fishbox import sensors
+from box import sensors
 
 
 def main():

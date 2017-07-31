@@ -1,6 +1,6 @@
 import inspect
 
-from fishweb.box_rpc import BoxManager
+from web.box_rpc import BoxManager
 
 
 class BoxRPCPlugin(object):

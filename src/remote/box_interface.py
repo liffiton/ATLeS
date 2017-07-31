@@ -7,7 +7,7 @@ import time
 
 import config
 import utils
-from fishbox import wiring
+from box import wiring
 
 
 def lock_exists():
@@ -106,7 +106,7 @@ def start_experiment(expname, notes, inifile, phases):
     stop_img_stream()
 
     if (not wiring.wiring_mocked) and (os.geteuid() != 0):
-        cmdparts = ['sudo']  # fishbox.py must be run as root!
+        cmdparts = ['sudo']  # atles_box.py must be run as root!
     else:
         cmdparts = []
 

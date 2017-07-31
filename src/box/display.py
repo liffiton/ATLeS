@@ -5,7 +5,7 @@ try:
     import pygame
     display_mocked = False
 except ImportError:
-    from fishbox.modulemock import MockClass
+    from box.modulemock import MockClass
     pygame = MockClass("pygame")
     display_mocked = True
 
@@ -56,7 +56,7 @@ def _get_screen(xwin=False):
 
 
 class Display(object):
-    ''' Class for controlling the fishbox display '''
+    ''' Class for controlling the box display '''
 
     def __init__(self):
         self._screen = _get_screen()

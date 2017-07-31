@@ -1,13 +1,13 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          fishremote
+# Provides:          atles_remote
 # Required-Start:    $all sshd
 # Required-Stop:     $all sshd
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: initscript for fishremote.py
-# Description:       fishremote.py provides an RPC service that the main
-#                    fishbox web interface uses to query and control individual
+# Short-Description: initscript for atles_remote.py
+# Description:       atles_remote.py provides an RPC service that the main
+#                    ATLeS web interface uses to query and control individual
 #                    boxes.
 ### END INIT INFO
 
@@ -17,8 +17,8 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="fishremote RPC service"
-NAME=fishremote
+DESC="atles_remote RPC service"
+NAME=atles_remote
 DAEMON_DIR=/home/pi/fishycam/src/
 DAEMON_USER=root
 DAEMON=$DAEMON_DIR/$NAME.py
@@ -56,7 +56,7 @@ do_start()
 		|| return 1
 
     # LOGNAME is set to root w/o the below setting,
-    # and then fishremote's getuser() gets "root".
+    # and then atles_remote's getuser() gets "root".
     LOGNAME=$DAEMON_USER \
 	start-stop-daemon --start $START_OPTIONS -- \
 		$DAEMON_ARGS \

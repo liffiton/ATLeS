@@ -7,7 +7,7 @@ from wtforms import Form, FieldList, FormField, HiddenField, IntegerField, Radio
 from sqlalchemy import sql
 
 import config
-from fishweb import db_schema
+from web import db_schema
 
 
 def _inis():
@@ -190,7 +190,7 @@ def get_image(tgtbox, boxes_rpc, width=648):
             return
 
         # all set; carry on
-        response.set_header('Content-type', 'multipart/x-mixed-replace; boundary=fishboxframe')
+        response.set_header('Content-type', 'multipart/x-mixed-replace; boundary=atlesframe')
         while True:
             if box.lock_exists():
                 return
@@ -200,7 +200,7 @@ def get_image(tgtbox, boxes_rpc, width=648):
                 return
             if len(imgdata) < 16:
                 continue  # ignore dud frames
-            yield b"\n".join([b"--fishboxframe", b"Content-Type: image/jpeg", b"", imgdata, b""])
+            yield b"\n".join([b"--atlesframe", b"Content-Type: image/jpeg", b"", imgdata, b""])
     finally:
         box.stop_img_stream()
 

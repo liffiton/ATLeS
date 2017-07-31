@@ -10,11 +10,11 @@ import cv2
 
 import config
 
-from fishbox import tracking
-from fishbox import controllers  # noqa -- 'imported but unused' because used in eval()ed expression
-from fishbox import stimulus     # noqa -- ditto
-from fishbox import display
-from fishbox import wiring
+from box import tracking
+from box import controllers  # noqa -- 'imported but unused' because used in eval()ed expression
+from box import stimulus     # noqa -- ditto
+from box import display
+from box import wiring
 
 try:
     import sensors
@@ -215,7 +215,7 @@ class Experiment(object):
         using the configuration's tank bounds and just the given channel.
 
         Channels:  BGR -> Blue = 0, Green = 1 (default), Red = 2
-        For fishybox: use the green channel (all are sensitive to IR, but the
+        For atles_box: use the green channel (all are sensitive to IR, but the
         green appears to be most sensitive channel in general)
         '''
         return frame[self._ty1:self._ty2, self._tx1:self._tx2, channel]

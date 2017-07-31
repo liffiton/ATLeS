@@ -8,7 +8,7 @@ import cv2
 import subprocess
 import time
 
-from fishbox import tracking
+from box import tracking
 
 
 def main():

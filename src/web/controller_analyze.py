@@ -63,7 +63,7 @@ def get_stats():
         csvstring = output.getvalue()
         output.close()
         response.content_type = 'text/csv'
-        response.headers['Content-Disposition'] = 'attachment; filename=fishystats.csv'
+        response.headers['Content-Disposition'] = 'attachment; filename=atles_stats.csv'
         return csvstring
     else:
         return template('stats', keys=all_keys, stats=stats)

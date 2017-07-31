@@ -19,7 +19,7 @@ import time
 import config
 import utils
 from utils import Phase
-from fishbox import experiment
+from box import experiment
 
 
 def greedy_parse(s):
@@ -93,7 +93,7 @@ def setup_phases(args, conf):
 
 def get_args():
     '''Parse and return command-line arguments.'''
-    parser = argparse.ArgumentParser(description='Zebrafish Skinner box experiment.')
+    parser = argparse.ArgumentParser(description='ATLeS box experiment.')
     parser.add_argument('id', type=str, nargs='?', default='',
                         help='experiment ID (optional), added to output filenames')
     parser.add_argument('-w', '--watch', action='store_true',
@@ -125,7 +125,7 @@ def get_args():
                              'Specify each phase with its own -p/--phases '
                              'argument in the order the phases should run. '
                              'e.g.: "-p 10,off,a.png -p 30,rand,b.png -p 30,off,a.png" '
-                             'If not specified, fishbox runs a single, '
+                             'If not specified, atles_box runs a single, '
                              'infinite "phase" with stim=True and a black background image.'
                         )
 

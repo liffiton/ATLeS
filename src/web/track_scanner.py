@@ -10,7 +10,7 @@ from sqlalchemy import sql
 import config
 import utils
 from utils import Phase  # noqa
-import fishweb.db_schema as db_schema
+import web.db_schema as db_schema
 
 
 _trackfile_parse_regexp = re.compile(r"(\d{8}-\d{4,6})-?(.*)-track.csv")

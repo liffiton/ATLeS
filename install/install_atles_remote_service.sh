@@ -1,9 +1,9 @@
 #!/bin/sh
 
 if [ $# -ne 1 ]; then
-    echo "install_fishremote_service.sh: Install the fishremote service on the local machine."
+    echo "install_atles_remote_service.sh: Install the atles_remote service on the local machine."
     echo
-    echo "Usage: sudo $0 FISHYCAM_DIR"
+    echo "Usage: sudo $0 ATLES_DIR"
     echo
     echo "This generally will be run for you by setup_box.sh, and shouldn't"
     echo "need to be run separately."
@@ -12,7 +12,7 @@ fi
 
 
 DIR=$1
-NAME=fishremote
+NAME=atles_remote
 SCRIPT=$DIR/install/$NAME.initscript
 
 if [ ! -f $SCRIPT ]; then
