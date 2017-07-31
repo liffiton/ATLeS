@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import atexit
@@ -130,8 +130,8 @@ def get_args():
                         )
 
     rare_group = parser.add_argument_group('rarely-used arguments')
-    rare_group.add_argument('--inifile', type=str, default='ini/default.ini',
-                            help="configuration file specifying physical setup (default: ini/default.ini)")
+    rare_group.add_argument('--inifile', type=str, default='../ini/default.ini',
+                            help="path to configuration file specifying physical setup (default: ../ini/default.ini)")
     rare_group.add_argument('--vidfile', type=str,
                             help='read video input from the given file (for testing purposes)')
     rare_group.add_argument('--delay', type=int, default=0,

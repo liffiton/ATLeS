@@ -5,7 +5,7 @@ try:
     wiring_mocked = False
 except ImportError:
     print("INFO: wiringpi not available; running with mock stand-in instead.")
-    from .modulemock import MockClass
+    from fishbox.modulemock import MockClass
     wiringpi = MockClass("wiringpi")
     wiring_mocked = True
 

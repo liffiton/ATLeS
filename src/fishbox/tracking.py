@@ -108,7 +108,7 @@ class TargetFilterBGSub(TargetFilterBase):
         #self._bgs = cv2.BackgroundSubtractorMOG(history=10, nmixtures=3, backgroundRatio=0.2, noiseSigma=20)
 
         # varThreshold: higher values detect fewer/smaller changed regions
-        self._bgs = cv2.BackgroundSubtractorMOG2(history=0, varThreshold=8, bShadowDetection=False)
+        self._bgs = cv2.createBackgroundSubtractorMOG2(history=0, varThreshold=8, detectShadows=False)
 
         # ??? history is ignored?  Only if learning_rate is > 0, or...?  Unclear.
 
@@ -154,7 +154,7 @@ class FrameProcessor(object):
 
     def _get_contours(self):
         # find contours
-        self._contours, _ = cv2.findContours(self._frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        _, self._contours, _ = cv2.findContours(self._frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     def _get_centroids(self):
         if not self._contours:
@@ -424,8 +424,8 @@ class Stream(object):
     def get_video_stats(self):
         assert(self.sourcetype == 'file')
 
-        framecount = self._video.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
-        fps = self._video.get(cv2.cv.CV_CAP_PROP_FPS)
+        framecount = self._video.get(cv2.CAP_PROP_FRAME_COUNT)
+        fps = self._video.get(cv2.CAP_PROP_FPS)
 
         return framecount, fps
 
@@ -450,8 +450,8 @@ class Stream(object):
         atexit.register(cap.release)
 
         # Try setting width/height this way, too, in case we don't have modified OpenCV but this still works.
-        cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, w)
-        cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, h)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, w)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 
         # Read a frame, just in case it's needed before setting params
         rval, _ = cap.read()
@@ -492,11 +492,11 @@ class Stream(object):
 
     @property
     def width(self):
-        return int(self._video.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+        return int(self._video.get(cv2.CAP_PROP_FRAME_WIDTH))
 
     @property
     def height(self):
-        return int(self._video.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+        return int(self._video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     def get_frame(self):
         rval, frame = self._video.read()

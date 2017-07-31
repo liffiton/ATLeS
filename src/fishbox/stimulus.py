@@ -6,7 +6,7 @@ import signal
 import sys
 from threading import Timer
 
-import wiring
+from fishbox import wiring
 
 
 _LIGHT_PWM_PIN = 18      # pin for PWM control of visible light bar

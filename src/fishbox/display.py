@@ -5,7 +5,7 @@ try:
     import pygame
     display_mocked = False
 except ImportError:
-    from modulemock import MockClass
+    from fishbox.modulemock import MockClass
     pygame = MockClass("pygame")
     display_mocked = True
 

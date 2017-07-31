@@ -10,11 +10,11 @@ import cv2
 
 import config
 
-import tracking
-import controllers  # noqa -- 'imported but unused' because used in eval()ed expression
-import stimulus     # noqa -- ditto
-import display
-import wiring
+from fishbox import tracking
+from fishbox import controllers  # noqa -- 'imported but unused' because used in eval()ed expression
+from fishbox import stimulus     # noqa -- ditto
+from fishbox import display
+from fishbox import wiring
 
 try:
     import sensors
