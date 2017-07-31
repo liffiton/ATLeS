@@ -68,7 +68,9 @@ Depend on:
 
 Install PyPI packages by running:
 
-    $ pip3 install --user -U -r requirements_remote.txt
+    $ sudo pip3 install --user -U -r requirements_remote.txt
+
+We install using sudo here so that the libraries are available systemwide, as `atles_remote.py` will be run as root (to be able to control the PWM output).
 
 To install smbus:
 
