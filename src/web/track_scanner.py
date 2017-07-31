@@ -1,7 +1,6 @@
 import collections
 import configparser
 import dateutil
-import os
 import re
 import time
 
@@ -29,7 +28,7 @@ def _get_track_data(track):
     heatmap = collections.Counter()
     invalid_heatmap = collections.Counter()
     # TODO: use pandas to simplify parsing/analysis
-    with open(track) as f:
+    with open(str(track)) as f:
         lines = 0
         for line in f:
             vals = line.split(',')
@@ -81,7 +80,7 @@ def _get_track_data(track):
 def _get_setup_info(setupfile):
     parser = configparser.ConfigParser(interpolation=None)
     try:
-        parser.read(setupfile)
+        parser.read(str(setupfile))
         notes = parser.get('general', 'notes', fallback=None)
         trigger = parser.get('experiment', 'trigger', fallback=None)
         controller = parser.get('experiment', 'controller', fallback=None)
@@ -99,12 +98,13 @@ def _get_setup_info(setupfile):
         raise
 
 
-def _get_track_db_info(key, trackfile, trackrel):
+def _get_track_db_info(key, trackfile, trackrelpath):
     lines, asml, heat, invalid_heat = _get_track_data(trackfile)
-    subdir, filename = os.path.split(trackrel)
+    subdir = str(trackrelpath.parent)
     if subdir == '':
         # locally-created, most likely
         subdir = utils.get_boxname()
+    filename = trackrelpath.name
     starttime_str, exp_name = _trackfile_parse_regexp.search(filename).groups()
     starttime = dateutil.parser.parse(starttime_str)
 
@@ -118,7 +118,7 @@ def _get_track_db_info(key, trackfile, trackrel):
     new_row = dict(
         key=key,
         trackpath=trackfile,
-        trackrel=trackrel,
+        trackrel=str(trackrelpath),
         setupfile=setupfile,
         trigger=trigger,
         controller=controller,
@@ -181,11 +181,11 @@ def _add_new_tracks(conn, tracks_in_db, tracks_in_fs):
     # Go through all track files, loading track data from DB if present
     # or computing and storing in DB if not yet.
     for trackfile in tracks_in_fs:
-        mtime = os.stat(trackfile).st_mtime
-        trackrel = os.path.relpath(trackfile, config.TRACKDIR)  # path relative to main tracks directory
-        key = "%f|%s" % (mtime, trackrel)
+        mtime = trackfile.stat().st_mtime
+        trackrelpath = trackfile.relative_to(config.TRACKDIR)  # path relative to main tracks directory
+        key = "%f|%s" % (mtime, trackrelpath)
         if key not in tracks_in_db:
-            new_row, phase_data = _get_track_db_info(key, trackfile, trackrel)
+            new_row, phase_data = _get_track_db_info(key, trackfile, trackrelpath)
             insert = tracks.insert().values(new_row)
             conn.execute(insert)
             if phase_data is not None:

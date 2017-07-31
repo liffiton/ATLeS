@@ -38,7 +38,7 @@ if __name__ == '__main__':
     utils.mkdir(config.ARCHIVEDIR)
 
     # let bottle know where to find our templates
-    bottle.TEMPLATE_PATH.insert(0, config.TEMPLATEDIR)
+    bottle.TEMPLATE_PATH.insert(0, str(config.TEMPLATEDIR))
 
     app = bottle.default_app()
 

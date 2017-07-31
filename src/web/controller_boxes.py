@@ -1,4 +1,3 @@
-import os
 import re
 import time
 
@@ -11,12 +10,11 @@ from web import db_schema
 
 
 def _inis():
-    return sorted(f for f in os.listdir(config.INIDIR) if f.endswith('.ini'))
+    return sorted(config.INIDIR.glob("*.ini"))
 
 
 def _bgimgs():
-    bgimgs = os.listdir(config.IMGDIR)
-    return sorted(bgimgs)
+    return sorted(config.IMGDIR.glob("*"))
 
 
 def _get_box_rpc(tgtbox, boxes_rpc):
@@ -226,7 +224,7 @@ def post_new(tgtbox, boxes_rpc):
 
     expname = form.expname.data
     notes = form.notes.data
-    inifile = os.path.join(config.INIDIR, form.inifile.data)
+    inifile = config.INIDIR / form.inifile.data
 
     def get_phase(phase):
         length = phase.length.data

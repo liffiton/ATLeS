@@ -1,6 +1,5 @@
 import copy
 import datetime
-import os
 import socket
 import subprocess
 import threading
@@ -36,12 +35,12 @@ class Box(object):
         # username for SSH login to remote box
         self.user = properties[b'user'].decode()
 
-        # path to track data directory on remote box
+        # paths to track data directories on remote box
         self.appdir = properties[b'appdir'].decode()
-        # build useful paths
-        self.trackdir = os.path.join(self.appdir, config.TRACKDIR)
-        self.archivedir = os.path.join(self.appdir, config.ARCHIVEDIR)
-        self.dbgframedir = os.path.join(self.appdir, config.DBGFRAMEDIR)
+        # build useful paths (assumes same directory structure on remote)
+        self.trackdir = self.appdir / config.TRACKDIR.relative_to(config.BASEDIR)
+        self.archivedir = self.appdir / config.ARCHIVEDIR.relative_to(config.BASEDIR)
+        self.dbgframedir = self.appdir / config.DBGFRAMEDIR.relative_to(config.BASEDIR)
 
         self.error = None  # Internal error message, if any
         self.local = None  # True if box is actually the local machine
@@ -125,14 +124,13 @@ class Box(object):
         # commented), so they will be removed from remote entirely.
         #self._tunnel["cp -r %s %s" % (self.dbgframedir, self.archivedir)]
 
-        # Both source and dest must end with / to copy contents of one folder
-        # into another, isntead of copying the source folder into the
-        # destination as a new folder there.
-        # In os.path.join, the '' ensures a trailing /
-        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), os.path.join(config.TRACKDIR, self.name, '')]
+        # NOTE: Source must end with / to copy the *contents* of the folder
+        # instead of copying the source folder into the destination as a new
+        # folder there.
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), config.TRACKDIR / self.name]
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
-        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), os.path.join(config.DBGFRAMEDIR, self.name, '')]  # '' to ensure trailing /
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), config.DBGFRAMEDIR / self.name]  # '' to ensure trailing /
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
     @property
@@ -227,7 +225,7 @@ class BoxManager(object):
         if latest_remote is None:
             # No files present on remote
             return
-        boxtrackdir = os.path.join(config.TRACKDIR, box)
+        boxtrackdir = config.TRACKDIR / box
         latest_local = utils.max_mtime(boxtrackdir)
 
         # *Ugly* hack to "de-netref" the rpyc-returned object

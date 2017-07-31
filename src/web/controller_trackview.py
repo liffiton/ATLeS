@@ -5,7 +5,7 @@ import statistics
 import tempfile
 import zipfile
 
-from bottle import request, response, route, static_file, jinja2_template as template
+from bottle import request, response, route, jinja2_template as template
 from sqlalchemy import sql
 
 import config
@@ -253,11 +253,3 @@ def download():
     # relying on garbage collector to delete tempfile object
     # (and hence the file itself) when done sending
     return temp
-
-
-@route('/data/<filename:path>')
-def static_data(filename):
-    if filename.endswith('.csv'):
-        return static_file(filename, root=config.DATADIR, mimetype='text/plain')
-    else:
-        return static_file(filename, root=config.DATADIR)
