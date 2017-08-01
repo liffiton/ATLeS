@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import atexit
-import os
 import signal
 import socket
 import sys
@@ -102,7 +101,7 @@ def main():
         socket.inet_aton(ip), _PORT, 0, 0,
         {
             'name': boxname,
-            'appdir': os.getcwd(),
+            'appdir': str(config.BASEDIR),
             'user': config.REMOTE_USER,
             'hasdisplay': config.HAS_DISPLAY,
             'gitshort': gitshort,

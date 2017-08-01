@@ -127,10 +127,10 @@ class Box(object):
         # NOTE: Source must end with / to copy the *contents* of the folder
         # instead of copying the source folder into the destination as a new
         # folder there.
-        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), config.TRACKDIR / self.name]
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), str(config.TRACKDIR / self.name)]
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
-        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), config.DBGFRAMEDIR / self.name]  # '' to ensure trailing /
+        cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), str(config.DBGFRAMEDIR / self.name)]  # '' to ensure trailing /
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
     @property
