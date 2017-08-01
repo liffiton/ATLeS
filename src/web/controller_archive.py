@@ -11,8 +11,8 @@ def _relative_move(srcroot, srcrel, destroot):
     E.g.  relative_move('foo/', 'bar/baz', 'bob/') will move
     foo/bar/baz into bob/bar/baz, creating bob/bar if needed.
     '''
-    srcfile = srcroot / srcrel
-    destfile = destroot / srcrel
+    srcfile = str(srcroot / srcrel)
+    destfile = str(destroot / srcrel)
     utils.mkdir(destfile.parent)  # make sure directory exists
     shutil.move(srcfile, destfile)
 
