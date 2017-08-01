@@ -57,5 +57,5 @@ def max_mtime(dir):
     files = list(dir.glob("*"))
     if not files:
         return None
-    maxtime = max(os.path.getmtime(str(f)) for f in files)
+    maxtime = max(f.stat().st_mtime for f in files)
     return datetime.datetime.fromtimestamp(maxtime)

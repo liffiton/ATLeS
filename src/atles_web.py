@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
 import threading
 
 import bottle
@@ -70,13 +69,10 @@ if __name__ == '__main__':
     if args.daemon:
         import daemon
         print("Launching server daemon in the background.")
-        logfile = os.path.join(
-            os.getcwd(),
-            "bottle.log"
-        )
-        with open(logfile, 'w+') as log:
+        logfile = config.WEBAPPDIR / "bottle.log"
+        with logfile.open('w+') as log:
             context = daemon.DaemonContext(
-                working_directory=os.getcwd(),
+                working_directory=str(config.WEBAPPDIR),
                 stdout=log,
                 stderr=log
             )

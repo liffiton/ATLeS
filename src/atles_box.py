@@ -247,13 +247,13 @@ def main():
     try:
         # O_CREAT | O_EXCL ensure that this call creates the file,
         # raises OSError if file exists
-        lockfd = os.open(config.LOCKFILE, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        lockfd = os.open(str(config.LOCKFILE), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         lockfile = os.fdopen(lockfd, 'w')
         # store PID, start time (in UTC), and experiment runtime
         lockfile.write("%d\n%d\n%d\n" % (os.getpid(), int(time.time()), total_time*60 if total_time else 0))
         lockfile.close()
         # remove lockfile at exit
-        atexit.register(os.unlink, config.LOCKFILE)
+        atexit.register(config.LOCKFILE.unlink)
     except ValueError:
         logging.error("It appears an experiment is already running (%s exists).  Please wait or end that experiment before starting another." % config.LOCKFILE)
         sys.exit(1)

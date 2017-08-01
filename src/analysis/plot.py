@@ -1,5 +1,4 @@
 import math
-import os
 import re
 
 import matplotlib
@@ -311,7 +310,7 @@ class TrackPlotter(object):
         # Get [tracking]:start_frame for proper offset of debug frame numbers into track data here
         start_frame = int(self._track.config['tracking']['start_frame'])
         for dbgframe in self._dbgframes:
-            nameparts = os.path.basename(dbgframe).split('_')
+            nameparts = dbgframe.name.split('_')
             frameindex = max(0, int(nameparts[1]) - start_frame)  # restrict to index 0 at minimum
             frametime = self._track.df.index[frameindex]
             if start <= frametime < end:

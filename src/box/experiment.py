@@ -343,7 +343,7 @@ class Experiment(object):
                 phase_data = new_phase_data
                 logging.info("Starting phase: %s" % (str(phase_data)))
                 if config.HAS_DISPLAY:
-                    imgfile = os.path.join(config.IMGDIR, phase_data.background)
+                    imgfile = str(config.IMGDIR / phase_data.background)
                     self._display.show_image(imgfile)
 
             stim_msg = self._stim.msg_poll()

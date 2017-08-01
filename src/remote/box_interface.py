@@ -18,7 +18,7 @@ def lock_data():
     if not lock_exists():
         return {'running': False}
 
-    with open(config.LOCKFILE, 'r') as f:
+    with config.LOCKFILE.open('r') as f:
         pid, starttime, runtime = (int(line) for line in f)
         return {'running': True,
                 'pid': pid,
@@ -176,7 +176,7 @@ def cond_sudo_kill(pid, signal):
 
 def kill_experiment():
     # kill process
-    with open(config.LOCKFILE, 'r') as f:
+    with config.LOCKFILE.open('r') as f:
         pid, starttime, runtime = (int(line) for line in f)
 
     print("Killing PID %d" % pid)
@@ -193,7 +193,7 @@ def kill_experiment():
 
     # remove existing lockfile
     try:
-        os.unlink(config.LOCKFILE)
+        config.LOCKFILE.unlink()
     except:
         # might not exist anymore
         pass
