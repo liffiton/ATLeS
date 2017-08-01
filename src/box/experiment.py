@@ -295,7 +295,7 @@ class Experiment(object):
                 # save a frame every "debug_frames" frames
                 self._save_debug_frame(frame, subframe, frame_num, status)
 
-        if status != 'lost' and self._trigger(pos_tank):
+        if status != 'lost' and status != 'init' and self._trigger(pos_tank):
             # Only provide a stimulus if we know where the fish is
             # and the behavior test for that position says we should.
             if phase_data.dostim:

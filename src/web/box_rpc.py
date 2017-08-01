@@ -238,8 +238,10 @@ class BoxManager(object):
         if latest_local is None or latest_local < latest_remote:
             box_rpc.sync_data()
 
-        # assert that update occurred
-        assert latest_remote == utils.max_mtime(boxtrackdir)
+        # check that update occurred
+        if latest_remote != utils.max_mtime(boxtrackdir):
+            # warn w/ simple print for now
+            print("Warning: sync may not have occurred for box {}.".format(box))
 
     def _update_box(self, box, conn):
         # get updated box data
