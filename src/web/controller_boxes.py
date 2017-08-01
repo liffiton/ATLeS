@@ -10,11 +10,15 @@ from web import db_schema
 
 
 def _inis():
-    return sorted(config.INIDIR.glob("*.ini"))
+    return sorted(str(p.relative_to(config.INIDIR))
+                  for p in
+                  config.INIDIR.glob("*.ini"))
 
 
 def _bgimgs():
-    return sorted(config.IMGDIR.glob("*"))
+    return sorted(str(p.relative_to(config.IMGDIR))
+                  for p in
+                  config.IMGDIR.glob("*"))
 
 
 def _get_box_rpc(tgtbox, boxes_rpc):
@@ -224,7 +228,7 @@ def post_new(tgtbox, boxes_rpc):
 
     expname = form.expname.data
     notes = form.notes.data
-    inifile = config.INIDIR / form.inifile.data
+    inifile = form.inifile.data
 
     def get_phase(phase):
         length = phase.length.data

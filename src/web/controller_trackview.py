@@ -242,7 +242,9 @@ def download():
             base_wildcard = trackrel.replace("-track.csv", "*")
             paths = config.TRACKDIR.glob(base_wildcard)
             for path in paths:
-                archive.write(path, path.relative_to(config.TRACKDIR))
+                archive.write(str(path),
+                              str(path.relative_to(config.TRACKDIR))
+                              )
 
     temp.seek(0)
 

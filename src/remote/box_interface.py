@@ -114,7 +114,7 @@ def start_experiment(expname, notes, inifile, phases):
 
     # inifile
     cmdparts.append("--inifile")
-    cmdparts.append(inifile)
+    cmdparts.append(str(config.INIDIR / inifile))
 
     # phases: each specified with a -p argument w/ ','-delimited values in each
     # e.g.: -p 10,off -p 30,rand -p 30,off
