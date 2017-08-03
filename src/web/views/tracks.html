@@ -14,6 +14,10 @@ $(function() {
     filter_rows(this.value);
   });
   $("#rowfilter").trigger('input');
+  $("#showfilters").click(function(e) {
+    $("#filters").show();
+    $("#showfilters").hide();
+  });
   $("._selectallbutton").click(toggle_select_all);
   $("tr.track_row .selectbutton").click(function(e) {
     var row = $(this).closest("tr");
@@ -34,10 +38,12 @@ $(function() {
 <div class="container">
   <h1>Track Analyzer/Viewer</h1>
 
-  {% if filters or selected: %}
   <div class="row">
     <div class="col-sm-12">
-      <div class="panel panel-default">
+      <button class="btn btn-default" role="button" id="showfilters" {% if selected: %}style="display:none;"{% endif %}>
+        Enable Filters
+      </button>
+      <div class="panel panel-default" id="filters" {% if not selected: %}style="display:none;"{% endif %}>
         <div class="panel-heading form-inline">
           <a class="close" href="/tracks/">&times;</a>
           <h2 class="panel-title">
@@ -96,13 +102,6 @@ $(function() {
       </div>
     </div>
   </div>
-  {% else: %}
-  <p>
-    <a href="/tracks/filter/" class="btn btn-default" role="button">
-      Enable Filters
-    </a>
-  </p>
-  {% endif %}
 
   <div class="row">
     <div class="col-sm-12">
@@ -157,15 +156,9 @@ $(function() {
             {% endif %}
           </td>
           <td>
-            {% if imgs: %}
-            <a href="/view/{{row['trackrel']}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-stats"></span> Plots</a>
-            {% endif %}
-            {% if dbgframes: %}
-            <a href="/dbgframes/{{row['trackrel']}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-camera"></span> Debug</a>
-            {% endif %}
-            {% if setupfile: %}
-            <a href="/data/tracks/{{setupfile}}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-cog"></span> Setup</a>
-            {% endif %}
+            <a href="/view/{{row['trackrel']}}" class="btn btn-default btn-xs" {% if not imgs: %}style="visibility:hidden;"{% endif %}><span class="glyphicon glyphicon-stats"></span> Plots</a>
+            <a href="/dbgframes/{{row['trackrel']}}" class="btn btn-default btn-xs" {% if not dbgframes: %}style="visibility:hidden;"{% endif %}><span class="glyphicon glyphicon-camera"></span> Debug</a>
+            <a href="/data/tracks/{{setupfile}}" class="btn btn-default btn-xs" {% if not setupfile: %}style="visibility:hidden;"{% endif %}><span class="glyphicon glyphicon-cog"></span> Setup</a>
           </td>
           <td class="actionbuttons">
             {% if row['lines'] > 0: %}

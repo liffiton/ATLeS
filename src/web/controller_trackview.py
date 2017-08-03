@@ -109,12 +109,6 @@ def _get_all_track_data(db):
     return track_data
 
 
-@route('/tracks/')
-def tracks(db):
-    track_data = _get_all_track_data(db)
-    return template('tracks', tracks=track_data)
-
-
 def _get_filters(rows, selected):
     ''' Return a list of potential filter tuples for the given data in rows.
          tuple: (param name, type, values or stats)
@@ -195,8 +189,8 @@ def _select_track_data(track_data, filt, val):
         return [t for t in track_data if t[0][filt] == val]
 
 
-@route('/tracks/filter/')
-def tracks_filter(db):
+@route('/tracks/')
+def tracks(db):
     track_data = _get_all_track_data(db)
 
     selected = {}
