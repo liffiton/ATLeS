@@ -1,0 +1,13 @@
+To install atles_web.py as a systemd service:
+
+ 1. Edit atles_web.service to set the correct values for the "User," "Group,"
+    "WorkingDirectory," and "ExecStart," values in the [Service] section.
+
+ 2. Copy the atles_web.service file to /etc/systemd/system/ directory.
+
+ 3. Test running the service:
+    sudo systemctl start atles_web
+
+ 4. If it works (you can access the web server with a browser), enable the service on boot:
+    sudo systemctl enable atles_web
+
