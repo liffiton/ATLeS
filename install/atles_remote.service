@@ -1,0 +1,12 @@
+[Unit]
+Description=ATLeS RPC service
+After=sshd.service
+Requires=sshd.service
+
+[Service]
+WorkingDirectory=/home/pi/fishycam
+ExecStart=/home/pi/fishycam/fishremote.py
+Type=idle
+
+[Install]
+WantedBy=multi-user.target

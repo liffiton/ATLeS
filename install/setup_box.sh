@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ $# -ne 1 ]; then
-    echo "setup_box.sh: Set up a connected fishbox Raspberry Pi from the main fixbox server."
+    echo "setup_box.sh: Set up a connected ATLeS Raspberry Pi from the main server."
     echo
     echo "Usage: $0 hostname"
     echo
@@ -19,7 +19,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-remote_cmd="sudo ~/fishycam/install/install_fishremote_service.sh ~/fishycam/ && sudo service fishremote start"
+remote_cmd="sudo ~/fishycam/install/install_remote_service.sh ~/fishycam/"
 cmd="ssh pi@$hostname"
 $cmd $remote_cmd
 
