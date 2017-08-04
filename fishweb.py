@@ -37,7 +37,7 @@ if __name__ == '__main__':
     app = bottle.default_app()
 
     # install sqlalchemy plugin
-    db_engine = sqlalchemy.create_engine('sqlite:///{}'.format(config.DBFILE))
+    db_engine = sqlalchemy.create_engine('sqlite:///{}'.format(config.DBFILE), connect_args={'timeout': 10})
     db_schema.create_all(db_engine)  # create db/tables if not already there
     db_plugin = bottle.ext.sqlalchemy.Plugin(
         db_engine,
