@@ -2,7 +2,6 @@ bottle
 bottle-sqlalchemy
 Jinja2
 wtforms
-python-daemon
 matplotlib
 numpy
 pandas

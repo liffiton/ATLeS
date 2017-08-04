@@ -19,7 +19,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-remote_cmd="sudo ~/fishycam/install/install_atles_remote_service.sh ~/fishycam/ && sudo service atles_remote start"
+remote_cmd="sudo ~/fishycam/install/install_remote_service.sh ~/fishycam/"
 cmd="ssh pi@$hostname"
 $cmd $remote_cmd
 

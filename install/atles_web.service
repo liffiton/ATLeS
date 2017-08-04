@@ -1,0 +1,13 @@
+[Unit]
+Description=ATLeS Web Server
+After=syslog.target
+
+[Service]
+User=fishhead
+Group=fishhead
+WorkingDirectory=/home/fishhead/atles/
+ExecStart=/home/fishhead/atles/fishweb.py
+Type=idle
+
+[Install]
+WantedBy=multi-user.target

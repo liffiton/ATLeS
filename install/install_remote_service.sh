@@ -13,13 +13,13 @@ fi
 
 DIR=$1
 NAME=atles_remote
-SCRIPT=$DIR/install/$NAME.initscript
+SERVICEFILE=$DIR/install/$NAME.service
 
-if [ ! -f $SCRIPT ]; then
-    echo "Initscript $SCRIPT does not exist."
+if [ ! -f $SERVICEFILE ]; then
+    echo "Service file $SERVICEFILE does not exist."
     exit 1
 fi
 
-cp $SCRIPT /etc/init.d/$NAME
-chmod +x /etc/init.d/$NAME
-update-rc.d $NAME defaults
+cp $SERVICEFILE /etc/systemd/system/
+systemctl enable $NAME
+systemctl start $NAME

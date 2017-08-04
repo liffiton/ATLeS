@@ -15,8 +15,6 @@ from web import bottle_plugin_box_rpc, db_schema, track_scanner
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-d', '--daemon', action='store_true',
-                        help="run the server as a daemon (in the background)")
     parser.add_argument('--testing', action='store_true',
                         help="run the server in 'testing' mode, with debugging information, restricted to localhost, etc. -- don't do this unless you really need to")
 
@@ -26,9 +24,6 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-
-    #host = 'localhost' if args.testing else '0.0.0.0'
-    host = '0.0.0.0'
 
     # Create needed directories if not already there
     utils.mkdir(config.PLOTDIR)
@@ -42,7 +37,7 @@ if __name__ == '__main__':
     app = bottle.default_app()
 
     # install sqlalchemy plugin
-    db_engine = sqlalchemy.create_engine('sqlite:///{}'.format(config.DBFILE))
+    db_engine = sqlalchemy.create_engine('sqlite:///{}'.format(config.DBFILE), connect_args={'timeout': 10})
     db_schema.create_all(db_engine)  # create db/tables if not already there
     db_plugin = bottle.ext.sqlalchemy.Plugin(
         db_engine,
@@ -66,28 +61,8 @@ if __name__ == '__main__':
     t.daemon = True
     t.start()
 
-    if args.daemon:
-        import daemon
-        print("Launching server daemon in the background.")
-        logfile = config.WEBAPPDIR / "bottle.log"
-        with logfile.open('w+') as log:
-            context = daemon.DaemonContext(
-                working_directory=str(config.WEBAPPDIR),
-                stdout=log,
-                stderr=log
-            )
-            with context:
-                # add our boxes plugin
-                # (IIRC, this needs to be done in the daemon context,
-                #  not before.)
-                box_rpc_plugin = bottle_plugin_box_rpc.BoxRPCPlugin()
-                app.install(box_rpc_plugin)
+    # add our boxes plugin
+    box_rpc_plugin = bottle_plugin_box_rpc.BoxRPCPlugin(db_engine)
+    app.install(box_rpc_plugin)
 
-                app.run(host=host, port=8080, server='waitress', debug=False, reloader=False)
-
-    else:
-        # add our boxes plugin
-        box_rpc_plugin = bottle_plugin_box_rpc.BoxRPCPlugin(db_engine)
-        app.install(box_rpc_plugin)
-
-        app.run(host=host, port=8080, server='waitress', debug=args.testing, reloader=args.testing)
+    app.run(host='0.0.0.0', port=8080, server='waitress', debug=args.testing, reloader=args.testing)

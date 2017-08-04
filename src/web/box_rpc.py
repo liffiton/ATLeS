@@ -279,5 +279,5 @@ class BoxManager(object):
             for box in self._boxes:
                 assert box in box_names
             for box in box_names:
-                self._update_box(box, conn)
+                self._updatequeue.put(box)
             time.sleep(2)
