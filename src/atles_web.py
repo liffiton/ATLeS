@@ -16,7 +16,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--testing', action='store_true',
-                        help="run the server in 'testing' mode, with debugging information, restricted to localhost, etc. -- don't do this unless you really need to")
+                        help="run the server in 'testing' mode, with debugging information, automatic file reload, etc. -- don't do this unless you really need to")
+    parser.add_argument('--port', type=int, default=8080,
+                        help="port on which to serve the web interface (default: 8080)")
 
     args = parser.parse_args()
     return args
@@ -65,4 +67,4 @@ if __name__ == '__main__':
     box_rpc_plugin = bottle_plugin_box_rpc.BoxRPCPlugin(db_engine)
     app.install(box_rpc_plugin)
 
-    app.run(host='0.0.0.0', port=8080, server='waitress', debug=args.testing, reloader=args.testing)
+    app.run(host='0.0.0.0', port=args.port, server='waitress', debug=args.testing, reloader=args.testing)
