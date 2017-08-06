@@ -6,7 +6,7 @@ After=syslog.target
 User=fishhead
 Group=fishhead
 WorkingDirectory=/home/fishhead/atles/
-ExecStart=/home/fishhead/atles/fishweb.py
+ExecStart=/home/fishhead/atles/src/atles_web.py
 Type=idle
 
 [Install]
