@@ -5,7 +5,7 @@ Requires=sshd.service
 
 [Service]
 WorkingDirectory=/home/pi/fishycam
-ExecStart=/home/pi/fishycam/fishremote.py
+ExecStart=/home/pi/fishycam/src/atles_remote.py
 Type=idle
 
 [Install]
