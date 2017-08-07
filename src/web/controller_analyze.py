@@ -2,7 +2,7 @@ import base64
 import csv
 import io
 import multiprocessing
-import traceback
+import sys
 from io import StringIO
 from pathlib import Path
 
@@ -14,6 +14,7 @@ matplotlib.use('Agg')
 from bottle import get, post, redirect, request, response, jinja2_template as template  # noqa: E402
 
 from analysis import heatmaps, process, plot  # noqa: E402
+from .error_handlers import TrackParseError
 import config  # noqa: E402
 import utils   # noqa: E402
 
@@ -31,9 +32,9 @@ def get_stats():
 
         try:
             processor = process.TrackProcessor(str(config.TRACKDIR / trackrel))
-        except ValueError as e:
+        except ValueError:
             # often 'wrong number of columns' due to truncated file from killed experiment
-            return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackrel, exception=traceback.format_exc())
+            raise(TrackParseError(trackrel, sys.exc_info()))
 
         curstats.update(processor.get_setup(['experiment', 'phases']))
         curstats.update(processor.get_stats(include_phases=True))
@@ -105,9 +106,9 @@ def post_analyze():
     trackrel = request.query.trackrel
     try:
         _do_analyze(trackrel)
-    except ValueError as e:
+    except ValueError:
         # often 'wrong number of columns' due to truncated file from killed experiment
-        return template('error', errormsg="Failed to parse %s.  Please check and correct the file, deselect it, or archive it." % trackrel, exception=traceback.format_exc())
+        raise(TrackParseError(trackrel, sys.exc_info()))
     redirect("/view/{}".format(trackrel))
 
 
@@ -115,7 +116,7 @@ def _analyze_selection(trackrels):
     for trackrel in trackrels:
         try:
             _do_analyze(trackrel)
-        except ValueError as e:
+        except ValueError:
             # often 'wrong number of columns' due to truncated file from killed experiment
             pass  # nothing to be done here; we're processing in the background
 
@@ -130,10 +131,12 @@ def post_analyze_selection():
 @get('/heatmaps/')
 def get_heatmaps():
     trackrels = request.query.tracks.split('|')
-    processors = [
-        process.TrackProcessor(str(config.TRACKDIR / trackrel), just_raw_data=True)
-        for trackrel in trackrels
-    ]
+    processors = []
+    for trackrel in trackrels:
+        try:
+            processors.append(process.TrackProcessor(str(config.TRACKDIR / trackrel), just_raw_data=True))
+        except ValueError:
+            raise(TrackParseError(trackrel, sys.exc_info()))
     # verify all phases are equivalent
     # https://stackoverflow.com/a/3844832/7938656
     plengths = [[phase.length for phase in p.phase_list] for p in processors]

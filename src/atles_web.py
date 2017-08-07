@@ -9,7 +9,7 @@ import sqlalchemy
 
 import config
 import utils
-from web import bottle_plugin_box_rpc, db_schema, track_scanner
+from web import bottle_plugin_box_rpc, db_schema, error_handlers, track_scanner
 
 
 def parse_args():
@@ -66,5 +66,8 @@ if __name__ == '__main__':
     # add our boxes plugin
     box_rpc_plugin = bottle_plugin_box_rpc.BoxRPCPlugin(db_engine)
     app.install(box_rpc_plugin)
+
+    # add our exceptionhandler plugin
+    app.install(error_handlers.exception_plugin)
 
     app.run(host='0.0.0.0', port=args.port, server='waitress', debug=args.testing, reloader=args.testing)
