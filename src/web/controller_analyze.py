@@ -3,6 +3,7 @@ import csv
 import io
 import multiprocessing
 import sys
+from collections import defaultdict
 from io import StringIO
 from pathlib import Path
 
@@ -32,12 +33,12 @@ def get_stats():
 
         try:
             processor = process.TrackProcessor(str(config.TRACKDIR / trackrel))
-        except ValueError:
+            curstats.update(processor.get_setup(['experiment', 'phases']))
+            curstats.update(processor.get_stats(include_phases=True))
+        except (ValueError, IndexError):
             # often 'wrong number of columns' due to truncated file from killed experiment
             raise(TrackParseError(trackrel, sys.exc_info()))
 
-        curstats.update(processor.get_setup(['experiment', 'phases']))
-        curstats.update(processor.get_stats(include_phases=True))
         all_keys.update(curstats.keys())
         stats.append(curstats)
     for i in range(len(stats)):
@@ -132,23 +133,31 @@ def post_analyze_selection():
 def get_heatmaps():
     trackrels = request.query.tracks.split('|')
     processors = []
+    # to verify all phases are equivalent
+    plength_map = defaultdict(list)
     for trackrel in trackrels:
         try:
-            processors.append(process.TrackProcessor(str(config.TRACKDIR / trackrel), just_raw_data=True))
+            p = process.TrackProcessor(str(config.TRACKDIR / trackrel), just_raw_data=True)
+            processors.append(p)
+            plength_map[tuple(phase.length for phase in p.phase_list)].append(trackrel)
         except ValueError:
             raise(TrackParseError(trackrel, sys.exc_info()))
-    # verify all phases are equivalent
-    # https://stackoverflow.com/a/3844832/7938656
-    plengths = [[phase.length for phase in p.phase_list] for p in processors]
-    if plengths.count(plengths[0]) != len(plengths):
-        return template('error', errormsg="The provided tracks do not all have the same phase lengths.  Please select tracks that share an experimental setup.")
+    if len(plength_map) > 1:
+        lengths_string = '\n'.join(
+            "{} in:\n    {}\n".format(
+                str(lengths),
+                "\n    ".join(trackrel for trackrel in plength_map[lengths])
+            )
+            for lengths in plength_map
+        )
+        return template('error', errormsg="The provided tracks do not all have the same phase lengths.  Please select tracks that share an experimental setup.<br>Phase lengths found:<pre>{}</pre>".format(lengths_string))
 
     # Save all images as binary to be included in the page directly
     # Base64-encoded.  (Saves having to write temporary data to filesystem.)
     images_data = []
 
-    # use phases from the first track
-    plengths = plengths[0]
+    # use phases from an arbitrary track
+    plengths = plength_map.popitem()[0]
 
     dataframes = [p.df for p in processors]
     phase_start = 0
