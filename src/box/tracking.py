@@ -437,19 +437,13 @@ class Stream(object):
             logging.warning("Unable to call v4l2-ctl; video stream may not be configured correctly.")
 
     def _cam_setup(self, source, w, h, fps, exposure):
-        try:
-            cap = cv2.VideoCapture(source, w, h)
-        except TypeError:
-            # Don't have our modified version of OpenCV w/ width/height args
-            logging.warning("Unmodified OpenCV installation; no width/height control for capture.")
-            cap = cv2.VideoCapture(source)
-
+        cap = cv2.VideoCapture(source)
         if not cap.isOpened():
             return None
 
         atexit.register(cap.release)
 
-        # Try setting width/height this way, too, in case we don't have modified OpenCV but this still works.
+        # Set width/height (note: this fails in OpenCV 2.4.x but works with 3.2)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, w)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 

@@ -10,7 +10,7 @@ The capture framerate is sensitive to many things.
 
 First, displaying the captured frames using highgui takes a huge amount of CPU time, making it infeasible (i.e., maxing out CPU) above 10fps.  Without displaying the images, however, CPU usage doesn't hit 100% until about 50fps.
 
-Secondly, the capture size obviously makes a difference.  There is currently some bug in the interaction between OpenCV and V4L that makes it impossible to change the capture size after the stream is opened in OpenCV (at its default 640x480 size).  See opencv_notes.txt for directions for how to modify and compile OpenCV to fix this bug.  The fix allows us to set the video capture size smaller for better performance.  160x120 seems nice and fast, and we have lots of flexibility now.
+Secondly, the capture size obviously makes a difference.  There is currently some bug in the interaction between OpenCV and V4L that makes it impossible to change the capture size after the stream is opened in OpenCV (at its default 640x480 size).  See [opencv_notes](opencv_notes.md) for directions for how to modify and compile OpenCV to fix this bug.  The fix allows us to set the video capture size smaller for better performance.  160x120 seems nice and fast, and we have lots of flexibility now.
 
 Also, it is important to note that terminal output, displayed on the rpi's X server, uses a large amount of the CPU as well.  Simply switching to a different tab while FPS output is enabled in camtest.py drops the CPU usage significantly.  Keep this in mind particularly during testing, where debugging output may significantly harm performance.
 

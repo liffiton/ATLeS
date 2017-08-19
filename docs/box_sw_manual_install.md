@@ -76,7 +76,7 @@ To install smbus:
 
     $ sudo apt-get install python-smbus
 
-To install cv2, see [opencv_notes](opencv_notes.txt).
+To install cv2, see [opencv_notes](opencv_notes.md).
 
 
 ## Runtime Dependencies
