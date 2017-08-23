@@ -204,12 +204,6 @@ $(function() {
         <button type="button" class="btn btn-primary active-if-2plus" disabled="true" id="heatmapsbutton" onclick="tracksel_go('/heatmaps/');">
           Generate aggregate heatmaps
         </button>
-        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="statsbutton" onclick="tracksel_go('/stats/');">
-          View Statistics
-        </button>
-        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="statscsvbutton" onclick="tracksel_go('/stats/', 'csv=true');">
-          Download Statistics [.csv]
-        </button>
         <button type="button" class="btn btn-primary active-if-any" disabled="true" id="downloadbutton" onclick="tracksel_go('/download/');">
           Download Raw Data [.zip]
         </button>
@@ -220,6 +214,21 @@ $(function() {
         <button type="button" class="btn btn-primary active-if-any" disabled="true" title="Archive" id="archiveselbutton" onclick="archive_selection();">
           <span class="glyphicon glyphicon-log-out"></span>
           Archive
+        </button>
+        <br>
+        Statistics:
+        <br>
+        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="statsbutton" onclick="tracksel_go('/stats/');">
+          View
+        </button>
+        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="statscsvbutton" onclick="tracksel_go('/stats/', 'csv=true');">
+          Download .csv
+        </button>
+        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="statsbutton" onclick="tracksel_go('/stats/', 'exp_type=extinction');">
+          View (extinction)
+        </button>
+        <button type="button" class="btn btn-primary active-if-any" disabled="true" id="statscsvbutton" onclick="tracksel_go('/stats/', 'csv=true&exp_type=extinction');">
+          Download .csv (extinction)
         </button>
       </div>
     </div>

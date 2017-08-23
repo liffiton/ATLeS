@@ -38,14 +38,16 @@ class TrackProcessor(object):
         self.trackfile = trackfile
         self.setupfile = trackfile.replace("-track.csv", "-setup.txt")
 
+        self._read_setupfile()
+
         self._read_trackfile()
         if not just_raw_data:
             self._generate_columns()
-        self._read_setupfile()
 
     def _read_trackfile(self):
         colnames = ['time', 'status', 'x', 'y', 'numpts', '_1', '_2']
         # for handling data w/ '.' in place of unknown initial locations
+
         def xy_to_float(s):
             if s == '.':
                 return -1
@@ -87,6 +89,18 @@ class TrackProcessor(object):
         # valid if this index *and* previous are both not 'lost' or 'missing'
         # need *both* as many columns are diffs relying on previous value
         df['valid'] = ~df.lost & ~df.missing & ~np.roll(df.lost, 1) & ~np.roll(df.missing, 1)
+
+        trigger_exp = self.config['experiment']['trigger']
+        # create xpos/ypos aliases for trigger_exp to use
+        xpos = df.x  # noqa (it is used, but in an eval)
+        ypos = df.y  # noqa
+        df['trigger'] = df.valid & eval(trigger_exp)
+        if '.5' in trigger_exp:
+            # create columns for "more triggered" conditions if trigger is of form > or < 0.50
+            trigger_dir_gt = '>' in trigger_exp
+            trigger_plus_vals = [.6, .7, .8, .9] if trigger_dir_gt else [.4, .3, .2, .1]
+            for i, newval in enumerate(trigger_plus_vals):
+                df['trigger_plus{}'.format(i + 1)] = df.valid & eval(trigger_exp.replace('.5', str(newval)))
 
         df['frozen'] = df.valid & (df.speed.rolling(window=_freeze_window_size, center=True).max() < _freeze_max_speed)
 
@@ -148,6 +162,60 @@ class TrackProcessor(object):
                 start_min += phase.length
         return ret
 
+    def get_exp_stats(self, exp_type):
+        if exp_type == 'extinction':
+            assert self.phase_list is not None
+            return self._get_stats_extinction()
+        else:
+            return None
+
+    def _get_stats_extinction(self):
+        ''' Returns dictionary of statistics for extinction experiments.
+            - time until first trigger/incursion
+            - time until first 60%, 70%, 80%, 90% reach/incursion
+            - since:
+                - beginning of phase
+                - end of last trigger
+        '''
+        phase_ends_sec = [60 * t for t in self.phase_starts()[1:]]
+        self.df['phase'] = np.searchsorted(phase_ends_sec, self.df.index)
+
+        ret = {}
+        for triggercol in 'trigger', 'trigger_plus1', 'trigger_plus2', 'trigger_plus3', 'trigger_plus4':
+            ret.update(self._get_stats_extinction_triggercol(triggercol))
+        return ret
+
+    def _get_stats_extinction_triggercol(self, triggercol):
+        # shorthand
+        df = self.df
+
+        ret = {}
+
+        # find first trigger within each phase...
+        for phase in self.phase_list:
+            phase_ind = (df.phase == phase.phasenum)
+            df_phase = df[phase_ind]
+            first_trigger_ind = df_phase[triggercol] & (df_phase[triggercol].cumsum() == 1)
+            first_trigger_list = df_phase[first_trigger_ind].index.tolist()
+            if first_trigger_list:
+                # ... from beginning of phase
+                first_trigger = first_trigger_list[0]
+                first_trigger_delta = first_trigger - 60*self.phase_starts()[phase.phasenum]
+                ret['time to first {} from phase start - phase {}'.format(triggercol, phase.phasenum + 1)] = first_trigger_delta
+                # ... from end of previous trigger
+                if phase.phasenum > 0:
+                    # only meaningful for phases after the first
+                    prev_phases_ind = (df.phase < phase.phasenum)
+                    df_prev_phases = df[prev_phases_ind]
+                    # use 'trigger' here, even for calcing time to trigger_plus1, etc.
+                    prev_trigger_ind = df_prev_phases.trigger & (df_prev_phases.trigger.cumsum() == df_prev_phases.trigger.cumsum().max())
+                    prev_trigger_list = df_prev_phases[prev_trigger_ind].index.tolist()
+                    if prev_trigger_list:
+                        prev_trigger = prev_trigger_list[0]
+                        prev_trigger_delta = first_trigger - prev_trigger
+                        ret['time to first {} from previous trigger - phase {}'.format(triggercol, phase.phasenum + 1)] = prev_trigger_delta
+        return ret
+
     def _get_stats_time_range(self, minutes=None):
         ''' Returns dictionary of statistics for the given time range.
             Params:
@@ -169,6 +237,9 @@ class TrackProcessor(object):
         dist_total = df.dist[selected].sum()
         time_total = df.dt[selected].sum()
 
+        trigger_starts, trigger_lens = groups_where(df.trigger & selected)
+        trigger_count, trigger_time, _ = self._sum_runs(trigger_starts, trigger_lens, min_runlength=0)
+
         frozen_starts, frozen_lens = groups_where(df.frozen & selected)
         freeze_count, freeze_time, _ = self._sum_runs(frozen_starts, frozen_lens, min_runlength=_freeze_min_time)
 
@@ -189,6 +260,11 @@ class TrackProcessor(object):
             stats["Avg. speed (?/sec)"] = dist_total / time_total
             stats["Avg. x speed (?/sec)"] = df.dx[selected].abs().sum() / time_total
             stats["Avg. y speed (?/sec)"] = df.dy[selected].abs().sum() / time_total
+            stats["#Triggers"] = trigger_count
+            if trigger_count:
+                stats["Total time triggered (sec)"] = trigger_time
+                stats["Avg. time per trigger (sec)"] = trigger_time / trigger_count
+                stats["Trigger frequency (per min)"] = 60.0*(trigger_count / time_total)
             stats["#Freezes"] = freeze_count
             if freeze_count:
                 stats["Total time frozen (sec)"] = freeze_time

@@ -2,6 +2,7 @@ import base64
 import csv
 import io
 import multiprocessing
+import numpy as np
 import sys
 from collections import defaultdict
 from io import StringIO
@@ -15,36 +16,15 @@ matplotlib.use('Agg')
 from bottle import get, post, redirect, request, response, jinja2_template as template  # noqa: E402
 
 from analysis import heatmaps, process, plot  # noqa: E402
-from .error_handlers import TrackParseError
+from .error_handlers import TrackParseError   # noqa: E402
 import config  # noqa: E402
 import utils   # noqa: E402
 
 
-@get('/stats/')
-def get_stats():
-    trackrels = request.query.tracks.split('|')
-    do_csv = request.query.csv
-    stats = []
-    all_keys = set()
-
-    for trackrel in trackrels:
-        curstats = {}
-        curstats['Track file'] = trackrel
-
-        try:
-            processor = process.TrackProcessor(str(config.TRACKDIR / trackrel))
-            curstats.update(processor.get_setup(['experiment', 'phases']))
-            curstats.update(processor.get_stats(include_phases=True))
-        except (ValueError, IndexError):
-            # often 'wrong number of columns' due to truncated file from killed experiment
-            raise(TrackParseError(trackrel, sys.exc_info()))
-
-        all_keys.update(curstats.keys())
-        stats.append(curstats)
+def _make_stats_output(stats, all_keys, do_csv):
     for i in range(len(stats)):
         stat = stats[i]
         for k in all_keys:
-            import numpy as np
             if k in stat:
                 val = stat[k]
                 if isinstance(val, (np.float32, np.float64)):
@@ -69,6 +49,33 @@ def get_stats():
         return csvstring
     else:
         return template('stats', keys=all_keys, stats=stats)
+
+
+@get('/stats/')
+def get_stats():
+    trackrels = request.query.tracks.split('|')
+    exp_type = request.query.exp_type
+    stats = []
+    all_keys = set()
+
+    for trackrel in trackrels:
+        curstats = {}
+        curstats['Track file'] = trackrel
+
+        try:
+            processor = process.TrackProcessor(str(config.TRACKDIR / trackrel))
+            curstats.update(processor.get_setup(['experiment', 'phases']))
+            curstats.update(processor.get_stats(include_phases=True))
+            if exp_type:
+                curstats.update(processor.get_exp_stats(exp_type))
+        except (ValueError, IndexError):
+            # often 'wrong number of columns' due to truncated file from killed experiment
+            raise(TrackParseError(trackrel, sys.exc_info()))
+
+        all_keys.update(curstats.keys())
+        stats.append(curstats)
+
+    return _make_stats_output(stats, all_keys, do_csv=request.query.csv)
 
 
 def _do_analyze(trackrel):
