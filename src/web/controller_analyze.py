@@ -64,7 +64,7 @@ def get_stats():
 
         try:
             processor = process.TrackProcessor(str(config.TRACKDIR / trackrel))
-            curstats.update(processor.get_setup(['experiment', 'phases']))
+            curstats.update(processor.get_setup(['experiment', 'phases', 'general']))
             curstats.update(processor.get_stats(include_phases=True))
             if exp_type:
                 curstats.update(processor.get_exp_stats(exp_type))
