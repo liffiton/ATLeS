@@ -15,7 +15,7 @@ All source files, including code and complete designs for physical parts, are av
 
 Building a single ATLeS box costs roughly $100 and requires some assembly and wiring.  The enclosure is designed to be laser cut from hardboard or similar flat, rigid materials.  Using the provided design files, you can either laser-cut the pieces yourself or order them from an online laser-cutting service.
 
-Follow the ~~[illustrated walkthrough](TBD)~~ *[coming soon]* in the [documentation](docs.md) to guide the assembly and software installation.
+Follow the ~~[illustrated walkthrough](TBD)~~ *[coming soon]* in the [documentation](docs) to guide the assembly and software installation.
 
 # Use It
 

@@ -31,7 +31,7 @@ header_pages:
 # Build settings
 markdown: kramdown
 theme: jekyll-theme-leap-day
-gems:
+plugins:
 #  - jekyll-feed
 exclude:
   - Gemfile
