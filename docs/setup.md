@@ -30,7 +30,7 @@ Required Python packages can be installed using pip (`pip3` is used as ATLeS is 
     cd ATLeS/src
     pip3 install --user -U -r requirements_web.txt
 
-The `--user` flag installs the required packages for the current user only.  Alternatively, you can install them and run ATLeS within a [virtual environment](https://docs.python.org/3/library/venv.html) or install them systemwide by ommitting `--user` and adding `sudo` before the `pip3` command.
+The `--user` flag installs the required packages for the current user only.  Alternatively, you can install them and run ATLeS within a [virtual environment](https://docs.python.org/3/library/venv.html) or install them systemwide by omitting `--user` and adding `sudo` before the `pip3` command.
 
 If pip installs the required packages successfully, you should be able to run the server:
 
