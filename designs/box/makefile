@@ -1,7 +1,10 @@
 # Use openscad binary from path unless specified in environment variable
 OPENSCAD?=openscad
 
+OUTDIR=../dist
+
 all: top.dxf bottom.dxf side1.dxf side2.dxf end1.dxf end2.dxf mask.dxf tank_support.dxf rpi_support.dxf rear_support.dxf
+	cp $^ $(OUTDIR)
 
 clean:
 	rm *.dxf
