@@ -115,13 +115,16 @@ class DummyStimulus(StimulusBase):
 
 class GPIOStimulus(ThreadedStimulus):
     '''Stimulus in the form of activating or toggling a GPIO pin.'''
-    def __init__(self, pin, levels=None, freq_Hz=None, safety_limit=None):
+    def __init__(self, pin, levels=None, freq_Hz=None, duty_cycle=0.5, safety_limit=None):
         '''
-        levels is a tuple of (nostim, stim), where each is a PWM level for the cases
-        of no stimulus and active stimulus, respectively.
+        levels is a tuple of (nostim, stim), where each is a PWM level (int: 0-1023)
+        for the cases of no stimulus and active stimulus, respectively.
 
         freq_Hz=0 means the pin will be set to stim_level for as long as the
         stimulus is active.
+
+        duty_cycle, if specified, should be between 0.0 and 1.0, specifying the fraction
+        of time the pin will be set high.  Only used if freq_Hz>0.  Default: 0.5.
 
         safety_limit is given in seconds.  If the stimulus is active for that many seconds,
         an exception is raised.
@@ -142,18 +145,20 @@ class GPIOStimulus(ThreadedStimulus):
             self._pwm = False
 
         if freq_Hz is None or freq_Hz == 0:
-            self._interval = None  # infinite wait in poll()
+            self._on_interval = None  # infinite wait in poll()
+            self._off_interval = None  # infinite wait in poll()
         else:
-            self._interval = 1.0 / freq_Hz / 2  # half of the period
+            self._on_interval = 1.0 / freq_Hz * duty_cycle
+            self._off_interval = 1.0 / freq_Hz * (1 - duty_cycle)
 
         if safety_limit is not None:
             self._watchdog = Watchdog(safety_limit, self._pipe)
         else:
             self._watchdog = None
 
-        self._stim_on = False   # is stimulus activated?
-        self._on = False        # is stimulus pin currently on? (may be off while 'activated' if toggling)
-        self._pinval = None  # stores current PWM value to avoid extraneous pwmWrites
+        self._stim_active = False   # is stimulus activated?
+        self._pin_on = False            # is stimulus pin currently on? (may be off while 'activated' if freq_Hz>0)
+        self._pinval = None         # stores current PWM value to avoid extraneous pwmWrites
 
     def _set_pin(self, val):
         if self._pinval != val:
@@ -183,19 +188,19 @@ class GPIOStimulus(ThreadedStimulus):
 
     def _handle_command(self, cmd):
         if cmd:
-            self._stim_on = True
+            self._stim_active = True
         else:
-            self._stim_on = False
-            self._on = False
+            self._stim_active = False
+            self._pin_on = False
 
     def _update(self):
-        if self._stim_on:
-            if self._interval is None:
+        if self._stim_active:
+            if self._on_interval is None:
                 self._pin_stim()
             else:
-                # toggle fully on/off
-                self._on = not self._on
-                if self._on:
+                # toggle stimulus pin on/off
+                self._pin_on = not self._pin_on
+                if self._pin_on:
                     self._pin_stim()
                 else:
                     self._pin_nostim()
@@ -217,7 +222,7 @@ class GPIOStimulus(ThreadedStimulus):
 
         while True:
             # check pipe for commands and implement delay between flashes
-            msg_ready = pipe.poll(self._interval)
+            msg_ready = pipe.poll(self._on_interval if self._pin_on else self._off_interval)
             while msg_ready:
                 val = pipe.recv()
 
@@ -243,6 +248,18 @@ class LightBarStimulus(GPIOStimulus):
 
 
 class ElectricalStimulus(GPIOStimulus):
-    def __init__(self, safety_limit):
-        '''safety_limit: integer number of seconds; if stimulus active without a break for that long, terminate experiment.'''
-        super(ElectricalStimulus, self).__init__(_ELECTRIC_STIM_PIN, safety_limit=safety_limit)
+    def __init__(self, safety_limit=None, freq_Hz=None, duty_cycle=None):
+        '''
+        Parameters:
+            freq_Hz: float, frequency of toggling electrical stimulus
+            duty_cycle: float, percentage of time stimulus is on during one cycle
+            safety_limit: integer number of seconds; if stimulus active without
+                          a break for that long, terminate experiment.
+        '''
+        assert safety_limit is not None or freq_Hz is not None
+        super(ElectricalStimulus, self).__init__(
+            _ELECTRIC_STIM_PIN,
+            freq_Hz=freq_Hz,
+            duty_cycle=duty_cycle,
+            safety_limit=safety_limit
+        )
