@@ -4,6 +4,7 @@ import multiprocessing
 import os
 import signal
 import sys
+import time
 from threading import Timer
 
 from box import wiring
@@ -150,6 +151,7 @@ class GPIOStimulus(ThreadedStimulus):
         else:
             self._on_interval = 1.0 / freq_Hz * duty_cycle
             self._off_interval = 1.0 / freq_Hz * (1 - duty_cycle)
+            print(self._on_interval, self._off_interval)
 
         if safety_limit is not None:
             self._watchdog = Watchdog(safety_limit, self._pipe)
@@ -157,8 +159,9 @@ class GPIOStimulus(ThreadedStimulus):
             self._watchdog = None
 
         self._stim_active = False   # is stimulus activated?
-        self._pin_on = False            # is stimulus pin currently on? (may be off while 'activated' if freq_Hz>0)
-        self._pinval = None         # stores current PWM value to avoid extraneous pwmWrites
+        self._pin_on = False        # is stimulus pin currently on? (may be off while 'activated' if freq_Hz>0)
+        self._pinval = None         # current PWM value to avoid extraneous pwmWrites
+        self._stim_cycle_end = None  # end of current half-cycle (on/off) of stimulus
 
     def _set_pin(self, val):
         if self._pinval != val:
@@ -198,12 +201,15 @@ class GPIOStimulus(ThreadedStimulus):
             if self._on_interval is None:
                 self._pin_stim()
             else:
-                # toggle stimulus pin on/off
-                self._pin_on = not self._pin_on
-                if self._pin_on:
-                    self._pin_stim()
-                else:
-                    self._pin_nostim()
+                # check and possibly toggle stimulus pin on/off
+                if self._time_remaining() == 0:
+                    self._pin_on = not self._pin_on
+                    duration = self._on_interval if self._pin_on else self._off_interval
+                    self._stim_cycle_end = time.time() + duration
+                    if self._pin_on:
+                        self._pin_stim()
+                    else:
+                        self._pin_nostim()
         else:
             self._pin_nostim()
 
@@ -212,6 +218,13 @@ class GPIOStimulus(ThreadedStimulus):
 
     def _end(self):
         self._set_pin(0)
+
+    def _time_remaining(self):
+        if self._on_interval is None:
+            return None  # use infinite timeout in pipe.poll()
+        if self._stim_cycle_end is None:
+            return 0     # done; time to toggle
+        return max(0, self._stim_cycle_end - time.time())
 
     def _stimulus_thread(self, pipe):
         # ignore signals that will be handled by parent
@@ -222,7 +235,7 @@ class GPIOStimulus(ThreadedStimulus):
 
         while True:
             # check pipe for commands and implement delay between flashes
-            msg_ready = pipe.poll(self._on_interval if self._pin_on else self._off_interval)
+            msg_ready = pipe.poll(self._time_remaining())
             while msg_ready:
                 val = pipe.recv()
 
