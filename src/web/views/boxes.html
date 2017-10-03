@@ -23,7 +23,7 @@
       <div class="gitstatus" title="{{box.gitlong}}">
         ver: {{box.gitshort}}
       </div>
-      <div class="panel" ng-class="{'panel-success': box.connected, 'panel-danger': !box.connected}">
+      <div class="panel" ng-class="{'panel-success': box.connected, 'panel-danger': !box.connected}" title="Current as of {{box.lock_data.curtime | timeformat}}">
         <div class="panel-heading">
           <h2 class="panel-title" style="font-size: x-large">
             {{box.name}}
@@ -36,7 +36,7 @@
             <button type="button" class="btn btn-danger btn-xs pull-right" title="Kill experiment" my-clear-button="{{box.name}}">
               <span class="glyphicon glyphicon-remove"></span>
             </button>
-            <strong>Experiment running</strong><br>since {{box.lock_data | since}}.
+            <strong>Experiment running</strong><br>since {{box.lock_data.starttime | timeformat}}.
             <div class="progress" style="width: 100%;">
               <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="{{box.lock_data | barwidth}}" aria-valuemin="0" aria-valuemax="100" ng-style="{width: ((box.lock_data | barwidth) + '%') }">
                 <span class="pull-right" id="rem_in">{{box.lock_data | remaining:'in'}}</span>

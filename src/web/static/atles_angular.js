@@ -25,10 +25,10 @@ angular.module('BoxesApp', ['ngResource'])
     });
   };
 })
-.filter('since', function() {
-  return function(lock_data) {
-    var starttime = new Date(parseInt(lock_data.starttime)*1000);
-    return starttime.toLocaleTimeString();
+.filter('timeformat', function() {
+  return function(time) {
+    var time_as_Date = new Date(parseInt(time)*1000);
+    return time_as_Date.toLocaleTimeString();
   };
 })
 .filter('barwidth', function() {
