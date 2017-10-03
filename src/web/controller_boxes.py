@@ -162,17 +162,6 @@ def new_experiment_box(tgtbox, db):
     return template('new', dict(form=form, box=box))
 
 
-@post('/sync/<tgtbox>')
-def post_sync_data(tgtbox, boxes_rpc):
-    box = _get_box_rpc(tgtbox, boxes_rpc)
-
-    try:
-        return box.sync_data()
-    except Exception as e:
-        # For this one, pass back the full error to the client.
-        abort(500, str(e))
-
-
 @route('/image/<tgtbox>')
 @route('/image/<tgtbox>/<width:int>')
 def get_image(tgtbox, boxes_rpc, width=648):

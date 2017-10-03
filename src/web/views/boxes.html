@@ -52,15 +52,6 @@
               </a>
             </p>
             <p>
-              <button ng-show="!box.local" type="button" class="btn btn-default" role="button" my-sync-button="{{box.name}}" ng-disabled="syncing.has(box.name)">
-                <span class="glyphicon glyphicon-refresh" ng-class="{'rotatey': syncing.has(box.name)}"></span>
-                <span class="btntxt" ng-if="!syncing.has(box.name)">
-                  Sync Data
-                </span>
-                <span class="btntxt" ng-if="syncing.has(box.name)">
-                  Syncing...
-                </span>
-              </button>
               <a href="/image/{{box.name}}/648" class="btn btn-default" role="button">
                 <span class="glyphicon glyphicon-camera"></span>
                 <span class="btntxt">

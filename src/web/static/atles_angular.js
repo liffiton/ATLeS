@@ -6,7 +6,6 @@ angular.module('BoxesApp', ['ngResource'])
 .controller('BoxesCtrl', ['$scope', '$interval', 'toArrayFilter', 'BoxesService',
   function($scope, $interval, toArrayFilter, BoxesService) {
     $scope.boxes = null;  // give ng-show something to go on until boxes is an array
-    $scope.syncing = new Set();  // maintained outside of boxes so it persists
     function update() {
       BoxesService.query(
               {},
@@ -155,37 +154,6 @@ angular.module('BoxesApp', ['ngResource'])
       }
 
       element.on('click', do_clear);
-    }
-  };
-}])
-.directive('mySyncButton', ['$http', function($http) {
-  return {
-    restrict: 'A',
-    link: function(scope, element, attrs) {
-      var boxname = attrs.mySyncButton;
-
-      function do_sync() {
-        scope.syncing.add(boxname);
-
-        $http.post(
-          "/sync/" + boxname,
-          ""
-        ).then(
-          function success(response) { },
-          function error(response) {
-            if (response.status == -1 && response.data === null) {
-              // likely caused by navigating away from page; ignore.
-              return;
-            }
-            show_alert('#alertModal', 'Sync Failed', response.data);
-          }
-        ).then(function() {
-          scope.syncing.delete(boxname);
-        });
-
-      };
-
-      element.on('click', do_sync);
     }
   };
 }])
