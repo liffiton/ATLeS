@@ -4,7 +4,9 @@ title: Box Software Cloning
 
 # Box Software Cloning
 
-These instructions are for developers who wish to create a new base OS image to install on ATLeS box Raspberry Pis.
+These instructions are for developers who wish to clone an existing ATLeS box
+Raspberry Pi installation to create a new base OS image for installing on new
+boxes.
 
 ## Making a New Image
 
@@ -27,8 +29,10 @@ To save a disk image of a working/configured Raspberry Pi SD card:
    
    Prints the partition table.
 
-   Record 'End' of final partition and sector size.
+   Record 'End' of the final partition and the sector size.
 
-5. Use `dd | gzip` to create the image using the size from the previous step.
+5. Use `dd` to create the image using the size from the previous step.
     
-       $ sudo dd bs=[sector size] count=[end of final partition + 1] if=/dev/[device of entire card] | gzip > atles_rpi_`date +%Y%m%d`.img.gz
+       $ sudo dd bs=[sector size] count=[end of final partition + 1] if=/dev/[device of entire card] of=atles_rpi_`date +%Y%m%d`.img status=progress
+
+6. Compress with zip, gzip, bzip2, etc.
