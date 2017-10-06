@@ -60,4 +60,13 @@ Run `sudo raspi-config` and:
 
 Exit the configuration software and reboot.
 
-After rebooting, if a box is connected to the same network as the server, the box should appear in the web interface automatically.
+After rebooting the box, there is one more step to register the box on the
+server.  From the server, run:
+
+    ATLeS/install/setup_box.sh [box hostname]
+
+You will need to provide a password to log in to the box (default: fishypi),
+and it will then setup the box to run the `atles_remote.py` software at boot.
+
+Now, if the box is connected to the same network as the server, the box should
+appear in the web interface automatically.
