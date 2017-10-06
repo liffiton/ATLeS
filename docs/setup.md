@@ -42,7 +42,12 @@ By default, it will start serving the web interface on port 8080 (configurable v
 
 ### Installing the Software
 
-The easiest way to install the required software on a Raspberry Pi for a new ATLeS Box is to burn (write) a pre-configured image onto a MicroSD card.  *(TODO: disk images not yet available.)*  We recommend using [Etcher](https://etcher.io/) to burn the image.
+The easiest way to install the required software on a Raspberry Pi for a new
+ATLeS Box is to burn (write) a pre-configured image onto a MicroSD card.  Disk
+images are available as versioned releases on Github:
+[https://github.com/liffiton/ATLeS/releases](https://github.com/liffiton/ATLeS/releases).
+Download a disk image and extract the .img file.  We recommend using
+[Etcher](https://etcher.io/) to burn the image to a MicroSD card.
 
 Alternatively, follow the [Manual Box Software Setup](box_sw_manual_install) instructions to install all needed software from scratch.
 
