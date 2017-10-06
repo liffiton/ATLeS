@@ -1,7 +1,7 @@
 [Unit]
 Description=ATLeS RPC service
-After=sshd.service
-Requires=sshd.service
+After=ssh.service
+Requires=ssh.service
 
 [Service]
 WorkingDirectory=/home/pi/ATLeS
