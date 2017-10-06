@@ -6,9 +6,6 @@ title: Box Software Cloning
 
 These instructions are for developers who wish to create a new base OS image to install on ATLeS box Raspberry Pis.
 
-[TODO: Issues w/ current build]
- * ~pi/fishycam is cloned from hyperion
-
 ## Making a New Image
 
 To save a disk image of a working/configured Raspberry Pi SD card:
@@ -34,4 +31,4 @@ To save a disk image of a working/configured Raspberry Pi SD card:
 
 5. Use `dd | gzip` to create the image using the size from the previous step.
     
-       $ sudo dd bs=[sector size] count=[end of final partition + 1] if=/dev/[device of entire card] | gzip > fishypi_`date +%Y%m%d`.img.gz
+       $ sudo dd bs=[sector size] count=[end of final partition + 1] if=/dev/[device of entire card] | gzip > atles_rpi_`date +%Y%m%d`.img.gz
