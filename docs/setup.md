@@ -59,7 +59,7 @@ Login to a newly-installed Raspberry Pi as pi/fishypi.
 
 Run `sudo raspi-config` and:
 
-  1. Expand filesystem to fit
+  1. Expand filesystem to fit (depending on the image you used, this may have been done automatically already)
 
   2. Set hostname (suggestion: name boxes sequentially and label each box with its hostname -- this is how they will be identified in the web interface)
 
