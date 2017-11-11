@@ -43,7 +43,7 @@ def module2service(module):
     return _serviceclass
 
 
-def term_handler():
+def term_handler(signum=None, stack_frame=None):
     sys.exit(1)
 
 
