@@ -52,10 +52,10 @@ def main():
     signal.signal(signal.SIGTERM, term_handler)
 
     # Create needed directories if not already there
-    utils.mkdir(config.PLOTDIR)
-    utils.mkdir(config.TRACKDIR)
-    utils.mkdir(config.DBGFRAMEDIR)
-    utils.mkdir(config.ARCHIVEDIR)
+    utils.mkdir(config.PLOTDIR, config.REMOTE_USER)
+    utils.mkdir(config.TRACKDIR, config.REMOTE_USER)
+    utils.mkdir(config.DBGFRAMEDIR, config.REMOTE_USER)
+    utils.mkdir(config.ARCHIVEDIR, config.REMOTE_USER)
 
     # Get our external IP
     # Loop until we have one, because we can't run without it

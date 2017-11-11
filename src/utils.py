@@ -2,6 +2,7 @@ import datetime
 import errno
 import os
 import platform
+import pwd
 import socket
 from collections import namedtuple
 
@@ -28,7 +29,7 @@ def get_boxname():
     return platform.node()
 
 
-def mkdir(path):
+def mkdir(path, user=None):
     try:
         os.makedirs(str(path))
     except OSError as e:
@@ -37,6 +38,10 @@ def mkdir(path):
             pass
         else:
             raise
+
+    if user is not None:
+        pw = pwd.getpwnam(user)
+        os.chown(str(path), pw.pw_uid, pw.pw_gid)
 
 
 def git_status():
@@ -59,3 +64,17 @@ def max_mtime(dir):
         return None
     maxtime = max(f.stat().st_mtime for f in files)
     return datetime.datetime.fromtimestamp(maxtime)
+
+
+# https://stackoverflow.com/a/29692864/7938656
+# Wrap a function to restart itself automatically (used for threads that may crash)
+def auto_restart(func):
+    def wrapper():
+        while True:
+            try:
+                func()
+            except BaseException as e:
+                print('Exception in {}: {!r}\nRestarting.'.format(func.__name__, e))
+            else:
+                print('{} exited normally.\nRestarting.'.format(func.__name__))
+    return wrapper

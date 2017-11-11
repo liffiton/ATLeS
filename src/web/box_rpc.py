@@ -166,11 +166,11 @@ class BoxManager(object):
 
         # start separate thread for:
         #  - polling boxes
-        t = threading.Thread(target=self._poll_boxes)
+        t = threading.Thread(target=utils.auto_restart(self._poll_boxes))
         t.daemon = True
         t.start()
         #  - handling the explicit update queue
-        t = threading.Thread(target=self._watch_queue)
+        t = threading.Thread(target=utils.auto_restart(self._watch_queue))
         t.daemon = True
         t.start()
 
