@@ -33,6 +33,11 @@ def pwm(pin, val):
     wiringpi.pwmWrite(pin, val)
 
 
+def tone(pin, freq):
+    wiringpi.softToneCreate(pin)
+    wiringpi.softToneWrite(pin, freq)
+
+
 def IR_on():
     out(_IR_GPIO_PIN, 1)  # turn on IR light bar
     atexit.register(IR_off)

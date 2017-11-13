@@ -10,8 +10,9 @@ from threading import Timer
 from box import wiring
 
 
-_LIGHT_PWM_PIN = 18      # pin for PWM control of visible light bar
-_ELECTRIC_STIM_PIN = 25  # pin for control of the electric current stimulation
+_LIGHT_PWM_PIN = 18         # pin for PWM control of visible light bar
+_ELECTRIC_STIM_PIN = 25     # pin for enabling/disabling the electric current stimulation
+_ELECTRIC_AC_PIN = 8        # pin for alternating the "direction" of the stimulus (when using AlternatingElectricalStimulus)
 
 
 class NotRootError(RuntimeError):
@@ -151,7 +152,6 @@ class GPIOStimulus(ThreadedStimulus):
         else:
             self._on_interval = 1.0 / freq_Hz * duty_cycle
             self._off_interval = 1.0 / freq_Hz * (1 - duty_cycle)
-            print(self._on_interval, self._off_interval)
 
         if safety_limit is not None:
             self._watchdog = Watchdog(safety_limit, self._pipe)
@@ -195,6 +195,7 @@ class GPIOStimulus(ThreadedStimulus):
         else:
             self._stim_active = False
             self._pin_on = False
+            self._stim_cycle_end = None  # so next activation starts in On phase of cycle
 
     def _update(self):
         if self._stim_active:
@@ -273,6 +274,36 @@ class ElectricalStimulus(GPIOStimulus):
         super(ElectricalStimulus, self).__init__(
             _ELECTRIC_STIM_PIN,
             freq_Hz=freq_Hz,
+            duty_cycle=duty_cycle,
+            safety_limit=safety_limit
+        )
+
+
+class AlternatingElectricalStimulus(GPIOStimulus):
+    '''
+    Control an "alternating" electrical stimulus via two pins.
+
+    One pin ("enable") will turn on (high) when stimulus is active, optinally
+    with a safety limit, cycling frequency (active_freq_Hz), and duty cycle.
+    The other pin is set to constantly cycle high/low at another frequency
+    (ac_freq_Hz).
+    '''
+    def __init__(self, safety_limit=None, ac_freq_Hz=None, active_freq_Hz=None, duty_cycle=None):
+        '''
+        Parameters:
+            ac_freq_Hz: float, frequency of alternations while stimulus is on
+            active_freq_Hz: float, frequency of toggling electrical stimulus on and off
+            duty_cycle: float, percentage of time stimulus is on during one cycle
+            safety_limit: integer number of seconds; if stimulus active without
+                          a break for that long, terminate experiment.
+        '''
+        # First, setup the alternating pin
+        wiring.tone(_ELECTRIC_AC_PIN, ac_freq_Hz)
+
+        # Then, setup the "enable" pin as a normal GPIO stimulus
+        super(AlternatingElectricalStimulus, self).__init__(
+            _ELECTRIC_STIM_PIN,
+            freq_Hz=active_freq_Hz,
             duty_cycle=duty_cycle,
             safety_limit=safety_limit
         )
