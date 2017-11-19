@@ -21,10 +21,13 @@ from web import db_schema
 
 
 class Box(object):
-    def __init__(self, name, ip, port, properties):
+    def __init__(self, name, ip, port, properties, deregister_callback):
         self.name = name   # name of remote box
         self.ip = ip       # IP address
         self.port = port   # port on which atles_remote.py is accepting connections
+
+        # callback function for this box to deregister itself w/ zeroconf
+        self.deregister_callback = deregister_callback
 
         # information on git commit status for remote code
         self.gitshort = properties[b'gitshort'].decode()
@@ -48,7 +51,7 @@ class Box(object):
         self._tunnel = None  # SSH tunnel instance
         self._rpc = None     # RPC connection instance
 
-    def as_dict(self):
+    def get_info(self):
         ret = {
             'name': self.name,
             'ip': self.ip,
@@ -63,6 +66,9 @@ class Box(object):
         }
 
         if self.connected:
+            # verify that we actually are connected
+            self._ping(timeout=1)
+
             lock_data = self.lock_data()
             ret.update({
                 'exp_running': lock_data.get('running'),
@@ -97,14 +103,18 @@ class Box(object):
         if done_callback is not None:
             done_callback(self.name)
 
-    def down(self):
+    def down(self, error=None):
         if self._rpc:
-            self._rpc.close()
+            try:
+                self._rpc.close()
+            except AttributeError:
+                pass  # always throws one in Session.close()... bug?
             self._rpc = None
         if self._tunnel:
             self._tunnel.close()
             self._tunnel = None
-        self.error = None
+
+        self.error = error
 
     def sync_data(self):
         ''' Copy/sync track data from this box to the local track directory.'''
@@ -132,6 +142,24 @@ class Box(object):
 
         cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), str(config.DBGFRAMEDIR / self.name)]  # '' to ensure trailing /
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+
+    def _ping(self, timeout):
+        '''
+        Attempt to call a function on the server over this connection with a
+        given timeout (in seconds).
+        '''
+        def timeout_close():
+            self.down("server timed out; connection closed")
+            # The server didn't deregister itself, so we need to here
+            # so that zeroconf will properly add the service when it returns.
+            self.deregister_callback()
+
+        timer = threading.Timer(timeout, timeout_close)
+        timer.start()
+        try:
+            self.lock_exists()  # any simple function call; return ignored
+        finally:
+            timer.cancel()
 
     @property
     def connected(self):
@@ -180,11 +208,22 @@ class BoxManager(object):
         print("Service %s added, service info: %s" % (name, info))
         boxname = info.properties[b'name'].decode()
         assert boxname == name.split('.')[0]
+
+        # make a function for deregistering this box
+        def deregister():
+            # Do just enough to make zeroconf register the service
+            # when it returns.
+            # (This is used when a box losesconnection without
+            # deregistering itself.)
+            del self._browser.services[info.name.lower()]
+
         newbox = Box(name=boxname,
                      ip=socket.inet_ntoa(info.address),
                      port=info.port,
-                     properties=info.properties
+                     properties=info.properties,
+                     deregister_callback=deregister
                      )
+
         # connect in a separate thread so we don't have to wait for the connection here
         threading.Thread(target=newbox.connect, args=[self._updatequeue.put]).start()
         with self._boxlock:
@@ -204,6 +243,9 @@ class BoxManager(object):
             return copy.copy(self._boxes)
 
     def _update_box_db(self, box, boxinfo, conn):
+        # add current time to boxinfo
+        boxinfo['last_updated'] = time.time()
+
         boxes = db_schema.boxes
         # check whether this box is in the database yet
         select = sql.select([boxes.c.name]).where(boxes.c.name == box)
@@ -247,7 +289,7 @@ class BoxManager(object):
         # get updated box data
         with self._boxlock:
             if box in self._boxes:
-                boxinfo = self._boxes[box].as_dict()
+                boxinfo = self._boxes[box].get_info()
             else:
                 boxinfo = {'connected': False}
         self._update_box_db(box, boxinfo, conn)

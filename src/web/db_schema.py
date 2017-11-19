@@ -22,7 +22,8 @@ boxes = Table(
     Column('exp_running', Boolean),
     Column('exp_pid', Integer),
     Column('exp_starttime', Integer),
-    Column('exp_runtime', Integer)
+    Column('exp_runtime', Integer),
+    Column('last_updated', Integer)
 )
 
 

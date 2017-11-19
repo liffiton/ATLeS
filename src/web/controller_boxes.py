@@ -106,7 +106,6 @@ def get_lock_data(tgtbox, db):
         'pid': box['exp_pid'],
         'starttime': box['exp_starttime'],
         'runtime': box['exp_runtime'],
-        'curtime': time.time()
     }
 
 

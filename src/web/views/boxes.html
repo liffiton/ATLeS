@@ -9,30 +9,30 @@
   <h1>Boxes</h1>
 
   <div class="row" ng-cloak>
-    <div class="col-sm-10 col-sm-offset-1 text-muted" ng-show="boxes !== null && !boxes.length">
+    <div class="col-sm-10 col-sm-offset-1 text-muted" ng-if="boxes !== null && !boxes.length">
       <p>No boxes currently connected.  When <code>atles_remote.py</code> is run on a box, it will appear here.</p>
     </div>
 
-    <div class="col-sm-10 col-sm-offset-1 text-muted" ng-show="boxes === 'error'">
+    <div class="col-sm-10 col-sm-offset-1 text-muted" ng-if="boxes === 'error'">
       <p>Error receiving data from server.  <code>atles_web.py</code> may not be running.</p>
     </div>
   </div>
 
-  <div class="row flex-container" ng-cloak ng-show="boxes.length && boxes !== 'error'">
+  <div class="row flex-container" ng-cloak ng-if="boxes.length && boxes !== 'error'">
     <div class="col-lg-3 col-sm-4 flex-item" ng-repeat="box in boxes | orderBy:'name'">
       <div class="gitstatus" title="{{box.gitlong}}">
         ver: {{box.gitshort}}
       </div>
-      <div class="panel" ng-class="{'panel-success': box.connected, 'panel-danger': !box.connected}" title="Current as of {{box.lock_data.curtime | timeformat}}">
+      <div class="panel" ng-class="{'panel-success': box.connected, 'panel-danger': !box.connected}" title="Current as of {{box.last_updated | timeformat}}">
         <div class="panel-heading">
           <h2 class="panel-title" style="font-size: x-large">
             {{box.name}}
           </h2>
-          {{box.connected ? "connected" : "down"}}
+          {{box.connected ? "connected" : "down"}}<br>
           {{box.error ? "(" + box.error + ")" : ""}}
         </div>
-        <div class="panel-body" ng-show="box.connected">
-          <div class="exp_progress_box alert alert-info small" ng-show="box.lock_data.running" my-progress-bar>
+        <div class="panel-body" ng-if="box.connected">
+          <div class="exp_progress_box alert alert-info small" ng-if="box.lock_data.running" my-progress-bar>
             <button type="button" class="btn btn-danger btn-xs pull-right" title="Kill experiment" my-clear-button="{{box.name}}">
               <span class="glyphicon glyphicon-remove"></span>
             </button>
@@ -44,7 +44,7 @@
               <span class="pull-right" id="rem_out">{{box.lock_data | remaining:'out'}}</span>
             </div>
           </div>
-          <div ng-show="!box.lock_data.running">
+          <div ng-if="!box.lock_data.running">
             <p>
               <a href="/new/{{box.name}}" class="btn btn-success" role="button">
                 <span class="glyphicon glyphicon-plus-sign"></span>
