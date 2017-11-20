@@ -67,7 +67,7 @@ class Box(object):
 
         if self.connected:
             # verify that we actually are connected
-            self._ping(timeout=1)
+            self._ping(timeout=2)
 
             lock_data = self.lock_data()
             ret.update({
