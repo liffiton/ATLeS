@@ -35,87 +35,62 @@ def _setupfile(trackrel):
         return None
 
 
-def _get_track_data(track):
-    # configuration: # buckets for x/y in heatmaps
-    xbuckets = 30
-    ybuckets = 15
-
-    states = collections.Counter()
-    heatmap = collections.Counter()
-    invalid_heatmap = collections.Counter()
-    # TODO: use pandas to simplify parsing/analysis
-    with open(track) as f:
-        lines = 0
-        for line in f:
-            vals = line.split(',')
-            try:
-                state, x, y, numpts = vals[1:5]
-            except ValueError:
-                # most likely an empty line
-                break
-
-            lines += 1
-            if state == "init":
-                state = "lost"
-            if int(numpts) > 1:
-                state = "sketchy"
-            states[state] += 1
-            try:
-                x = float(x)
-                y = float(y)
-
-                # place this sample in a heatmap bucket
-                bucket_x = int(x * xbuckets)
-                bucket_y = int(y * ybuckets)
-                if state != "lost":
-                    heatmap[(bucket_x, bucket_y)] += 1
-                if state != "acquired":
-                    invalid_heatmap[(bucket_x, bucket_y)] += 1
-            except ValueError:
-                pass  # not super important if we can't parse x,y
-
-    if lines:
-        asml = ["%0.3f" % (states[key] / float(lines)) for key in ('acquired', 'sketchy', 'missing', 'lost')]
-    else:
-        asml = [0, 0, 0, 0]
-
-    def normalize_stringify(heatdata):
-        maxheat = max(heatdata.values())
-        # convert counts to 2-digit hex integer in range 0-255
-        ret = '|'.join(''.join("%02x" % int(255 * float(heatdata[hx,hy])/maxheat) for hx in range(xbuckets)) for hy in range(ybuckets))
-        return ret
-
-    heatstr = normalize_stringify(heatmap) if heatmap else ""
-    invalid_heatstr = normalize_stringify(invalid_heatmap) if invalid_heatmap else ""
-
-    return lines, asml, heatstr, invalid_heatstr
-
-
-def _get_all_track_data(db):
-    ''' Load all track data for present track files.
-        Uses the database (for any data previously computed/stored). '''
+def _get_track_data(db, filters):
+    ''' Load track data for present track files.
+        Uses the database (for any data previously computed/stored).
+        Applies filters before returning data.
+    '''
     tracks = db_schema.tracks
     select = sql.select([tracks]).order_by(tracks.c.trackrel)
     rows = db.execute(select)
 
-    track_data = []
+    track_data = [
+        collections.OrderedDict(row)  # ordered so filters show up in web interface in same order as columns in db
+        for row in rows
+        if _filter_row(row, filters)  # filter data (not a great method; better to use db WHERE clauses...)
+    ]
 
-    for row in rows:
-        asml = [str(x) for x in (row[key] for key in ('acquired', 'sketchy', 'missing', 'lost'))]
-        track_data.append(
-            (row, asml, _imgs(row['trackrel']), _dbgframes(row['trackrel']), _setupfile(row['trackrel']))
-        )
+    # add extra data not stored in db
+    for row in track_data:
+        row['asml'] = [str(x) for x in (row[key] for key in ('acquired', 'sketchy', 'missing', 'lost'))]
+        row['imgs'] = _imgs(row['trackrel'])
+        row['dbgframes'] = _dbgframes(row['trackrel'])
+        row['setupfile'] = _setupfile(row['trackrel'])
 
     return track_data
 
 
+def _filter_row(row, filters):
+    def filterfunc(row, filt):
+        val = filters[filt]['val']
+        if filt == "tracks":
+            tracks_set = set(val.split('|'))
+            return row['trackrel'] in tracks_set
+        elif filt.endswith(" (min)"):
+            filt = filt.replace(" (min)", "")
+            val = float(val)
+            return row[filt] >= val
+        elif filt.endswith(" (max)"):
+            filt = filt.replace(" (max)", "")
+            val = float(val)
+            return row[filt] <= val
+        elif isinstance(row[filt], bool):
+            # need to convert our string query values to bool for the comparison
+            return row[filt] == bool(val)
+        else:
+            return row[filt] == val
+
+    return all(filterfunc(row, filt) for filt in filters)
+
+
 def _get_filters(rows, selected):
     ''' Return a list of potential filter tuples for the given data in rows.
-         tuple: (param name, type, values or stats)
-         "type": 'string' or 'numeric'
-         "values or stats": a list of tuples (val, count) for string values
-                            or
-                            a tuple of (min,med,max) for numeric values
+
+        return tuple: (param name, type, values or stats)
+            "type": 'string' or 'numeric'
+            "values or stats": a list of tuples (val, count) for string values
+                               or
+                               a tuple of (min,med,max) for numeric values
 
         Tries to generate a filter for every column in rows.
         Excludes any already in selected.
@@ -124,7 +99,7 @@ def _get_filters(rows, selected):
     filters = []
     for name in rows[0].keys():
         # exclude never-filtered columsn
-        if name in ('key', 'trackpath', 'trackrel', 'setupfile'):
+        if name in ('key', 'trackpath', 'trackrel', 'asml', 'imgs', 'dbgframes', 'setupfile'):
             continue
         # exclude any already selected
         if name in selected \
@@ -170,49 +145,35 @@ def _get_filters(rows, selected):
     return filters
 
 
-def _select_track_data(track_data, filt, val):
-    if filt == "tracks":
-        tracks_set = set(val.split('|'))
-        return [t for t in track_data if t[0]['trackrel'] in tracks_set]
-    if filt.endswith(" (min)"):
-        filt = filt.replace(" (min)", "")
-        val = float(val)
-        return [t for t in track_data if t[0][filt] >= val]
-    elif filt.endswith(" (max)"):
-        filt = filt.replace(" (max)", "")
-        val = float(val)
-        return [t for t in track_data if t[0][filt] <= val]
-    elif isinstance(track_data[0][0][filt], bool):
-        # need to convert our string query values to bool for the comparison
-        return [t for t in track_data if t[0][filt] == bool(val)]
-    else:
-        return [t for t in track_data if t[0][filt] == val]
-
-
 @route('/tracks/')
 def tracks(db):
-    track_data = _get_all_track_data(db)
-
-    selected = {}
+    selected_filters = {}
     for filt in request.query.keys():
         val = request.query.get(filt)
         if val == '':
             # unspecified min/max numeric values, e.g.
             continue
 
-        # hack filtering for now (better: use DB)
-        track_data = _select_track_data(track_data, filt, val)
-
         # figure out query string without this selection (for backing out in web interface)
         querystring_without = '&'.join("{}={}".format(key, val) for key, val in request.query.items() if key != filt)
         # store for showing in page
-        selected[filt] = { 'val': val, 'querystring_without': querystring_without }
+        selected_filters[filt] = {
+            'val': val,
+            'querystring_without': querystring_without
+        }
+
+    track_data = _get_track_data(db, selected_filters)
 
     # possible filter params/values for selected rows
-    rows = [t[0] for t in track_data]
-    filters = _get_filters(rows, selected) if rows else []
+    possible_filters = _get_filters(track_data, selected_filters) if track_data else []
 
-    return template('tracks', tracks=track_data, filters=filters, selected=selected, query_string=request.query_string, query=request.query)
+    return template('tracks',
+                    tracks=track_data,
+                    filters=possible_filters,
+                    selected=selected_filters,
+                    query_string=request.query_string,
+                    query=request.query
+                    )
 
 
 @route('/view/<trackrel:path>')
