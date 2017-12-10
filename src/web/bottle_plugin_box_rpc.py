@@ -26,8 +26,8 @@ class BoxRPCPlugin(object):
     def apply(self, callback, route):
         # Test if the original callback accepts our keyword.
         # Ignore it if it does not need a box list.
-        args = inspect.getargspec(route.callback).args
-        if self._keyword not in args:
+        params = inspect.signature(route.callback).parameters
+        if self._keyword not in params:
             return callback
 
         def wrapper(*args, **kwargs):
