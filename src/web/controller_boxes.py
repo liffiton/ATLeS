@@ -111,7 +111,7 @@ def get_lock_data(tgtbox, db):
 
 
 def _name_is_sane(form, field):
-    if re.search('\W', field.data):
+    if field.data is None or re.search('\W', field.data):
         raise ValidationError("Experiment name must be alphanumeric characters only.")
 
 
