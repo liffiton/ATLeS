@@ -88,7 +88,7 @@ def _do_analyze(trackrel):
     # look for debug frames to create links in the trace plot
     trackname = trackrel.name.replace('-track.csv', '')
     dbgframedir = config.DBGFRAMEDIR / trackreldir / trackname
-    dbgframes = dbgframedir.glob("subframe*.png")
+    dbgframes = list(dbgframedir.glob("subframe*.png"))  # list so TrackPlotter can re-use (instead of exhausting the iterable)
 
     processor = process.TrackProcessor(str(config.TRACKDIR / trackrel))
     plotter = plot.TrackPlotter(processor, dbgframes)
@@ -166,7 +166,7 @@ def get_heatmaps():
     # use phases from an arbitrary track
     plengths = plength_map.popitem()[0]
 
-    dataframes = [p.df for p in processors]
+    dataframes = [proc.df for proc in processors]
     phase_start = 0
     for i, length in enumerate(plengths):
         phase_end = phase_start + length
