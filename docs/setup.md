@@ -1,5 +1,5 @@
 ---
-title: Documentation: System Integration & Setup
+title: "Documentation: System Integration & Setup"
 ---
 
 # Installation / Setup

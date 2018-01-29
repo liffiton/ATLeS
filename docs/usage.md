@@ -1,5 +1,5 @@
 ---
-title: Documentation: Using ATLeS
+title: "Documentation: Using ATLeS"
 ---
 
 *TODO*

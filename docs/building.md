@@ -1,5 +1,5 @@
 ---
-title: Documentation: Building an ATLeS Box Enclosure
+title: "Documentation: Building an ATLeS Box Enclosure"
 ---
 
 # Building an ATLeS Box Enclosure
