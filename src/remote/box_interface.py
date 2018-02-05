@@ -189,6 +189,8 @@ def kill_experiment():
     cond_sudo_kill(pid, signal.SIGKILL)
     time.sleep(0.1)
 
+    os.wait()  # clean up defunct child process
+
     assert not pid_exists(pid)
 
     # remove existing lockfile
