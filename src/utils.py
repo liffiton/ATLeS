@@ -4,6 +4,7 @@ import os
 import platform
 import pwd
 import socket
+import time
 from collections import namedtuple
 
 from contextlib import closing
@@ -69,12 +70,17 @@ def max_mtime(dir):
 # https://stackoverflow.com/a/29692864/7938656
 # Wrap a function to restart itself automatically (used for threads that may crash)
 def auto_restart(func):
-    def wrapper():
+    def wrapper(*args, **kwargs):
+        delay = 0.001
         while True:
             try:
-                func()
+                func(*args, **kwargs)
             except BaseException as e:
                 print('Exception in {}: {!r}\nRestarting.'.format(func.__name__, e))
             else:
                 print('{} exited normally.\nRestarting.'.format(func.__name__))
+            # exponential backoff
+            print('Waiting {} seconds before restart.'.format(delay))
+            time.sleep(delay)
+            delay *= 2
     return wrapper

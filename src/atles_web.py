@@ -59,7 +59,7 @@ if __name__ == '__main__':
     bottle.load("web.controller_trackview")
 
     # start up the track scanner
-    t = threading.Thread(target=track_scanner.scan_tracks, args=[db_engine])
+    t = threading.Thread(target=utils.auto_restart(track_scanner.scan_tracks), args=[db_engine])
     t.daemon = True
     t.start()
 

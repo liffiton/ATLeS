@@ -281,9 +281,10 @@ class BoxManager(object):
             box_rpc.sync_data()
 
         # check that update occurred
-        if abs(latest_remote - utils.max_mtime(boxtrackdir)) > datetime.timedelta(microseconds=100):
+        diff = abs(latest_remote - utils.max_mtime(boxtrackdir))
+        if diff > datetime.timedelta(seconds=1):
             # warn w/ simple print for now
-            print("Warning: sync may not have occurred for box {}.".format(box))
+            print("Warning: sync may not have occurred for box {}.  Got time delta {}.".format(box, diff))
 
     def _update_box(self, box, conn):
         # get updated box data
