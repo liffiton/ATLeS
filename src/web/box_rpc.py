@@ -118,6 +118,8 @@ class Box(object):
 
     def sync_data(self):
         ''' Copy/sync track data from this box to the local track directory.'''
+        print("{}: Starting sync.".format(self.name))
+
         assert self.connected
 
         # If data is already local, no need to sync
@@ -129,19 +131,23 @@ class Box(object):
 
         # Copy remote files into an archive dir, then have rsync
         # delete the originals after the transfer
-        self._tunnel["cp -r %s %s" % (self.trackdir, self.archivedir)]
+        cp_cmd = self._tunnel["cp"]
+        res = cp_cmd("-r", self.trackdir, self.archivedir)
+        print("{}: cp command got: {}".format(self.name, res))
         # Currently does *not* copy the debugframes (following line is
         # commented), so they will be removed from remote entirely.
-        #self._tunnel["cp -r %s %s" % (self.dbgframedir, self.archivedir)]
+        #cp_cmd("-r", self.dbgframedir, self.archivedir)
 
         # NOTE: Source must end with / to copy the *contents* of the folder
         # instead of copying the source folder into the destination as a new
         # folder there.
         cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.trackdir), str(config.TRACKDIR / self.name)]
-        subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        res = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        print("{}: rsync trackfiles command got: {}".format(self.name, res))
 
         cmd = ['rsync', '-rvt', '--remove-source-files', '%s@%s:%s/' % (self.user, self.ip, self.dbgframedir), str(config.DBGFRAMEDIR / self.name)]  # '' to ensure trailing /
-        subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        res = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        print("{}: rsync dbgframes command got: {}".format(self.name, res))
 
     def _ping(self, timeout):
         '''
