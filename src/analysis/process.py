@@ -262,12 +262,11 @@ class TrackProcessor(object):
 
         stats = {}
 
-        if minutes is 'all':
-            stats["#Datapoints"] = len(df)
-            stats["#Valid"] = valid_count
-            stats["%Valid datapoints"] = valid_count / float(len(df))
-            stats["Total time (sec)"] = df.index.max()
-            stats["Valid time (sec)"] = time_total
+        stats["#Datapoints"] = len(df)
+        stats["#Valid"] = valid_count
+        stats["%Valid datapoints"] = valid_count / float(len(df))
+        stats["Total time (sec)"] = df.index.max()
+        stats["Valid time (sec)"] = time_total
 
         if selected.any():  # no stats if no data, and avoids "nan" results, as well
             stats["Total distance traveled (?)"] = dist_total
