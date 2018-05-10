@@ -244,48 +244,57 @@ class TrackProcessor(object):
         # shorthand
         df = self.df
 
-        if minutes is 'all':
-            selected = df.valid
-        else:
-            selected = df.valid & (df.index >= minutes[0]*60) & (df.index < minutes[1]*60)
+        if minutes is not 'all':
+            # restrict to rows from the specified time period
+            selected = (df.index >= minutes[0]*60) & (df.index < minutes[1]*60)
+            df = df[selected]
 
-        valid_count = df.valid.sum()
+        total_count = len(df)
+        total_time = df.dt.sum()
 
-        dist_total = df.dist[selected].sum()
-        time_total = df.dt[selected].sum()
+        # restrict to valid rows for remaining
+        df = df[df.valid]
 
-        trigger_starts, trigger_lens = groups_where(df.trigger & selected)
-        trigger_count, trigger_time, _ = self._sum_runs(trigger_starts, trigger_lens, min_runlength=0)
+        valid_count = len(df)
+        valid_time = df.dt.sum()
 
-        frozen_starts, frozen_lens = groups_where(df.frozen & selected)
-        freeze_count, freeze_time, _ = self._sum_runs(frozen_starts, frozen_lens, min_runlength=_freeze_min_time)
-
+        # the dictionary to be returned
         stats = {}
 
-        stats["#Datapoints"] = len(df)
+        stats["#Datapoints"] = total_count
         stats["#Valid"] = valid_count
-        stats["%Valid datapoints"] = valid_count / float(len(df))
-        stats["Total time (sec)"] = df.index.max()
-        stats["Valid time (sec)"] = time_total
+        stats["%Valid datapoints"] = valid_count / total_count
+        stats["Total time (sec)"] = total_time
+        stats["Valid time (sec)"] = valid_time
 
-        if selected.any():  # no stats if no data, and avoids "nan" results, as well
-            stats["Total distance traveled (?)"] = dist_total
-            # TODO: weight averages by dt of each frame?
-            stats["Avg. x coordinate"] = df.x[selected].mean()
-            stats["Avg. y coordinate"] = df.y[selected].mean()
-            stats["Avg. speed (?/sec)"] = dist_total / time_total
-            stats["Avg. x speed (?/sec)"] = df.dx[selected].abs().sum() / time_total
-            stats["Avg. y speed (?/sec)"] = df.dy[selected].abs().sum() / time_total
-            stats["#Triggers"] = trigger_count
-            if trigger_count:
-                stats["Total time triggered (sec)"] = trigger_time
-                stats["Avg. time per trigger (sec)"] = trigger_time / trigger_count
-                stats["Trigger frequency (per min)"] = 60.0*(trigger_count / time_total)
-            stats["#Freezes"] = freeze_count
-            if freeze_count:
-                stats["Total time frozen (sec)"] = freeze_time
-                stats["Avg. time per freeze (sec)"] = freeze_time / freeze_count
-                stats["Freeze frequency (per min)"] = 60.0*(freeze_count / time_total)
+        if valid_count == 0:
+            # no more stats if no data, and avoids "nan" results, as well
+            return stats
+
+        trigger_starts, trigger_lens = groups_where(df.trigger)
+        trigger_count, trigger_time, _ = self._sum_runs(trigger_starts, trigger_lens, min_runlength=0)
+
+        frozen_starts, frozen_lens = groups_where(df.frozen)
+        freeze_count, freeze_time, _ = self._sum_runs(frozen_starts, frozen_lens, min_runlength=_freeze_min_time)
+
+        dist_total = df.dist.sum()
+        stats["Total distance traveled (?)"] = dist_total
+        # TODO: weight averages by dt of each frame?
+        stats["Avg. x coordinate"] = df.x.mean()
+        stats["Avg. y coordinate"] = df.y.mean()
+        stats["Avg. speed (?/sec)"] = dist_total / valid_time
+        stats["Avg. x speed (?/sec)"] = df.dx.abs().sum() / valid_time
+        stats["Avg. y speed (?/sec)"] = df.dy.abs().sum() / valid_time
+        stats["#Triggers"] = trigger_count
+        if trigger_count:
+            stats["Total time triggered (sec)"] = trigger_time
+            stats["Avg. time per trigger (sec)"] = trigger_time / trigger_count
+            stats["Trigger frequency (per min)"] = 60.0*(trigger_count / total_time)
+        stats["#Freezes"] = freeze_count
+        if freeze_count:
+            stats["Total time frozen (sec)"] = freeze_time
+            stats["Avg. time per freeze (sec)"] = freeze_time / freeze_count
+            stats["Freeze frequency (per min)"] = 60.0*(freeze_count / total_time)
 
         return stats
 
