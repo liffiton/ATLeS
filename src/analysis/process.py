@@ -241,6 +241,9 @@ class TrackProcessor(object):
                         *beginning* of end_min.
                         If 'all', analysis covers entire dataset.
         '''
+        # the dictionary to be returned
+        stats = {}
+
         # shorthand
         df = self.df
 
@@ -252,23 +255,24 @@ class TrackProcessor(object):
         total_count = len(df)
         total_time = df.dt.sum()
 
+        stats["#Datapoints"] = total_count
+        stats["Total time (sec)"] = total_time
+
+        if total_count == 0:
+            # no more stats if no data
+            return stats
+
         # restrict to valid rows for remaining
         df = df[df.valid]
 
         valid_count = len(df)
         valid_time = df.dt.sum()
-
-        # the dictionary to be returned
-        stats = {}
-
-        stats["#Datapoints"] = total_count
         stats["#Valid"] = valid_count
         stats["%Valid datapoints"] = valid_count / total_count
-        stats["Total time (sec)"] = total_time
         stats["Valid time (sec)"] = valid_time
 
         if valid_count == 0:
-            # no more stats if no data, and avoids "nan" results, as well
+            # no more stats if no data
             return stats
 
         trigger_starts, trigger_lens = groups_where(df.trigger)
