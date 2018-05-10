@@ -9,15 +9,30 @@ import time
 
 import rpyc
 import zeroconf
+import plumbum  # for git_status()
 
 from rpyc.utils.server import ThreadedServer
 
 import config
-import utils
+from common import mkdir, get_routed_ip, get_boxname
 from remote import box_interface
 
 
 _PORT = 4158
+
+
+def git_status():
+    git = plumbum.local["git"]
+    branch = git('describe', '--contains', '--all', 'HEAD').strip()
+    fulldesc = git('describe', '--all', '--long', '--dirty').strip()
+    fulldate = git('show', '-s', '--format=%ci').strip()
+    date = fulldate.split()[0]
+    mods = git['diff', '--no-ext-diff', '--quiet'] & plumbum.TF(1)
+
+    # short git description: date plus dirty marker
+    gitshort = "%s-%s%s" % (branch, date, '-*' if mods else '')
+    gitlong = "%s\n%s" % (fulldesc, fulldate)
+    return (gitshort, gitlong)
 
 
 def module2service(module):
@@ -52,17 +67,17 @@ def main():
     signal.signal(signal.SIGTERM, term_handler)
 
     # Create needed directories if not already there
-    utils.mkdir(config.PLOTDIR, config.REMOTE_USER)
-    utils.mkdir(config.TRACKDIR, config.REMOTE_USER)
-    utils.mkdir(config.DBGFRAMEDIR, config.REMOTE_USER)
-    utils.mkdir(config.ARCHIVEDIR, config.REMOTE_USER)
+    mkdir(config.PLOTDIR, config.REMOTE_USER)
+    mkdir(config.TRACKDIR, config.REMOTE_USER)
+    mkdir(config.DBGFRAMEDIR, config.REMOTE_USER)
+    mkdir(config.ARCHIVEDIR, config.REMOTE_USER)
 
     # Get our external IP
     # Loop until we have one, because we can't run without it
     ip = None
     while ip is None:
         try:
-            ip = utils.get_routed_ip()
+            ip = get_routed_ip()
         except:
             # any error (in part because I'm not certain what is thrown
             # when this fails)
@@ -91,8 +106,8 @@ def main():
     print("RPC server started.")
 
     # register the service via MDNS/Bonjour
-    boxname = utils.get_boxname()
-    gitstatus = utils.git_status()
+    boxname = get_boxname()
+    gitstatus = git_status()
     gitshort = gitstatus[0]
     gitlong = gitstatus[1]
     info = zeroconf.ServiceInfo(

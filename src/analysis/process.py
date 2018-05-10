@@ -4,7 +4,7 @@ import math
 import numpy as np
 import pandas
 
-from utils import Phase  # noqa
+from common import Phase  # noqa
 
 _entry_wait = 2  # min seconds between counted entries to top
 _freeze_min_time = 2  # min seconds to count lack of motion as a "freeze"
@@ -110,7 +110,7 @@ class TrackProcessor(object):
         # parse phases_data
         if 'phases' in self.config and 'phases_data' in self.config['phases']:
             phases_data_str = self.config['phases']['phases_data']
-            self.phase_list = eval(phases_data_str)  # uses Phase namedtuple imported from utils
+            self.phase_list = eval(phases_data_str)  # uses Phase namedtuple imported from common
         elif 'experiment_args' in self.config:
             # older setup file; look for experiment_args section and build a Phase from that
             onephase = Phase(

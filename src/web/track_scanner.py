@@ -7,8 +7,7 @@ import time
 from sqlalchemy import sql
 
 import config
-import utils
-from utils import Phase  # noqa
+from common import Phase, get_boxname # noqa
 import web.db_schema as db_schema
 
 
@@ -87,7 +86,7 @@ def _get_setup_info(setupfile):
         stimulus = parser.get('experiment', 'stimulus', fallback=None)
         phase_data_str = parser.get('phases', 'phases_data', fallback=None)
         try:
-            phase_data = eval(phase_data_str)  # uses Phase namedtuple imported from utils
+            phase_data = eval(phase_data_str)  # uses Phase namedtuple imported from common
         except TypeError:
             # old setupfile w/o matching phase tuple
             phase_data = []
@@ -103,7 +102,7 @@ def _get_track_db_info(key, trackfile, trackrelpath):
     subdir = str(trackrelpath.parent)
     if subdir == '':
         # locally-created, most likely
-        subdir = utils.get_boxname()
+        subdir = get_boxname()
     filename = trackrelpath.name
     starttime_str, exp_name = _trackfile_parse_regexp.search(filename).groups()
     starttime = dateutil.parser.parse(starttime_str)

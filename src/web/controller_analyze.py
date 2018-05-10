@@ -16,9 +16,9 @@ matplotlib.use('Agg')
 from bottle import get, post, redirect, request, response, jinja2_template as template  # noqa: E402
 
 from analysis import heatmaps, process, plot  # noqa: E402
-from .error_handlers import TrackParseError   # noqa: E402
+from web.error_handlers import TrackParseError   # noqa: E402
+from common import mkdir  # noqa: E402
 import config  # noqa: E402
-import utils   # noqa: E402
 
 
 def _make_stats_output(stats, all_keys, do_csv):
@@ -83,7 +83,7 @@ def _do_analyze(trackrel):
 
     # ensure directories exist for plot creation
     trackreldir = trackrel.parent
-    utils.mkdir(config.PLOTDIR / trackreldir)
+    mkdir(config.PLOTDIR / trackreldir)
 
     # look for debug frames to create links in the trace plot
     trackname = trackrel.name.replace('-track.csv', '')

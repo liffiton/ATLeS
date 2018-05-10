@@ -16,8 +16,8 @@ from sqlalchemy import sql
 from zeroconf import ServiceBrowser, Zeroconf
 
 import config
-import utils
 from web import db_schema
+from common import auto_restart, get_routed_ip, max_mtime
 
 
 class Box(object):
@@ -83,7 +83,7 @@ class Box(object):
 
     def connect(self, done_callback=None):
         self.error = "connecting..."
-        self.local = (self.ip == utils.get_routed_ip())
+        self.local = (self.ip == get_routed_ip())
         if not self.local:
             # only connect if it's a separate machine
             try:
@@ -200,11 +200,11 @@ class BoxManager(object):
 
         # start separate thread for:
         #  - polling boxes
-        t = threading.Thread(target=utils.auto_restart(self._poll_boxes))
+        t = threading.Thread(target=auto_restart(self._poll_boxes))
         t.daemon = True
         t.start()
         #  - handling the explicit update queue
-        t = threading.Thread(target=utils.auto_restart(self._watch_queue))
+        t = threading.Thread(target=auto_restart(self._watch_queue))
         t.daemon = True
         t.start()
 
@@ -274,7 +274,7 @@ class BoxManager(object):
             # No files present on remote
             return
         boxtrackdir = config.TRACKDIR / box
-        latest_local = utils.max_mtime(boxtrackdir)
+        latest_local = max_mtime(boxtrackdir)
 
         # *Ugly* hack to "de-netref" the rpyc-returned object
         # Otherwise we can't compare it to a real datetime object...
@@ -287,7 +287,7 @@ class BoxManager(object):
             box_rpc.sync_data()
 
         # check that update occurred
-        diff = abs(latest_remote - utils.max_mtime(boxtrackdir))
+        diff = abs(latest_remote - max_mtime(boxtrackdir))
         if diff > datetime.timedelta(seconds=1):
             # warn w/ simple print for now
             print("Warning: sync may not have occurred for box {}.  Got time delta {}.".format(box, diff))

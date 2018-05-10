@@ -6,10 +6,7 @@ import pwd
 import socket
 import time
 from collections import namedtuple
-
 from contextlib import closing
-
-import plumbum
 
 
 # define a named tuple for storing Phase data
@@ -43,20 +40,6 @@ def mkdir(path, user=None):
     if user is not None:
         pw = pwd.getpwnam(user)
         os.chown(str(path), pw.pw_uid, pw.pw_gid)
-
-
-def git_status():
-    git = plumbum.local["git"]
-    branch = git('describe', '--contains', '--all', 'HEAD').strip()
-    fulldesc = git('describe', '--all', '--long', '--dirty').strip()
-    fulldate = git('show', '-s', '--format=%ci').strip()
-    date = fulldate.split()[0]
-    mods = git['diff', '--no-ext-diff', '--quiet'] & plumbum.TF(1)
-
-    # short git description: date plus dirty marker
-    gitshort = "%s-%s%s" % (branch, date, '-*' if mods else '')
-    gitlong = "%s\n%s" % (fulldesc, fulldate)
-    return (gitshort, gitlong)
 
 
 def max_mtime(dir):

@@ -8,7 +8,7 @@ import bottle.ext.sqlalchemy
 import sqlalchemy
 
 import config
-import utils
+from common import mkdir, auto_restart
 from web import bottle_plugin_box_rpc, db_schema, error_handlers, track_scanner
 
 
@@ -28,10 +28,10 @@ if __name__ == '__main__':
     args = parse_args()
 
     # Create needed directories if not already there
-    utils.mkdir(config.PLOTDIR)
-    utils.mkdir(config.TRACKDIR)
-    utils.mkdir(config.DBGFRAMEDIR)
-    utils.mkdir(config.ARCHIVEDIR)
+    mkdir(config.PLOTDIR)
+    mkdir(config.TRACKDIR)
+    mkdir(config.DBGFRAMEDIR)
+    mkdir(config.ARCHIVEDIR)
 
     # let bottle know where to find our templates
     bottle.TEMPLATE_PATH.insert(0, str(config.TEMPLATEDIR))
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     bottle.load("web.controller_trackview")
 
     # start up the track scanner
-    t = threading.Thread(target=utils.auto_restart(track_scanner.scan_tracks), args=[db_engine])
+    t = threading.Thread(target=auto_restart(track_scanner.scan_tracks), args=[db_engine])
     t.daemon = True
     t.start()
 

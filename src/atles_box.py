@@ -17,8 +17,7 @@ import threading
 import time
 
 import config
-import utils
-from utils import Phase
+from common import Phase, get_boxname, mkdir
 from box import experiment
 
 
@@ -56,7 +55,7 @@ def get_conf(args):
     conf['general'] = {}
     conf['general']['notes'] = args.notes
     conf['general']['inifile'] = args.inifile
-    conf['general']['boxname'] = utils.get_boxname()
+    conf['general']['boxname'] = get_boxname()
 
     return conf
 
@@ -153,11 +152,11 @@ def init_logging(args, conf):
     conf['name'] = name
 
     # ensure log and image directories exist
-    utils.mkdir(config.TRACKDIR, config.REMOTE_USER)
+    mkdir(config.TRACKDIR, config.REMOTE_USER)
     debugframe_dir = "%s/%s" % (config.DBGFRAMEDIR, name)
     # Make debugframedir world-writable so rsync can delete it.
     oldmask = os.umask(0)
-    utils.mkdir(debugframe_dir, config.REMOTE_USER)
+    mkdir(debugframe_dir, config.REMOTE_USER)
     os.umask(oldmask)
     conf['debugframe_dir'] = debugframe_dir
 

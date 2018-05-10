@@ -6,7 +6,7 @@ import tempfile
 import time
 
 import config
-import utils
+from common import max_mtime
 from box import wiring
 
 
@@ -29,7 +29,7 @@ def lock_data():
 
 
 def max_datafile_mtime():
-    return utils.max_mtime(config.TRACKDIR)
+    return max_mtime(config.TRACKDIR)
 
 
 _raspistill = None

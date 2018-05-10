@@ -2,7 +2,7 @@ import shutil
 from bottle import post, request
 
 import config
-import utils
+from common import mkdir
 
 
 def _relative_move(srcroot, srcrel, destroot):
@@ -13,7 +13,7 @@ def _relative_move(srcroot, srcrel, destroot):
     '''
     srcfile = srcroot / srcrel
     destfile = destroot / srcrel
-    utils.mkdir(destfile.parent)  # make sure directory exists
+    mkdir(destfile.parent)  # make sure directory exists
     shutil.move(str(srcfile), str(destfile))
 
 
