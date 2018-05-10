@@ -3,3 +3,4 @@
 *.makerbot
 data/
 refs/
+.ipynb_checkpoints/
