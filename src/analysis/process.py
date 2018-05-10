@@ -148,9 +148,26 @@ class TrackProcessor(object):
         # (e.g. time=3600.0456), it still just counts as 60 minutes
         return int(math.ceil(self.df.index[-2] / 60.0))
 
-    def get_stats(self, include_phases=False):
+    def get_stats_single_table(self, include_phases=False):
+        ''' Return a dictionary of key,value pairs with keys as descriptive text. '''
+        stats = self.get_stats(include_phases)
         ret = {}
-        ret.update(self._get_stats_time_range(minutes='all'))
+        for dict_name, stats_dict in stats.items():
+            entries = {
+                "%s - %s" % (key, dict_name) : value
+                for key, value in stats_dict.items()
+            }
+            ret.update(entries)
+
+        return ret
+
+    def get_stats(self, include_phases=False):
+        '''
+        Return a dictionary of dictionaries, keyed on 'all' and phase names, each containing
+        stats for the entire track ('all') or an individual phase.
+        '''
+        ret = {}
+        ret['all'] = self._get_stats_time_range(minutes='all')
         # only include per-phase stats if we have more than one phase
         if include_phases and self.phase_list is not None and len(self.phase_list) > 1:
             start_min = 0
@@ -158,7 +175,7 @@ class TrackProcessor(object):
                 phase_stats = self._get_stats_time_range(
                                 minutes=(start_min, start_min+phase.length)
                               )
-                ret.update(phase_stats)
+                ret['phase %d' % phase.phasenum] = phase_stats
                 start_min += phase.length
         return ret
 
@@ -270,12 +287,6 @@ class TrackProcessor(object):
                 stats["Total time frozen (sec)"] = freeze_time
                 stats["Avg. time per freeze (sec)"] = freeze_time / freeze_count
                 stats["Freeze frequency (per min)"] = 60.0*(freeze_count / time_total)
-
-        if minutes is not 'all':
-            stats = {
-                "%s - minutes %04d-%04d" % (key, minutes[0], minutes[1]): value
-                for key, value in stats.items()
-            }
 
         return stats
 

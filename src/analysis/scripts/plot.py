@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import numpy as np
-
 from .. import process, plot
 
 name = "plot"
@@ -19,13 +17,6 @@ def run(args):
     ''' The default command.  Creates and shows or saves a single plot. '''
     processor = process.TrackProcessor(args.infile)
     plotter = plot.TrackPlotter(processor)
-
-    stats = processor.get_stats()
-    maxlen = max(len(key) for key in stats.keys())
-    for key, val in stats.items():
-        if type(val) is np.float32 or type(val) is np.float64:
-            val = "%0.3f" % val
-        print("%*s: %s" % (maxlen, key, str(val)))
 
     if args.heat:
         plotter.plot_heatmap(args.heat_num)
