@@ -70,7 +70,11 @@ def setup_phases(args, conf):
     phase_args = [p.split(',') for p in args.phases]
     phases = []
     for i, (length, stim, background) in enumerate(phase_args):
+        # 1-based phase counting
+        phasenum = i+1
+
         length = int(length)
+
         # Determine and record whether stimulus is enabled for each phase
         if stim == 'on':
             dostim = True
@@ -78,14 +82,14 @@ def setup_phases(args, conf):
             dostim = False
         elif stim == 'rand':
             dostim = random.choice([True, False])
-            logging.info("stim=rand selected for phase %d; chose stimulus %s." % (i, ("ENABLED" if dostim else "DISABLED")))
+            logging.info("stim=rand selected for phase %d; chose stimulus %s." % (phasenum, ("ENABLED" if dostim else "DISABLED")))
 
-        phase_data = Phase(i, length, dostim, background)
+        phase_data = Phase(phasenum, length, dostim, background)
         phases.append(phase_data)
 
-        section['phase_%d_length' % i] = length
-        section['phase_%d_dostim' % i] = dostim
-        section['phase_%d_background' % i] = background
+        section['phase_%d_length' % phasenum] = length
+        section['phase_%d_dostim' % phasenum] = dostim
+        section['phase_%d_background' % phasenum] = background
 
     section['phases_data'] = phases
 
@@ -230,7 +234,7 @@ def main():
         # run as a single "infinite" phase with dostim=True
         # and a black background image
         conf['phases'] = {}
-        onephase = Phase(0, float('inf'), True, 'black.png')
+        onephase = Phase(1, float('inf'), True, 'black.png')
         conf['phases']['phases_data'] = [onephase]
 
         total_time = None
