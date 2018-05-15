@@ -56,9 +56,9 @@ class TrackProcessor(object):
         # generate normalized x coordinates based on the given expression
         if normalize_x_with_trigger is not None:
             if normalize_x_with_trigger == self.config['experiment']['trigger']:
-                self.df.norm_x = 1 - self.df.x
+                self.df['norm_x'] = 1 - self.df.x
             else:
-                self.df.norm_x = self.df.x
+                self.df['norm_x'] = self.df.x
 
         if not just_raw_data:
             self._generate_columns()
