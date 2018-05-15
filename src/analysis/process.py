@@ -34,13 +34,29 @@ def groups_where(vals):
 
 
 class TrackProcessor(object):
-    def __init__(self, trackfile, just_raw_data=False):
+    def __init__(self, trackfile, just_raw_data=False, flip_x_if_trigger=None):
+        '''
+            Params:
+              trackfile:  String containing a path to the trackfile to be processed.
+                          A corresponding -setup.txt file must exist as well.
+              just_raw_data:  Boolean.  If True, do not process the track at all.
+              flip_x_if_trigger:  String.  If set, the x coordinates of the track
+                                  will be flipped (x = 1-x) if the trigger condition
+                                  of the given track matches this value.
+        '''
         self.trackfile = trackfile
         self.setupfile = trackfile.replace("-track.csv", "-setup.txt")
 
+        # creates self.config, self.phase_list
         self._read_setupfile()
 
+        # creates self.df
         self._read_trackfile()
+
+        # flip x coordinates if trigger matches the given expression
+        if flip_x_if_trigger == self.config['experiment']['trigger']:
+            self.df.x = 1 - self.df.x
+
         if not just_raw_data:
             self._generate_columns()
 
