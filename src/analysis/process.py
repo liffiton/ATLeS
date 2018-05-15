@@ -34,15 +34,15 @@ def groups_where(vals):
 
 
 class TrackProcessor(object):
-    def __init__(self, trackfile, just_raw_data=False, flip_x_if_trigger=None):
+    def __init__(self, trackfile, just_raw_data=False, normalize_x_with_trigger=None):
         '''
             Params:
               trackfile:  String containing a path to the trackfile to be processed.
                           A corresponding -setup.txt file must exist as well.
               just_raw_data:  Boolean.  If True, do not process the track at all.
-              flip_x_if_trigger:  String.  If set, the x coordinates of the track
-                                  will be flipped (x = 1-x) if the trigger condition
-                                  of the given track matches this value.
+              normalize_x_with_trigger:  String.  If set, 'normalized' versions of x coordinates
+                                         and related columsn will be generated (normx = 1-x)
+                                         if the trigger condition of the given track matches this value.
         '''
         self.trackfile = trackfile
         self.setupfile = trackfile.replace("-track.csv", "-setup.txt")
@@ -53,9 +53,12 @@ class TrackProcessor(object):
         # creates self.df
         self._read_trackfile()
 
-        # flip x coordinates if trigger matches the given expression
-        if flip_x_if_trigger == self.config['experiment']['trigger']:
-            self.df.x = 1 - self.df.x
+        # generate normalized x coordinates based on the given expression
+        if normalize_x_with_trigger is not None:
+            if normalize_x_with_trigger == self.config['experiment']['trigger']:
+                self.df.norm_x = 1 - self.df.x
+            else:
+                self.df.norm_x = self.df.x
 
         if not just_raw_data:
             self._generate_columns()
@@ -84,6 +87,8 @@ class TrackProcessor(object):
 
         # calculate derivatives and other derived values
         df['dx'] = df.x.diff()
+        if 'norm_x' in df:
+            df['norm_dx'] = df.norm_x.diff()
         df['dy'] = df.y.diff()
         df['dt'] = df.index.to_series().diff()
 
@@ -301,6 +306,8 @@ class TrackProcessor(object):
         stats["Total distance traveled (?)"] = dist_total
         # TODO: weight averages by dt of each frame?
         stats["Avg. x coordinate"] = df.x.mean()
+        if 'norm_x' in df:
+            stats["Avg. normed x coordinate"] = df.norm_x.mean()
         stats["Avg. y coordinate"] = df.y.mean()
         stats["Avg. speed (?/sec)"] = dist_total / valid_time
         stats["Avg. x speed (?/sec)"] = df.dx.abs().sum() / valid_time
