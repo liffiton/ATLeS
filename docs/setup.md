@@ -58,7 +58,7 @@ If using a provided pre-configured image to install the software, a few addition
 
 Boot and log in to the Raspberry Pi with a freshly-installed MicroSD card with username: `pi` password: `fishypi`.
 
-If the Pi will be on a publically-accessible network, change the password to something secure by running `passwd`.
+If the Pi will be on a publicly-accessible network, change the password to something secure by running `passwd`.
 
 Run `sudo raspi-config` and:
 

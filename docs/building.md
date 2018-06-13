@@ -39,7 +39,7 @@ The mask piece `mask.dxf` slides in from the top, interfacing with the two sides
 Build step 3
 
 ### Step 4
-The two top pieces `top.dxf` fit into place on top of the box (they are translucent here but should be opaque in reality), and the support bracket for the Rasberry Pi holds it in place as shown:
+The two top pieces `top.dxf` fit into place on top of the box (they are translucent here but should be opaque in reality), and the support bracket for the Raspberry Pi holds it in place as shown:
 
 {:.center}
 [![Build step 4](imgs/box_structure_4.png){:width="500px"}](imgs/box_structure_4.png)<br>
@@ -72,6 +72,6 @@ Everything should be powered from a 12VDC supply that can provide at least 1A of
 
 The Pi is powered with 5VDC over a micro-USB connection.  Many 12V to 5V micro-USB converters are available on Amazon (the bill of materials contains a link to one).
 
-A strip of white, visible-light LEDs should be installed along the top of the back wall of the enclosure (where the camera is mounted), and a strip of infrared LEDs should be mounted on the bottom of the enclosure below where the fish tanks will be placed.  The positive/power lead of each strip is connected to the +12VDC rail, while the negative/ground for each connects to an N-type power MOSFET on the breadboard so it can be controlled by the Pi.  The other pins of each MOSFET are connected to ground and to a specific GPIO pin on the Pi (the software has those pin numbers hardcoded).
+A strip of white, visible-light LEDs should be installed along the top of the back wall of the enclosure (where the camera is mounted), and a strip of infrared LEDs should be mounted on the bottom of the enclosure below where the fish tanks will be placed.  The positive/power lead of each strip is connected to the +12VDC rail, while the negative/ground for each connects to an N-type power MOSFET on the breadboard so it can be controlled by the Pi.  The other pins of each MOSFET are connected to ground and to a specific GPIO pin on the Pi (the software has those pin numbers hard-coded).
 
-If using electrical stimulus in the fish tanks, suitable electrodes (large pieces of ideally non-reactive metal) should be placed at each end of the tank and each wired back to the breadboard.  In our current design, they are driven by an L293D dual H-bridge motor controller.  We use a standard 7400-series hex inverter chip alonside that.
+If using electrical stimulus in the fish tanks, suitable electrodes (large pieces of ideally non-reactive metal) should be placed at each end of the tank and each wired back to the breadboard.  In our current design, they are driven by an L293D dual H-bridge motor controller.  We use a standard 7400-series hex inverter chip alongside that.

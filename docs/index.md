@@ -44,7 +44,7 @@ The following page provides more details:
 
 # Adapt It
 
-Because the entire system is open-source, from the code to the physical design, you can modify and adapt the system to suit your needs.  Modify the enclosure to accomodate a different style of tank.  Tweak the software to perform a different analysis.  Or just take a component out to use in your own system.  See [Licenses](licenses) for details.
+Because the entire system is open-source, from the code to the physical design, you can modify and adapt the system to suit your needs.  Modify the enclosure to accommodate a different style of tank.  Tweak the software to perform a different analysis.  Or just take a component out to use in your own system.  See [Licenses](licenses) for details.
 
 The following pages provide information for anyone interested in modifying or working on the software:
 

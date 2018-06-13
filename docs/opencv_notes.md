@@ -1,4 +1,4 @@
-Installing an Updated OpenCV on the Raspbery Pi
+Installing an Updated OpenCV on the Raspberry Pi
 ===============================================
 
 The following instructions assume an updated Raspbian system.

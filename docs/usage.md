@@ -56,7 +56,7 @@ All collected tracks are shown by default.  Press "Enable Filters" to filter the
 Each row of the table contains:
  * The name of the track file with a link to its raw data.
  * The number of lines in the file (as a quick indicator of the length of that track).
- * An "A/S/M/L" chart showing what percentag of the points in the track have the status "Acquired", "Sketchy", "Missing", or "Lost".  "Sketchy" points are those in which the tracking identified more than one point and chose the best one (nearest to the last known position of the fish).  "Missing" and "Lost" are both for times at which no fish was found; the status will first become "Missing" and then "Lost" after 5 tracking frames with no fish found.
+ * An "A/S/M/L" chart showing what percentage of the points in the track have the status "Acquired", "Sketchy", "Missing", or "Lost".  "Sketchy" points are those in which the tracking identified more than one point and chose the best one (nearest to the last known position of the fish).  "Missing" and "Lost" are both for times at which no fish was found; the status will first become "Missing" and then "Lost" after 5 tracking frames with no fish found.
  * A "position" heatmap showing where in the tank the fish was over the course of the entire experiment.
  * An "invalid" heatmap showing where in the tank the fish was before it was ever missing or lost; this can help identify common locations where tracking fails, if any.
  * Buttons to view plots, debug frames, and setup files (described below).
