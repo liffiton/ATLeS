@@ -273,10 +273,10 @@ small {
 
 nav {
   width: 205px;
-  position: fixed;
-  top: 170px;
-  left: 50%;
-  margin-left: -530px;
+  position: sticky;
+  float: left;
+  top: 0px;
+  margin-left: -205px;
 
   ul {
     list-style: none;
