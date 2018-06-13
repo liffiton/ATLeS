@@ -74,7 +74,7 @@ server.  From the **server**, run:
     ATLeS/install/setup_box.sh [box hostname or IP]
 
 You will need to provide a password to log in to the box (the default from
-above or whatever you set it to).  and it will then setup the box to run the
+above or whatever you set it to), and it will then setup the box to run the
 `atles_remote.py` software at boot.
 
 Now, if the box is connected to the same network as the server, the box should
