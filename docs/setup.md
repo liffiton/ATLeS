@@ -1,5 +1,5 @@
 ---
-title: "Documentation: System Integration & Setup"
+title: "System Integration & Setup"
 ---
 
 # Installation / Setup
@@ -21,7 +21,7 @@ The server software *can* run on a Raspberry Pi, even one installed in and contr
 
 The server software has been tested under Debian Linux and Cygwin.  It should work on any recent Linux distribution, and it may run on other platforms as well.
 
-To install the server software, first clone the ATLeS repository:
+To install the server software, first clone the [ATLeS repository](https://github.com/liffiton/ATLeS):
 
     git clone https://github.com/liffiton/ATLeS.git
 
@@ -43,8 +43,9 @@ By default, it will start serving the web interface on port 8080 (configurable v
 ### Installing the Software
 
 The easiest way to install the required software on a Raspberry Pi for a new
-ATLeS Box is to burn (write) a pre-configured image onto a MicroSD card.  Disk
-images are available as versioned releases on Github:
+ATLeS Box is to burn (write) a pre-configured image onto a MicroSD card.  A 4GB
+card is required, and 8GB or larger is recommended.  Disk images are available
+as versioned releases on Github:
 [https://github.com/liffiton/ATLeS/releases](https://github.com/liffiton/ATLeS/releases).
 Download a disk image and extract the .img file.  We recommend using
 [Etcher](https://etcher.io/) to burn the image to a MicroSD card.
@@ -55,7 +56,9 @@ Alternatively, follow the [Manual Box Software Setup](box_sw_manual_install) ins
 
 If using a provided pre-configured image to install the software, a few additional steps are required.
 
-Login to a newly-installed Raspberry Pi as pi/fishypi.
+Boot and log in to the Raspberry Pi with a freshly-installed MicroSD card with username: `pi` password: `fishypi`.
+
+If the Pi will be on a publically-accessible network, change the password to something secure by running `passwd`.
 
 Run `sudo raspi-config` and:
 
@@ -70,8 +73,9 @@ server.  From the **server**, run:
 
     ATLeS/install/setup_box.sh [box hostname or IP]
 
-You will need to provide a password to log in to the box (default: fishypi),
-and it will then setup the box to run the `atles_remote.py` software at boot.
+You will need to provide a password to log in to the box (the default from
+above or whatever you set it to).  and it will then setup the box to run the
+`atles_remote.py` software at boot.
 
 Now, if the box is connected to the same network as the server, the box should
 appear in the web interface automatically.
