@@ -121,3 +121,7 @@ Archive all of the selected tracks (hides them, but the files still remain in th
 ### Statistics
 
 These actions calculate a large number of statistics for the selected tracks and produce a table with one row per track and one column per calculated statistic.  They can be viewed in the browser or downloaded as a .csv file.  The "(extinction)" variants produce calculations specific to a learning/extinction experiment.
+
+# Further Analysis
+
+A Jupyter notebook demonstrating deeper analysis of track data can be found in the `notebooks` directory.  View it on Github [here](https://github.com/liffiton/ATLeS/tree/master/notebooks), including a link to run a live, editable version of the notebook with some of our experimental data.
