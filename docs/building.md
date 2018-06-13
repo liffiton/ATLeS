@@ -55,3 +55,23 @@ Enclosures can be stacked up to three high, with each offset to the rear from th
 Build step 5 (optional)
 
 Adjust the length of the support piece as needed to reach the surface below.
+
+# Electronics
+
+The electronics require some wiring.  Knowledge and experience with electronics is helpful.
+
+{:.center}
+[![The main breadboard](imgs/box_circuit_bb.png){:width="500px"}](imgs/box_circuit_bb.png)<br>
+The main breadboard
+
+The above image shows the connections that need to be made.  The source file, made with [Fritzing](http://fritzing.org/), is available in `designs/circuit/box_circuit.fzz`.
+
+Our [bill-of-materials spreadsheet](https://docs.google.com/spreadsheets/d/1JdE_qXsXnkHEHv3YeQ8cLeGDJKUJM5uZkHw2dTtAtYg/edit?usp=sharing) lists the required parts along with estimated costs and links to options for purchasing most of them.
+
+Everything should be powered from a 12VDC supply that can provide at least 1A of current.  Via a jack, wire the 12VDC to the top blue and red rails of the breadboard as shown.  **NOTE** that only the ground (blue) rail is shared with the bottom; the bottom red rail is 5VDC provided by the Raspberry Pi.
+
+The Pi is powered with 5VDC over a micro-USB connection.  Many 12V to 5V micro-USB converters are available on Amazon (the bill of materials contains a link to one).
+
+A strip of white, visible-light LEDs should be installed along the top of the back wall of the enclosure (where the camera is mounted), and a strip of infrared LEDs should be mounted on the bottom of the enclosure below where the fish tanks will be placed.  The positive/power lead of each strip is connected to the +12VDC rail, while the negative/ground for each connects to an N-type power MOSFET on the breadboard so it can be controlled by the Pi.  The other pins of each MOSFET are connected to ground and to a specific GPIO pin on the Pi (the software has those pin numbers hardcoded).
+
+If using electrical stimulus in the fish tanks, suitable electrodes (large pieces of ideally non-reactive metal) should be placed at each end of the tank and each wired back to the breadboard.  In our current design, they are driven by an L293D dual H-bridge motor controller.  We use a standard 7400-series hex inverter chip alonside that.
