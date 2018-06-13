@@ -311,7 +311,7 @@ module top_cover(spacing=0) {
     // width1 = main cover ; width2 = tank section cover
     width1 = width - mask_loc - thickness/2;
     width2 = mask_loc - thickness/2;
-    color("Grey", alpha=0.5)
+    color("Gray", alpha=0.5)
     union() {
         // back piece (over empty space)
         // spacing added to make separate pieces for laser cutting
@@ -348,7 +348,7 @@ module tank_support() {
     translate([thickness/2, thickness/2, base_height+thickness])
     union() {
         tank_support_layer1();
-        color("Grey", alpha=0.5)
+        color("Gray", alpha=0.5)
             tank_support_layer2();
     }
 }
