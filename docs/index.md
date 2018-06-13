@@ -2,6 +2,8 @@
 title: Automated Tracking and Learning System
 ---
 
+# ATLeS
+
 The goal of the ATLeS project is to create an inexpensive, open-source system for automated, high-throughput, realtime observation and conditioning experiments.  Zebrafish, *danio rerio*, are the target organism for the initial design.
 
 {:.center}

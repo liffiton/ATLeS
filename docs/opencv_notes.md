@@ -39,7 +39,7 @@ Download OpenCV
 
 ATLeS currently works and has been tested with OpenCV 3.2.0.  You can download
 this release from [OpenCV's Releases page](http://opencv.org/releases.html).
-ATLeS may work with earlier versions, but compatibility is not guaranteed.
+ATLeS will likely work with other versions, but compatibility is not guaranteed.
 
 Build instructions
 ------------------
