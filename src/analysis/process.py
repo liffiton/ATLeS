@@ -239,7 +239,7 @@ class TrackProcessor(object):
                 # ... from beginning of phase
                 first_trigger = first_trigger_list[0]
                 first_trigger_delta = first_trigger - 60*self.phase_starts()[phase.phasenum]
-                ret['time to first {} from phase start - phase {}'.format(triggercol, phase.phasenum)] = first_trigger_delta
+                ret[f'phase{phase.phasenum}-tme to 1st {triggercol} frm phs start'] = first_trigger_delta
                 # ... from end of previous trigger
                 if phase.phasenum > 1:
                     # only meaningful for phases after the first
@@ -251,7 +251,7 @@ class TrackProcessor(object):
                     if prev_trigger_list:
                         prev_trigger = prev_trigger_list[0]
                         prev_trigger_delta = first_trigger - prev_trigger
-                        ret['time to first {} from previous trigger - phase {}'.format(triggercol, phase.phasenum)] = prev_trigger_delta
+                        ret[f'phase{phase.phasenum}-tme to 1st {triggercol} frm prev trigger'] = prev_trigger_delta
         return ret
 
     def _get_stats_time_range(self, minutes=None):
