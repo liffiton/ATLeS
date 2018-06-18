@@ -166,15 +166,10 @@ header {
   -webkit-font-smoothing:antialiased;
 
   h1 {
-    font: 40px/48px 'Copse', Georgia, serif;
+    font: 40px 'Copse', Georgia, serif;
     color: #f3f3f3;
     text-shadow: 0px 2px 0px #235796;
     margin: 0px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    -o-text-overflow: ellipsis;
-    -ms-text-overflow: ellipsis;
   }
 
   p {
@@ -273,10 +268,10 @@ small {
 
 nav {
   width: 205px;
-  position: sticky;
-  float: left;
-  top: 0px;
   margin-left: -205px;
+  float: left;
+  position: sticky;
+  top: 20px;
 
   ul {
     list-style: none;
@@ -346,14 +341,6 @@ footer {
 
   header, section, footer {
     float:none;
-
-    h1 {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      -o-text-overflow: ellipsis;
-      -ms-text-overflow: ellipsis;
-    }
   }
 
   #banner {
@@ -393,11 +380,6 @@ footer {
 
     h1 {
       font-size: 32px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      -o-text-overflow: ellipsis;
-      -ms-text-overflow: ellipsis;
     }
 
     p { display: none;}
@@ -405,6 +387,11 @@ footer {
 
   #banner {
     top: 0;
+
+    .button {
+      padding: 4px 6px;
+      margin: 3px;
+    }
   }
 
   section {
@@ -426,11 +413,6 @@ footer {
 
     h1 {
       font-size: 24px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      -o-text-overflow: ellipsis;
-      -ms-text-overflow: ellipsis;
     }
   }
   section {
