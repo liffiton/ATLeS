@@ -15,4 +15,4 @@ ATLeS was created by Mark Liffiton and Brad Sheese at [Illinois Wesleyan Univers
 
 ## Open-Source Licenses
 
-Each part of the ATLeS project is licensed under one of two open-source licenses, depending on what type of material it is.  See ''[docs/licenses.md](docs/licenses.md)'' for details.
+Each part of the ATLeS project is licensed under one of two open-source licenses, depending on what type of material it is.  See ``[docs/licenses.md](docs/licenses.md)`` for details.
