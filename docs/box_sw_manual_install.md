@@ -55,7 +55,7 @@ To install smbus:
 
     sudo apt install python-smbus
 
-To install cv2, see [opencv_notes](opencv_notes.md).
+To install cv2, see [opencv_notes](opencv_notes).
 
 ### atles\_web.py
 
