@@ -15,6 +15,8 @@ Each box uses an inexpensive [Raspberry Pi](https://www.raspberrypi.org/) as its
 A central server can connect to boxes over a network (ethernet or wifi) to control and manage them via a web interface.
 The server software is written in Python, and it runs under Linux, OS X, or Windows.
 
+ATLeS was created by Mark Liffiton and Brad Sheese at [Illinois Wesleyan University](https://www.iwu.edu/).
+
 # Make Your Own
 
 All source files, including code and complete designs for physical parts, are available in the [ATLeS Github repository](https://www.github.com/liffiton/ATLeS).

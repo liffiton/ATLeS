@@ -8,3 +8,11 @@ A central server can connect to boxes over a network (ethernet or wifi) to contr
 The server software is written in Python, and it runs under Linux, OS X, or Windows.
 
 Please visit the main [ATLeS website](https://liffiton.github.io/ATLeS) or look in the ``docs`` folder for more details and documentation.
+
+## Authors
+
+ATLeS was created by Mark Liffiton and Brad Sheese at [Illinois Wesleyan University](https://www.iwu.edu/).
+
+## Open-Source Licenses
+
+Each part of the ATLeS project is licensed under one of two open-source licenses, depending on what type of material it is.  See ''[docs/licenses.md](docs/licenses.md)'' for details.
