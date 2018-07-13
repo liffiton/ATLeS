@@ -11,7 +11,7 @@ Please visit the main [ATLeS website](https://liffiton.github.io/ATLeS) or look 
 
 ## Authors
 
-ATLeS was created by [Mark Liffiton](https://www.iwu.edu/~mliffito/) and [Brad Sheese](https://www.iwu.edu/psychology/faculty/BradSheese.html) at [Illinois Wesleyan University](https://www.iwu.edu/).
+ATLeS was created by [Mark Liffiton](https://www.iwu.edu/~mliffito/) and [Brad Sheese](https://sites.google.com/view/bradsheese-researchandteaching/) at [Illinois Wesleyan University](https://www.iwu.edu/).
 
 ## Open-Source Licenses
 
