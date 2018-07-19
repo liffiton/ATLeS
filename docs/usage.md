@@ -2,9 +2,11 @@
 title: "Using ATLeS"
 ---
 
+# Using ATLeS
+
 With the ATLeS server running (``src/atles_web.py``), point a browser to ``http://[hostname]:8080/`` to access the web interface.
 
-# Main Interface
+## Main Interface
 
 The main page will show all of the boxes that are or have been connected:
 
@@ -17,7 +19,7 @@ Each box shows:
  * A button for launching a new experiment/trial.
  * A button to see the current view of that box's fishtank through the camera.
 
-# New Experiment Interface
+## New Experiment Interface
 
 Pressing any "New Experiment" button brings up the following interface for the given box:
 
@@ -32,7 +34,7 @@ The details of the experiment to be run are specified on the left.  You can set:
  * The .ini file -- used to configure the tracking and the experimental stimulus applied.  (See [.ini Files](#inifiles) below.)
  * The phases of the experiment, with a length (in minutes) and whether the stimulus will be on or off for that phase.  "Random choice" means that the system will randomly decide whether the stimulus is active during that phase, with equal probability for on and off.
 
-## <a name="inifiles"></a>.ini Files
+### <a name="inifiles"></a>.ini Files
 
 The .ini files specify details of an experiment that are constant from trial to trial.  They are saved in the `ini` folder.  The examples included in the repository contain comments explaining what can be set in an .ini file.  Create a new file by copying and modifying one of the examples to suit your setup.
 
@@ -40,11 +42,11 @@ The .ini files specify details of an experiment that are constant from trial to 
 
     $ scp file.ini pi@boxhostname:ATLeS/ini/
 
-## Running an experiment
+### Running an experiment
 
 Upon starting an experiment, the main interface will show the status of the experiment including the time remaining.  When an experiment ends, the recorded data will be automatically synced from the Pi to the server.
 
-# Tracks Interface (Collected Data)
+## Tracks Interface (Collected Data)
 
 The "Tracks" link at the top of the page takes you to a page that lets you view and analyze collected data.
 
@@ -64,7 +66,7 @@ Each row of the table contains:
 
 Some or all of the displayed tracks can be selected using the checkmarks in the leftmost column, and actions to be taken on the selected tracks (described below) are available at the bottom of the page.
 
-## Plots
+### Plots
 
 The ATLeS software can generate plots visualizing the data in a track.
 
@@ -84,44 +86,44 @@ Plots visualizing the time series data show:
 
 Additionally, small blue dots are placed along the x-axis of the plot.  Each indicates a time at which a debug frame was recorded.  Mouse over the dot to view the frame captured at that time.
 
-## Debug Frames
+### Debug Frames
 
 For debugging purposes, ATLeS records the current frame (whatever it's seeing through the camera) at a regular interval as well as whenever it first loses tracking (entering the "missing" state).  These can be viewed individually in the Plots view as described above or viewed all together on one page by choosing the "Debug" button for any track.
 
 The first frame is shown with the entire view of the camera, and "subframes," the cropped and grayscale images used in the actual tracking, are shown for later frames.  Press "+" to increase the brightness of all displayed frames; this helps make out faint features.
 
-## Setup Files
+### Setup Files
 
 Each setup file contains all of the details of how that experiment for that track was run.  This includes all of the information from the chosen .ini file for that track plus anything set in the "New Experiment" interface.  This file can provide metadata to be used in analyses of track files.  For example, it allows you to differentiate between trials where the "Random" stimulus was chosen to be active and those where it was not.
 
-## Selection Actions
+### Selection Actions
 
 When one or more track files are selected using the checkboxes in the main Tracks view, the actions at the bottom will become available:
 
-### Filter
+#### Filter
 
 Filter the view so that only the selected tracks remain.
 
-### Generate aggregate heatmaps
+#### Generate aggregate heatmaps
 
 Generates heatmaps for each phase of an experiment over all selected tracks.  That is, one heatmap will be generated for the first phase of the experiment showing the locations of all of the fish in all of the selected tracks, one for the second phase, etc.  This requires that all selected tracks share the same phase lengths.
 
-### Download raw data [.zip]
+#### Download raw data [.zip]
 
 Download a .zip archive containing all of the selected tracks and their setup files.
 
-### Re-plot
+#### Re-plot
 
 Regenerate the plots for all selected tracks (or generate them for the first time if they haven't been created yet).
 
-### Archive
+#### Archive
 
 Archive all of the selected tracks (hides them, but the files still remain in the `data` directory under `data/tracks_archive`).
 
-### Statistics
+#### Statistics
 
 These actions calculate a large number of statistics for the selected tracks and produce a table with one row per track and one column per calculated statistic.  They can be viewed in the browser or downloaded as a .csv file.  The "(extinction)" variants produce calculations specific to a learning/extinction experiment.
 
-# Further Analysis
+## Further Analysis
 
 A Jupyter notebook demonstrating deeper analysis of track data can be found in the `notebooks` directory.  View it on Github [here](https://github.com/liffiton/ATLeS/tree/master/notebooks), including a link to run a live, editable version of the notebook with some of our experimental data.

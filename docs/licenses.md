@@ -2,6 +2,8 @@
 title: Licenses
 ---
 
+# Licenses
+
 Each part of the ATLeS project is licensed under one of two licenses, depending on what type of material it is.
 Both licenses permit you to use and adapt the materials provided with minor restrictions.
 

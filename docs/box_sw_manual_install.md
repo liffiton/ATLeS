@@ -1,6 +1,8 @@
 ---
-title: (Manual) Box Software Setup
+title: Manual Box Software Setup
 ---
+
+# Manual Box Software Setup
 
 Most people will not need to use the following instructions.  They are provided
 for anyone who wants to set up the ATLeS box software environment themselves.
@@ -8,7 +10,7 @@ The easiest way to install and use the software is to install a provided OS
 image.  The following installation steps require that you are comfortable
 working in a Linux development environment.
 
-# Installing ATLeS Software
+## Installing ATLeS Software
 
 A common setup will install `atles_web.py` on a server (it has been tested
 under Linux and Cygwin thus far), while `atles_remote.py` will run on one or
@@ -20,14 +22,14 @@ The following instructions cover installing the software on a Raspberry Pi, and
 they were developed and tested on a clean install of Raspbian Stretch Lite
 (2017-09-07).
 
-## Software Dependencies
+### Software Dependencies
 
 Before installing the software, install the required tools and libraries (many
 may already be installed depending on your base system):
 
     sudo apt install build-essential pkg-config python3-dev python3-pip libpng-dev libfreetype6-dev git rsync
 
-## Downloading ATLeS Software
+### Downloading ATLeS Software
 
 Clone the ATLeS repository:
 
@@ -80,7 +82,7 @@ Re-run the earlier pip command after installing matplotlib this way, if this
 was necessary.
 
  
-## Runtime Dependencies
+### Runtime Dependencies
 
 Both the camera and i2c need to be enabled using raspi-config.  Run `sudo
 raspi-config` and enable both (i2c is under "advanced options").
