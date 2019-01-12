@@ -1,3 +1,5 @@
+These notes are out of date and preserved just in case.  Follow the instructions in [box_sw_manual_install](box_sw_manual_install) instead.
+
 Installing an Updated OpenCV on the Raspberry Pi
 ===============================================
 
@@ -25,14 +27,14 @@ python3-dev
 libavcodec-dev
 libavformat-dev
 libswscale-dev
-libpng12-dev
+libpng-dev
 libjasper-dev
 libtiff-dev
 ```
 
 To install these:
 
-    $ sudo apt-get install cmake libgtk2.0-dev python3-dev libavcodec-dev libavformat-dev libswscale-dev libpng12-dev libjasper-dev libtiff-dev
+    $ sudo apt-get install cmake libgtk2.0-dev python3-dev libavcodec-dev libavformat-dev libswscale-dev libpng-dev libjasper-dev libtiff-dev
 
 Download OpenCV
 ---------------

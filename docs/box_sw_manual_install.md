@@ -16,18 +16,18 @@ A common setup will install `atles_web.py` on a server (it has been tested
 under Linux and Cygwin thus far), while `atles_remote.py` will run on one or
 more Raspberry Pi nodes in the experiment boxes.  When installing on a
 Raspberry Pi, start with a clean install of
-[Raspbian](https://www.raspberrypi.org/downloads/raspbian/).
+[Raspbian Lite](https://www.raspberrypi.org/downloads/raspbian/).
 
 The following instructions cover installing the software on a Raspberry Pi, and
 they were developed and tested on a clean install of Raspbian Stretch Lite
-(2017-09-07).
+(2018-11-13).
 
 ### Software Dependencies
 
 Before installing the software, install the required tools and libraries (many
 may already be installed depending on your base system):
 
-    sudo apt install build-essential pkg-config python3-dev python3-pip libpng-dev libfreetype6-dev git rsync
+    sudo apt install build-essential pkg-config python3-dev python3-pip git rsync
 
 ### Downloading ATLeS Software
 
@@ -41,23 +41,25 @@ commands assume you have changed into that directory.
 ### atles\_remote.py and atles\_box.py
 
 The software that runs on each box to control experiments and connects back to
-the server depends on several Python packages that can be installed via pip and
-two that can be installed separately.
+the server depends on several Python packages that can be installed via apt and
+pip.
 
-Install the first set of packages by running:
+First install `numpy` and `smbus` (for reading sensor values) with apt:
 
-    sudo pip3 install --user -U -r src/requirements_remote.txt
+    sudo apt install python3-numpy python3-smbus
 
-We install using sudo here so that the libraries are available systemwide, as `atles_remote.py` will be run as root (to be able to control the PWM output).
+OpenCV can be installed [via pip](https://blog.piwheels.org/new-opencv-builds/)
+with dependencies installed first with apt:
 
-The packages that are installed separately are `cv2` (OpenCV) and `smbus` (for
-reading sensors values).
+    sudo apt install libatlas3-base libwebp6 libtiff5 libjasper1 libilmbase12 libopenexr22 libilmbase12 libgstreamer1.0-0 libavcodec57 libavformat57 libavutil55 libswscale4 libgtk-3-0 libpangocairo-1.0-0 libpango-1.0-0 libatk1.0-0 libcairo-gobject2 libcairo2 libgdk-pixbuf2.0-0
+    sudo pip3 install opencv-python-headless
 
-To install smbus:
+Install the remaining python packages by running:
 
-    sudo apt install python-smbus
+    sudo pip3 install -r src/requirements_remote.txt
 
-To install cv2, see [opencv_notes](opencv_notes).
+We install using sudo here so that the libraries are available systemwide, as
+`atles_remote.py` will be run as root (to be able to control the PWM output).
 
 ### atles\_web.py
 
@@ -68,24 +70,13 @@ prototyping purposes.
 
 Install the Python packages required for `atles_web.py` by running:
 
-    pip3 install --user -U -r src/requirements_web.txt
-
-If you want to install matplotlib on an older RPi, you may have to work around
-an issue with pip.  A standard pip install of matplotlib can fail on a stock
-RPi with a memory error.  To work around this, install it without using the
-cache (thanks to:
-[http://stackoverflow.com/a/31526029](http://stackoverflow.com/a/31526029)):
-
-    pip3 install --user --no-cache-dir matplotlib
-
-Re-run the earlier pip command after installing matplotlib this way, if this
-was necessary.
+    pip3 install --user -r src/requirements_web.txt
 
  
 ### Runtime Dependencies
 
-Both the camera and i2c need to be enabled using raspi-config.  Run `sudo
-raspi-config` and enable both (i2c is under "advanced options").
+The camera, SSH, and i2c need to be enabled using raspi-config.  Run `sudo
+raspi-config` and enable all three under "Interfacing Options."
 
 To use the camera via v4l, the `bcm2835-v4l2` module must be loaded.  For the
 i2c interface (for sensors), the `i2c-dev` module must be loaded.  To have the
@@ -94,7 +85,9 @@ modules loaded automatically on boot, add each to `/etc/modules`, one per line:
     bcm2835-v4l2
     i2c-dev
 
-Alternatively, modprobe can be used to load them manually at any time:
+Then reboot the Pi.
+
+Alternatively, modprobe can be used to load the modules manually at any time:
 
     sudo modprobe bcm2835-v4l2
     sudo modprobe i2c-dev
