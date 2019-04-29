@@ -239,7 +239,7 @@ class TrackProcessor(object):
                 # ... from beginning of phase
                 first_trigger = first_trigger_list[0]
                 first_trigger_delta = first_trigger - 60*self.phase_starts()[phase.phasenum]
-                ret[f'phase{phase.phasenum}-tme to 1st {triggercol} frm phs start'] = first_trigger_delta
+                ret['phase{}-tme to 1st {} frm phs start'.format(phase.phasenum, triggercol)] = first_trigger_delta
                 # ... from end of previous trigger
                 if phase.phasenum > 1:
                     # only meaningful for phases after the first
@@ -251,7 +251,7 @@ class TrackProcessor(object):
                     if prev_trigger_list:
                         prev_trigger = prev_trigger_list[0]
                         prev_trigger_delta = first_trigger - prev_trigger
-                        ret[f'phase{phase.phasenum}-tme to 1st {triggercol} frm prev trigger'] = prev_trigger_delta
+                        ret['phase{}-tme to 1st {} frm prev trigger'.format(phase.phasenum, triggercol)] = prev_trigger_delta
         return ret
 
     def _get_stats_time_range(self, minutes=None):
@@ -268,7 +268,7 @@ class TrackProcessor(object):
         # shorthand
         df = self.df
 
-        if minutes is not 'all':
+        if minutes != 'all':
             # restrict to rows from the specified time period
             selected = (df.index >= minutes[0]*60) & (df.index < minutes[1]*60)
             df = df[selected]
