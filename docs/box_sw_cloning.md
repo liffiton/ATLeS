@@ -12,6 +12,8 @@ boxes.
 
 To save a disk image of a working/configured Raspberry Pi SD card:
 
+[TODO: Could simplify to `dd` plus an automated script using loopback, https://github.com/Drewsif/PiShrink, and some of the steps below.]
+
 1. Put card into card reader in a Linux machine.
 
 2. (Optional) Use the `dist/prep_image.sh` script to remove unneeded files from
