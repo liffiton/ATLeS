@@ -26,3 +26,7 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 # I'd use 'if Gem.win_platform?', but it doesn't seem to work?
 gem 'json'
 gem 'bigdecimal'
+
+# Fix an issue w/ Faraday 1.0.0
+# https://stackoverflow.com/a/59554420/
+gem 'faraday', '~> 0'
