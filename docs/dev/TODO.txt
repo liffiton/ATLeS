@@ -1,6 +1,11 @@
 TODOs and Plans
 ===============
 
+Box Setup
+---------
+ - Simplify and automate box setup/installation with Ansible.
+ - Package ATLeS software for distribution on PyPI (_web and _box separately).
+
 ATLeS Box Image
 ---------------
  - https://github.com/Drewsif/PiShrink/
