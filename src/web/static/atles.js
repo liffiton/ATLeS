@@ -283,7 +283,7 @@ function update_ini(iniFile) {
 function num_phases_enabled() {
     var count = 0;
     $.each($(".phasediv"), function() {
-        var enabled = $("#var_enabled", this).val();
+        var enabled = $(".var_enabled", this).val();
         if (enabled == "True") {
             count++;
         }
@@ -296,7 +296,7 @@ function update_phase_ui() {
     $("#btn_addPhase").prop("disabled", num_enabled >= 10);
     $("#btn_delPhase").prop("disabled", num_enabled <= 1);
     $.each($(".phasediv"), function() {
-        var enabled = $("#var_enabled", this).val();
+        var enabled = $(".var_enabled", this).val();
         $(this).toggleClass('hidden', enabled != "True");
     });
 }
@@ -305,7 +305,7 @@ function add_phase() {
     if (num_enabled >= 10) return;
 
     var addphase = $("#phase_" + num_enabled);
-    $("#var_enabled", addphase).val("True");
+    $(".var_enabled", addphase).val("True");
     update_phase_ui();
 }
 function del_phase() {
@@ -313,7 +313,7 @@ function del_phase() {
     if (num_enabled <= 1) return;
 
     var delphase = $("#phase_" + (num_enabled-1));
-    $("#var_enabled", delphase).val("False");
+    $(".var_enabled", delphase).val("False");
     update_phase_ui();
 }
 
@@ -361,8 +361,11 @@ function load_form_data() {
         if (field.type == 'radio' || field.type == 'checkbox') {
             if (field.value == oldval) { $(field).prop("checked", true); }
         }
-        else if (!field.value || field.type == 'select-one') {
-            // only update if it's not already filled (except for selects, which are always filled, so...) and we do have something
+        else if (!field.value || field.type == 'select-one' ||
+            (field.name.endsWith("-length") && field.value == "0")) {
+            // Only update if it's not already filled (except for selects, which are always filled, so...) and we do have something
+            // Also special-case length fields, which have been set to 0 by the server but
+            // are still fine to override if that's their value.
             $(field).val(oldval);
         }
     });

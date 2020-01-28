@@ -154,13 +154,18 @@ $(function() {
                 {% for phase in form.phases: %}
                   <tr class="phasediv {{ 'hidden' if not phase.enabled.data }}" id="phase_{{loop.index0}}">
                     <th class="text-center">
-                      {{ phase.enabled(id="var_enabled") }}
+                      {{ phase.enabled(class="var_enabled") }}
                       {{ phase.hasdisplay(value="True" if box.hasdisplay else "False") }}
                       {{ loop.index }}
                     </th>
                     <td {{ 'class="has-error"' if phase.length.errors }} width="30%">
                       <div class="input-group">
-                        {{ phase.length(class_="form-control") }}
+                        {# value=0 so every field has some value -- avoids a very
+                           odd, difficult-to-debug issue in the browser where the
+                           browser refuses to submit the form if any length fields
+                           have no value in them.
+                         #}
+                        {{ phase.length(class_="form-control", value=0) }}
                         <span class="input-group-addon">
                           minutes
                         </span>
